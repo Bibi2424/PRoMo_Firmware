@@ -5,7 +5,7 @@
 #include "stm32f4xx_ll_rcc.h"
 #include "main.h"
 
-extern void TIM3_Encoder_Init(void);
+extern void TIM34_Encoder_Init(void);
 extern uint16_t encoder_left_get_value(void);
 extern uint16_t encoder_right_get_value(void);
 

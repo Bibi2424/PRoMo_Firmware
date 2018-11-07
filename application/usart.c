@@ -1,3 +1,5 @@
+#define DEBUG_THIS_FILE		DEBUG_USART_FILE
+
 #include <string.h>
 #include "usart.h"
 #include "global.h"
@@ -28,7 +30,7 @@ void MX_USART6_UART_Init(void) {
 	GPIO_InitStruct.Alternate = LL_GPIO_AF_8;
 	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	USART_InitStruct.BaudRate = 115200;
+	USART_InitStruct.BaudRate = 921600;
 	USART_InitStruct.DataWidth = LL_USART_DATAWIDTH_8B;
 	USART_InitStruct.StopBits = LL_USART_STOPBITS_1;
 	USART_InitStruct.Parity = LL_USART_PARITY_NONE;
@@ -51,12 +53,12 @@ void MX_USART6_UART_Init(void) {
 
 static void serial_debug_get_byte(uint8_t rx_char) {
 	if(rx_index >= RX_BUFFER_SIZE - 1) { 
-		printf("Error, command too Big\r\n");
+		debugf("Error, command too Big\r\n");
 		rx_index = 0;
 		return; 
 	}
 
-	// if(echo) { printf("%X", rx_char); }
+	// if(echo) { debugf("%X", rx_char); }
 	if(echo) { printf("%c", rx_char); }
 
 	if(rx_char == 0x08 || rx_char == 0x7F) {

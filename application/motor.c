@@ -1,4 +1,7 @@
+#define DEBUG_THIS_FILE	DEBUG_MOTOR_FILE
+
 #include "motor.h"
+#include "global.h"
 #include "gpio.h"
 
 
@@ -17,9 +20,9 @@ extern void TIM2_Motor_Init(void) {
 
   	//! Init Timer2 for base generation of PWM
 	LL_TIM_InitTypeDef LL_TIM_InitStruct;
-	LL_TIM_InitStruct.Prescaler = __LL_TIM_CALC_PSC(SystemCoreClock, 8000000);
+	LL_TIM_InitStruct.Prescaler = __LL_TIM_CALC_PSC(SystemCoreClock, 1000000);
 	LL_TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
-	LL_TIM_InitStruct.Autoreload = __LL_TIM_CALC_ARR(SystemCoreClock, LL_TIM_InitStruct.Prescaler, 15000);
+	LL_TIM_InitStruct.Autoreload = __LL_TIM_CALC_ARR(SystemCoreClock, LL_TIM_InitStruct.Prescaler, 1000);
 	LL_TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
 	LL_TIM_InitStruct.RepetitionCounter = (uint8_t)0x00;
 	LL_TIM_Init(TIM2, &LL_TIM_InitStruct);
@@ -94,8 +97,9 @@ extern void motor_right_set_speed(uint32_t speed_percent) {
 	uint32_t speed = (uint32_t)((uint64_t)period * (uint64_t)speed_percent) / 100;
 	LL_TIM_OC_SetCompareCH1(TIM2, speed);
 	LL_TIM_OC_SetCompareCH2(TIM2, speed);
-	printf("Set speed %lu/%lu\r\n", speed, period);
+	debugf("Set speed %lu/%lu\r\n", speed, period);
 }
+
 
 extern void motor_left_set_speed(uint32_t speed_percent) {
 	//! speed = MAX*percent/100
@@ -103,5 +107,5 @@ extern void motor_left_set_speed(uint32_t speed_percent) {
 	uint32_t speed = (uint32_t)((uint64_t)period * (uint64_t)speed_percent) / 100;
 	LL_TIM_OC_SetCompareCH3(TIM2, speed);
 	LL_TIM_OC_SetCompareCH4(TIM2, speed);
-	printf("Set speed %lu/%lu\r\n", speed, period);
+	debugf("Set speed %lu/%lu\r\n", speed, period);
 }

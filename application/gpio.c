@@ -1,3 +1,5 @@
+#define DEBUG_THIS_FILE	DEBUG_GPIO_FILE
+
 #include "gpio.h"
 
 
@@ -44,7 +46,7 @@ void MX_GPIO_Init(void) {
 
 void EXTI15_10_IRQHandler(void)
 {
-	// printf("Push\r\n");
+	// debugf("Push\r\n");
 	/* Manage Flags */
 	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_13) != RESET)
 	{

@@ -1,11 +1,13 @@
+#define DEBUG_THIS_FILE		DEBUG_MAIN_FILE
+
 #include "main.h"
 #include "global.h"
 #include "usart.h"
 #include "gpio.h"
 #include "encoder.h"
 #include "motor.h"
-
-#include "test.h"
+#include "nrf24l01.h"
+#include "scheduler.h"
 
 static void LL_Init(void);
 void SystemClock_Config(void);
@@ -20,32 +22,46 @@ void SystemClock_Config(void);
 /* PA5, D13 - LED 						                                   	  */
 /* PC13, N/A - BP						                                   	  */
 /******************************************************************************/
+extern void blink_led(void) {
+	LL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+}
 
-uint32_t duty_cycle_percent = 0;
-
-int main(void) {
+extern int main(void) {
 	LL_Init();
 	SystemClock_Config();
 
 	MX_GPIO_Init();
 	MX_USART6_UART_Init();
 	setbuf(stdout, NULL); 		//! For unbuffered ouput
-	printf("Boot..\r\n");
+	debugf("\r\n**************************************\r\n");
+	debugf(    "* Boot..\r\n");
+	debugf(    "* System_Frequency: %lu  MHz\n", SystemCoreClock);
+	debugf(    "**************************************\r\n");
 
-	TIM3_Encoder_Init();
+	TIM34_Encoder_Init();
 	TIM2_Motor_Init();
 
-	printf("Init Done\r\n");
-	printf("T:%u\n", plusone(54));
+	SPI2_NRF24L01_Init();
+
+	scheduler_init();
+	scheduler_add_event(0, 1*SECOND, SCHEDULER_ALWAYS, blink_led);
+	// scheduler_add_event(1, 100*MS, SCHEDULER_ONE, blink_led);
+
+	debugf("Init Done\r\n");
+
+	// nrf_send(0xAA);
+
 	while (1) {
 		// printf("Left - [Speed: %u, Dir:%u]\r\n", encoder_left_get_value(), READ_BIT(TIM3->CR1, TIM_CR1_DIR)==TIM_CR1_DIR);
 		// printf("Right -[Speed: %u, Dir:%u]\r\n", encoder_right_get_value(), READ_BIT(TIM4->CR1, TIM_CR1_DIR)==TIM_CR1_DIR);
+		// printf("plot %d %d\n", encoder_left_get_value(),encoder_right_get_value());
 		LL_mDelay(250);
-		LL_GPIO_SetOutputPin(LD2_GPIO_Port, LD2_Pin);
-		LL_mDelay(250);
-		LL_GPIO_ResetOutputPin(LD2_GPIO_Port, LD2_Pin);
+		// LL_GPIO_SetOutputPin(LD2_GPIO_Port, LD2_Pin);
+		// LL_mDelay(250);
+		// LL_GPIO_ResetOutputPin(LD2_GPIO_Port, LD2_Pin);
 
 	}
+	return 0;
 }
 
 
@@ -94,12 +110,15 @@ void SystemClock_Config(void) {
 }
 
 
+// static uint32_t duty_cycle_percent = 0;
 extern void UserButton_Callback(void) {
-	duty_cycle_percent += 10;
-	if(duty_cycle_percent > 100) { duty_cycle_percent = 0; } 
-	motor_right_set_speed(duty_cycle_percent);
-	motor_left_set_speed(duty_cycle_percent);
-	// printf("Press, new DC: %lu\n", duty_cycle_percent);
+	// duty_cycle_percent += 10;
+	// if(duty_cycle_percent > 100) { duty_cycle_percent = 0; } 
+	// motor_right_set_speed(duty_cycle_percent);
+	// motor_left_set_speed(duty_cycle_percent);
+	// debug("Press, new DC: %lu\n", duty_cycle_percent);
+
+	nrf_read_reg(0x00);
 }
 
 

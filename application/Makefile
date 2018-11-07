@@ -27,7 +27,8 @@ BUILD_DIR = ../_build
 # GCC toolchain path
 GCC_PATH = "C:/Program Files (x86)/GNU Tools Arm Embedded/7 2018-q2-update/bin/"
 # STM32 HAL librairies
-STM32_LIBRAIRIES_PATH = C:/Users/Bibi/STM32Cube/Repository/STM32Cube_FW_F4_V1.21.0/Drivers
+# STM32_LIBRAIRIES_PATH = C:/Users/Bibi/STM32Cube/Repository/STM32Cube_FW_F4_V1.21.0/Drivers
+STM32_LIBRAIRIES_PATH = ../lib/STM32_HAL_min
 STM32_LIBRAIRIES_SRC = $(STM32_LIBRAIRIES_PATH)/STM32F4xx_HAL_Driver/Src
 STM32_LIBRAIRIES_INC = $(STM32_LIBRAIRIES_PATH)/STM32F4xx_HAL_Driver/Inc
 # STL-Link Flasher Path
@@ -49,12 +50,15 @@ C_SOURCES += syscalls.c
 C_SOURCES += encoder.c
 C_SOURCES += motor.c
 C_SOURCES += process_serial_commands.c
-C_SOURCES += test.c
+C_SOURCES += scheduler.c
+C_SOURCES += nrf24l01.c
+# C_SOURCES += test.c
 C_SOURCES += stm32f4xx_ll_gpio.c
 C_SOURCES += stm32f4xx_ll_usart.c
 C_SOURCES += stm32f4xx_ll_tim.c
 C_SOURCES += stm32f4xx_ll_dma.c
 C_SOURCES += stm32f4xx_ll_rcc.c
+C_SOURCES += stm32f4xx_ll_spi.c
 C_SOURCES += stm32f4xx_ll_utils.c
 C_SOURCES += stm32f4xx_ll_exti.c
 
