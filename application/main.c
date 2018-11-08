@@ -118,7 +118,7 @@ extern void UserButton_Callback(void) {
 	// motor_left_set_speed(duty_cycle_percent);
 	// debug("Press, new DC: %lu\n", duty_cycle_percent);
 
-	nrf_read_reg(0x00);
+	// nrf_read_register(0x00);
 }
 
 

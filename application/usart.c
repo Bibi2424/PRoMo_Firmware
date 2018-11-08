@@ -59,12 +59,13 @@ static void serial_debug_get_byte(uint8_t rx_char) {
 	}
 
 	// if(echo) { debugf("%X", rx_char); }
-	if(echo) { printf("%c", rx_char); }
 
 	if(rx_char == 0x08 || rx_char == 0x7F) {
+		if(echo) { printf("%c", rx_char); }
 		if(rx_index > 0) { rx_buffer[--rx_index] = '\0'; }
 	}
 	else if(rx_char == '\r' || rx_char == '\n') {
+		if(echo) { printf("\r\n"); }
 		if(rx_index != 0) {
 			rx_buffer[rx_index++] = '\0';
 			process_serial_buffer(rx_buffer, rx_index);
@@ -73,6 +74,7 @@ static void serial_debug_get_byte(uint8_t rx_char) {
 		}
 	}
 	else {
+		if(echo) { printf("%c", rx_char); }
 		rx_buffer[rx_index++] = rx_char;
 	}
 }
