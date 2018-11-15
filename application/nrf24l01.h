@@ -44,6 +44,59 @@
 #define NRF24L01_REGISTER_DYNPD			0x1C
 #define NRF24L01_REGISTER_FEATURE		0x1D
 
+// Params for the CONFIG Register
+#define NRF24L01_CONFIG_RX_DR_INT_ON	0x00	// Default
+#define NRF24L01_CONFIG_RX_DR_INT_OFF	0x40
+
+#define NRF24L01_CONFIG_TX_DS_INT_ON	0x00	// Default
+#define NRF24L01_CONFIG_TX_DS_INT_OFF	0x20
+
+#define NRF24L01_CONFIG_MAX_RT_INT_ON	0x00	// Default
+#define NRF24L01_CONFIG_MAX_RT_INT_OFF	0x10
+
+#define NRF24L01_CONFIG_CRC_DISABLE		0x00
+#define NRF24L01_CONFIG_CRC_ENABLE		0x08	// Default
+
+#define NRF24L01_CONFIG_CRC_1BIT		0x00	// Default
+#define NRF24L01_CONFIG_CRC_2BIT		0x04
+
+#define NRF24L01_CONFIG_POWER_DOWN		0x00	// Default
+#define NRF24L01_CONFIG_POWER_UP		0x02
+
+#define NRF24L01_CONFIG_PRIM_TX			0x00	// Default
+#define NRF24L01_CONFIG_PRIM_RX			0x01
+
+//Params for status register
+#define NRF24L01_STATUS_DATA_READY_INT	0x40
+#define NRF24L01_STATUS_DATA_SENT_INT	0x20
+#define NRF24L01_STATUS_MAX_RT_INT		0x10
+
+// Params for the AUTO Retransmission Register
+#define NRF24L01_RETR_DELAY_IN_250MS(x) (x & 0x0F << 4)
+#define NRF24L01_RETR_COUNT(x) 			(x & 0x0F)
+
+// Params for the RF_SETTINGS Register
+#define NRF24L01_RF_SETTINGS_1MBPS		0x00
+#define NRF24L01_RF_SETTINGS_2MBPS		0x08	// Default
+
+#define NRF24L01_RF_SETTINGS_18DBM		0x00
+#define NRF24L01_RF_SETTINGS_12DBM		0x02
+#define NRF24L01_RF_SETTINGS_6DBM		0x04
+#define NRF24L01_RF_SETTINGS_0DBM		0x06	// Default
+
+// Params for the Dynamic Payload length Register
+#define NRF24L01_DYNPD_ENABLE_PIPE(x)	(1 << (x & 0x3F))
+
+// Params for the Feature Register
+#define NRF24L01_FEATURE_NOACK_PAYLOAD_DISABLE	0x00
+#define NRF24L01_FEATURE_NOACK_PAYLOAD_ENABLE	0x01
+
+#define NRF24L01_FEATURE_ACK_DISABLE			0x00
+#define NRF24L01_FEATURE_ACK_ENABLE				0x02
+
+#define NRF24L01_FEATURE_DYN_PAYLAOD_DISABLE	0x00
+#define NRF24L01_FEATURE_DYN_PAYLAOD_ENABLE		0x04
+
 
 #define CE_LOW		LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_2)
 #define CE_HIGH		LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_2);
@@ -51,8 +104,18 @@
 #define CSN_HIGH	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_12);
 
 
+typedef struct {
+	uint8_t rx_address[5];
+	uint8_t channel;
+	uint8_t payload_size;
+} nrf24l01_config;
+
+
 extern void SPI2_NRF24L01_Init(void);
 
+//* SPI *****************************************************************************
+extern uint8_t spi_send_byte_waiting(uint8_t data);
+extern void spi_send_multiple_bytes_waiting(uint8_t* write_data, uint8_t* read_data, uint8_t size);
 //* NRF Low Level *******************************************************************
 extern uint8_t nrf_read_register(uint8_t reg);
 extern void nrf_write_register(uint8_t reg, uint8_t value);
@@ -60,5 +123,9 @@ extern void nrf_read_multiple_bytes_register(uint8_t reg, uint8_t *data, uint8_t
 extern void nrf_write_multiple_bytes_register(uint8_t reg, uint8_t *data, uint8_t size);
 //* NRF High Level *******************************************************************
 extern uint8_t nrf_get_status(void);
+extern void nrf_flush_rx_buffer(void);
+extern void nrf_flush_tx_buffer(void);
+extern void nrf_clear_interrupt(void);
+extern uint8_t nrf_read_data(uint8_t *data);
 
 #endif

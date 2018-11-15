@@ -51,11 +51,22 @@ extern int main(void) {
 
 	// nrf_send(0xAA);
 
+	uint8_t nrf_rx_size = 0;
+	uint8_t nrf_data[32] = {0};
 	while (1) {
 		// printf("Left - [Speed: %u, Dir:%u]\r\n", encoder_left_get_value(), READ_BIT(TIM3->CR1, TIM_CR1_DIR)==TIM_CR1_DIR);
 		// printf("Right -[Speed: %u, Dir:%u]\r\n", encoder_right_get_value(), READ_BIT(TIM4->CR1, TIM_CR1_DIR)==TIM_CR1_DIR);
 		// printf("plot %d %d\n", encoder_left_get_value(),encoder_right_get_value());
-		LL_mDelay(250);
+		
+		LL_mDelay(50);
+		nrf_rx_size = nrf_read_data(nrf_data);
+		if(nrf_rx_size) {
+			printf("NRF RX (%u): [", nrf_rx_size);
+			for(uint8_t i = 0; i < nrf_rx_size; i++) { printf("%02X:", nrf_data[i]); }
+			printf("]\r\n");
+		}
+
+		// printf("Status: %02X\r\n", nrf_get_status());
 		// LL_GPIO_SetOutputPin(LD2_GPIO_Port, LD2_Pin);
 		// LL_mDelay(250);
 		// LL_GPIO_ResetOutputPin(LD2_GPIO_Port, LD2_Pin);
@@ -110,12 +121,12 @@ void SystemClock_Config(void) {
 }
 
 
-// static uint32_t duty_cycle_percent = 0;
+static uint32_t duty_cycle_percent = 0;
 extern void UserButton_Callback(void) {
-	// duty_cycle_percent += 10;
-	// if(duty_cycle_percent > 100) { duty_cycle_percent = 0; } 
-	// motor_right_set_speed(duty_cycle_percent);
-	// motor_left_set_speed(duty_cycle_percent);
+	duty_cycle_percent += 10;
+	if(duty_cycle_percent > 100) { duty_cycle_percent = 0; } 
+	motor_right_set_speed(duty_cycle_percent);
+	motor_left_set_speed(duty_cycle_percent);
 	// debug("Press, new DC: %lu\n", duty_cycle_percent);
 
 	// nrf_read_register(0x00);

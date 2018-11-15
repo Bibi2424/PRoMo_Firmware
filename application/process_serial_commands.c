@@ -38,12 +38,24 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 			motor_right_set_speed(speed);
 			motor_left_set_speed(speed);
 		}
-		//! NRF COMMANDSa
-		// else if(strcmp(word, "nrf-send") == 0) {
-		// 	word = get_next_word(commands, FALSE);
-		// 	uint8_t data = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
-		// 	nrf_send_byte_waiting(data);
-		// }
+		//! SPI COMMANDS
+		else if(strcmp(word, "spi-send") == 0) {
+			word = get_next_word(commands, FALSE);
+			uint8_t size = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
+			uint8_t spi_write_data[10];
+			uint8_t spi_read_data[10];
+			for(uint8_t i = 0; i < size; i++) {
+				word = get_next_word(commands, FALSE);
+				spi_write_data[i] = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
+			}
+			CSN_LOW;
+			spi_send_multiple_bytes_waiting(spi_write_data, spi_read_data, size);
+			printf("SPI-READ:[");
+			for(uint8_t i = 0; i < size; i++) { printf("%02X:", spi_read_data[i]); }
+			printf("]\r\n");
+			CSN_HIGH;
+		}
+		//! NRF COMMANDS
 		else if(strcmp(word, "nrf-status") == 0) {
 			uint8_t status = nrf_get_status();
 			printf("NRF status: 0x%02X\r\n", status);
@@ -55,8 +67,6 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 			printf("NRF reg[%u]: 0x%02X\r\n", data, reg);
 		}
 		else if(strcmp(word, "nrf-test-read") == 0) {
-			// uint8_t test[5] = {0xAA, 0x55, 0xAA, 0x55, 0xAA};
-			// nrf_write_multiple_bytes_register(NRF24L01_REGISTER_RX_ADDR_P0, test, 5);
 			uint8_t ret[5] = {0};
 			nrf_read_multiple_bytes_register(NRF24L01_REGISTER_RX_ADDR_P0, ret, 5);
 			printf("R:[");for(i=0;i<5;i++){printf("%02X ", ret[i]);}printf("]\r\n");
