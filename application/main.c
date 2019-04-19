@@ -26,6 +26,14 @@ extern void blink_led(void) {
 	LL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 }
 
+
+static void lost_connection(void) {
+	motor_left_set_speed(0);
+	motor_right_set_speed(0);
+	printf("Lost Connection with Remote\r\n");
+}
+
+
 extern int main(void) {
 	LL_Init();
 	SystemClock_Config();
@@ -57,14 +65,44 @@ extern int main(void) {
 		// printf("Left - [Speed: %u, Dir:%u]\r\n", encoder_left_get_value(), READ_BIT(TIM3->CR1, TIM_CR1_DIR)==TIM_CR1_DIR);
 		// printf("Right -[Speed: %u, Dir:%u]\r\n", encoder_right_get_value(), READ_BIT(TIM4->CR1, TIM_CR1_DIR)==TIM_CR1_DIR);
 		// printf("plot %d %d\n", encoder_left_get_value(),encoder_right_get_value());
-		
+
 		LL_mDelay(50);
 		nrf_rx_size = nrf_read_data(nrf_data);
 		if(nrf_rx_size) {
+			scheduler_add_event(1, 200*MS, SCHEDULER_ONE_SHOT, lost_connection);
+
 			printf("NRF RX (%u): [", nrf_rx_size);
 			for(uint8_t i = 0; i < nrf_rx_size; i++) { printf("%02X:", nrf_data[i]); }
 			printf("]\r\n");
+
+			int8_t forward_speed = (int8_t)nrf_data[0];
+			int8_t steer_speed = (int8_t)nrf_data[1];
+
+			int8_t left_speed = forward_speed + steer_speed;
+			int8_t right_speed = forward_speed - steer_speed;
+
+
+			if(left_speed > 0) {
+				motor_left_set_dir(1);
+				motor_left_set_speed((uint16_t)left_speed);
+			} 
+			else {
+				motor_left_set_dir(0);
+				motor_left_set_speed((uint16_t)-left_speed);
+			}
+			if(right_speed > 0) {
+				motor_right_set_dir(1);
+				motor_right_set_speed((uint16_t)right_speed);
+			} 
+			else {
+				motor_right_set_dir(0);
+				motor_right_set_speed((uint16_t)-right_speed);
+			}
 		}
+		else {
+			printf(".\n");
+		}
+
 
 		// printf("Status: %02X\r\n", nrf_get_status());
 		// LL_GPIO_SetOutputPin(LD2_GPIO_Port, LD2_Pin);
@@ -121,15 +159,17 @@ void SystemClock_Config(void) {
 }
 
 
-static uint32_t duty_cycle_percent = 0;
+// static uint32_t duty_cycle_percent = 0;
 extern void UserButton_Callback(void) {
-	duty_cycle_percent += 10;
-	if(duty_cycle_percent > 100) { duty_cycle_percent = 0; } 
-	motor_right_set_speed(duty_cycle_percent);
-	motor_left_set_speed(duty_cycle_percent);
+	// duty_cycle_percent += 10;
+	// if(duty_cycle_percent > 100) { duty_cycle_percent = 0; } 
+	// motor_right_set_speed(duty_cycle_percent);
+	// motor_left_set_speed(duty_cycle_percent);
 	// debug("Press, new DC: %lu\n", duty_cycle_percent);
 
 	// nrf_read_register(0x00);
+	
+	SPI2_NRF24L01_Init();
 }
 
 

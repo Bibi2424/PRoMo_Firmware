@@ -233,7 +233,7 @@ extern uint8_t nrf_read_data(uint8_t *data) {
 	status = spi_send_byte_waiting(NRF24L01_COMMAND_R_RX_PL_WID);
 	uint8_t rx_size = spi_send_byte_waiting(0xff);
 	CSN_HIGH;
-
+	
 	if(rx_size == 0 || !(status & NRF24L01_STATUS_DATA_READY_INT)) { return 0; }
 
 	CE_LOW;
