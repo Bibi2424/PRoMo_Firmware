@@ -24,6 +24,7 @@ void SystemClock_Config(void);
 /******************************************************************************/
 extern void blink_led(void) {
 	LL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+	LL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
 }
 
 

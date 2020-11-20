@@ -98,10 +98,10 @@
 #define NRF24L01_FEATURE_DYN_PAYLAOD_ENABLE		0x04
 
 
-#define CE_LOW		LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_2)
-#define CE_HIGH		LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_2);
-#define CSN_LOW		LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_12);
-#define CSN_HIGH	LL_GPIO_SetOutputPin(GPIOB, LL_GPIO_PIN_12);
+#define CE_LOW		LL_GPIO_ResetOutputPin(NRF_CE_GPIO_Port, NRF_CE_Pin)
+#define CE_HIGH		LL_GPIO_SetOutputPin(NRF_CE_GPIO_Port, NRF_CE_Pin);
+#define CSN_LOW		LL_GPIO_ResetOutputPin(NRF_CSN_GPIO_Port, NRF_CSN_Pin);
+#define CSN_HIGH	LL_GPIO_SetOutputPin(NRF_CSN_GPIO_Port, NRF_CSN_Pin);
 
 
 typedef struct {

@@ -50,11 +50,11 @@ extern void TIM34_Encoder_Init(void) {
 }
 
 
-extern uint16_t encoder_right_get_value(void) {
+extern uint16_t encoder_left_get_value(void) {
 	return LL_TIM_ReadReg(TIM3, CCR1);
 }
 
 
-extern uint16_t encoder_left_get_value(void) {
+extern uint16_t encoder_right_get_value(void) {
 	return LL_TIM_ReadReg(TIM4, CCR1);
 }

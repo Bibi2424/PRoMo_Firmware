@@ -82,6 +82,35 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 			nrf_read_multiple_bytes_register(NRF24L01_REGISTER_RX_ADDR_P0, ret, 5);
 			printf("R:[");for(i=0;i<5;i++){printf("%02X ", ret[i]);}printf("]\r\n");
 		}
+
+		else if(strcmp(word, "set-led") == 0) {
+			word = get_next_word(commands, FALSE);
+			uint8_t led_id = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
+			GPIO_TypeDef *led_port;
+			uint32_t led_pin;
+			if(led_id == 1) {
+				led_port = LD1_GPIO_Port;
+				led_pin = LD1_Pin;
+			}
+			else if(led_id == 2) {
+				led_port = LD2_GPIO_Port;
+				led_pin = LD2_Pin;
+			}
+			else {
+				return 0;
+			}
+			word = get_next_word(commands, FALSE);
+			if(strcmp(word, "off") == 0) {
+				LL_GPIO_SetOutputPin(led_port, led_pin);
+			}
+			else if(strcmp(word, "on") == 0) {
+				LL_GPIO_ResetOutputPin(led_port, led_pin);
+			}
+			else if(strcmp(word, "toggle") == 0) {
+				LL_GPIO_TogglePin(led_port, led_pin);
+			}
+		}
+
 		else {
 			debugf("Unknown command \'%s\'\r\n", word);
 		}

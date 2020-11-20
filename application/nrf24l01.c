@@ -3,6 +3,7 @@
 #include "nrf24l01.h"
 #include "global.h"
 #include "gpio.h"
+#include "main.h"
 
 #include "stm32f4xx_ll_spi.h"
 
@@ -19,7 +20,7 @@ extern void SPI2_NRF24L01_Init(void) {
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
 
 	//! CE - PB2, CSN - PC12
-	GPIO_InitStruct.Pin = LL_GPIO_PIN_2 | LL_GPIO_PIN_12;
+	GPIO_InitStruct.Pin = NRF_CE_Pin | NRF_CSN_Pin;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
 	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
@@ -29,7 +30,7 @@ extern void SPI2_NRF24L01_Init(void) {
 	CSN_HIGH;
 
 	//! SCK - PB13, MISO - PB14, MOSI - PB15
-	GPIO_InitStruct.Pin = LL_GPIO_PIN_13 | LL_GPIO_PIN_14 | LL_GPIO_PIN_15;
+	GPIO_InitStruct.Pin = NRF_SCK_Pin | NRF_MOSI_Pin | NRF_MISO_Pin;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
 	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;

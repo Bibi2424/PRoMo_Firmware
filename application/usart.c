@@ -28,7 +28,7 @@ void MX_USART6_UART_Init(void) {
 	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
 	GPIO_InitStruct.Alternate = LL_GPIO_AF_8;
-	LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+	LL_GPIO_Init(USART_GPIO_Port, &GPIO_InitStruct);
 
 	USART_InitStruct.BaudRate = USART6_BAUDRATE;
 	USART_InitStruct.DataWidth = LL_USART_DATAWIDTH_8B;

@@ -25,7 +25,8 @@ OPT = -Og
 # Build path
 BUILD_DIR = ../_build
 # GCC toolchain path
-GCC_PATH = "C:/Program Files (x86)/GNU Tools Arm Embedded/7 2018-q2-update/bin/"
+# GCC_PATH = "C:/Program Files (x86)/GNU Tools Arm Embedded/7 2018-q2-update/bin/"
+GCC_PATH = "C:/Program Files (x86)/GNU Tools Arm Embedded/9 2019-q4-major/bin/"
 # STM32 HAL librairies
 # STM32_LIBRAIRIES_PATH = C:/Users/Bibi/STM32Cube/Repository/STM32Cube_FW_F4_V1.21.0/Drivers
 STM32_LIBRAIRIES_PATH = ../lib/STM32_HAL_min
@@ -201,7 +202,8 @@ $(BUILD_DIR):
 # clean up
 #######################################
 clean:
-	-rm -fR $(BUILD_DIR)
+	@echo "    [RM]" $(BUILD_DIR)
+	@-rm -fR $(BUILD_DIR)
 
 #######################################
 # flash
@@ -209,6 +211,10 @@ clean:
 # flash: all
 flash: $(BUILD_DIR)/$(TARGET).hex | $(BUILD_DIR)
 	@$(STM32_FLASHER_EXEC)ST-LINK_CLI.exe -c -P $< 0x08000000 -Rst
+
+
+reset:
+	@$(STM32_FLASHER_EXEC)ST-LINK_CLI.exe -c -Rst
 
 #######################################
 # dependencies
