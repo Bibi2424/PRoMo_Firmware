@@ -32,11 +32,41 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 		}
 		//! MOTOR CONTROL COMMANDS
 		else if(strcmp(word, "set-speed") == 0) {
+			char wheels[10];
+			word = get_next_word(commands, FALSE);
+			strncpy(wheels, word, 10);
 			word = get_next_word(commands, FALSE);
 			uint8_t speed = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
 			if(speed > 100) { speed = 100; }
-			motor_right_set_speed(speed);
-			motor_left_set_speed(speed);
+			
+			if(strcmp(wheels, "left") == 0) {
+				motor_left_set_speed(speed);
+			}
+			else if(strcmp(wheels, "right") == 0) {
+				motor_right_set_speed(speed);
+			}
+			else if(strcmp(wheels, "both") == 0) {
+				motor_right_set_speed(speed);
+				motor_left_set_speed(speed);
+			}
+		}
+		else if(strcmp(word, "set-dir") == 0) {
+			char wheels[10];
+			word = get_next_word(commands, FALSE);
+			strncpy(wheels, word, 10);
+			word = get_next_word(commands, FALSE);
+			uint8_t dir = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
+
+			if(strcmp(wheels, "left") == 0) {
+				motor_left_set_dir(dir);
+			}
+			else if(strcmp(wheels, "right") == 0) {
+				motor_right_set_dir(dir);
+			}
+			else if(strcmp(wheels, "both") == 0) {
+				motor_right_set_dir(dir);
+				motor_left_set_dir(dir);
+			}
 		}
 		//! SPI COMMANDS
 		else if(strcmp(word, "spi-send") == 0) {

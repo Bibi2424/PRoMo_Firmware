@@ -1,6 +1,7 @@
 #define DEBUG_THIS_FILE	DEBUG_GPIO_FILE
 
 #include "gpio.h"
+#include "global.h"
 
 
 void MX_GPIO_Init(void) {
@@ -18,7 +19,7 @@ void MX_GPIO_Init(void) {
 	//! BP1
 	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTC, LL_SYSCFG_EXTI_LINE13);
 
-	EXTI_InitStruct.Line_0_31 = LL_EXTI_LINE_13;
+	EXTI_InitStruct.Line_0_31 = LL_EXTI_LINE_0;
 	EXTI_InitStruct.LineCommand = ENABLE;
 	EXTI_InitStruct.Mode = LL_EXTI_MODE_IT;
 	EXTI_InitStruct.Trigger = LL_EXTI_TRIGGER_FALLING;
@@ -28,10 +29,10 @@ void MX_GPIO_Init(void) {
 	LL_GPIO_SetPinMode(B1_GPIO_Port, B1_Pin, LL_GPIO_MODE_INPUT);
 
 	/* Configure NVIC for USER_BUTTON_EXTI_IRQn */
-	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_13);
-	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_13);
-	NVIC_EnableIRQ(EXTI15_10_IRQn); 
-	NVIC_SetPriority(EXTI15_10_IRQn,0x03);
+	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_0);
+	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_0);
+	NVIC_EnableIRQ(EXTI0_IRQn); 
+	NVIC_SetPriority(EXTI0_IRQn,0x03);
 	do {
 		LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
 		LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTC, LL_SYSCFG_EXTI_LINE13);
@@ -56,17 +57,17 @@ void MX_GPIO_Init(void) {
 	LL_GPIO_SetOutputPin(LD2_GPIO_Port, LD2_Pin);
 }
 
-void EXTI15_10_IRQHandler(void)
+void EXTI0_IRQHandler(void)
 {
 	// debugf("Push\r\n");
 	/* Manage Flags */
-	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_13) != RESET)
+	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_0) != RESET)
 	{
 
 		/* User button interrupt processing(function defined in main.c) */
 		UserButton_Callback();
 		//! Debounce
-		LL_mDelay(10);
-		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_13);
+		LL_mDelay(1);
+		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_0);
 	}
 }

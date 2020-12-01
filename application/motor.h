@@ -7,6 +7,10 @@
 
 #define MOTOR_DIR_FORWARD	1
 #define MOTOR_DIR_REVERSE	0
+#define MOTOR_DIR_DISABLE	0xFF
+
+// #define INVERSE_MOTOR_D
+#define INVERSE_MOTOR_G
 
 extern void TIM2_Motor_Init(void);
 extern void motor_right_set_dir(uint8_t dir);

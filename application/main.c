@@ -100,9 +100,9 @@ extern int main(void) {
 				motor_right_set_speed((uint16_t)-right_speed);
 			}
 		}
-		else {
-			printf(".\n");
-		}
+		// else {
+		// 	printf(".\n");
+		// }
 
 
 		// printf("Status: %02X\r\n", nrf_get_status());
@@ -162,6 +162,7 @@ void SystemClock_Config(void) {
 
 // static uint32_t duty_cycle_percent = 0;
 extern void UserButton_Callback(void) {
+	printf("Press\n");
 	// duty_cycle_percent += 10;
 	// if(duty_cycle_percent > 100) { duty_cycle_percent = 0; } 
 	// motor_right_set_speed(duty_cycle_percent);
@@ -170,7 +171,7 @@ extern void UserButton_Callback(void) {
 
 	// nrf_read_register(0x00);
 	
-	SPI2_NRF24L01_Init();
+	// SPI2_NRF24L01_Init();
 }
 
 

@@ -10,13 +10,20 @@ extern void TIM2_Motor_Init(void) {
 
   	//! Init GPIOs associated with the generation of PWM
 	LL_GPIO_InitTypeDef GPIO_InitStruct;
-	GPIO_InitStruct.Pin = TIM2_CH1_Pin | TIM2_CH2_Pin | TIM2_CH3_Pin | TIM2_CH4_Pin;
-	GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
+	GPIO_InitStruct.Pin = TIM2_CH1_Pin /*| TIM2_CH2_Pin*/ | TIM2_CH3_Pin | TIM2_CH4_Pin;
+	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
 	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
-	GPIO_InitStruct.Alternate = LL_GPIO_AF_1;
+	// GPIO_InitStruct.Alternate = LL_GPIO_AF_1;
 	LL_GPIO_Init(TIM2_CH1_GPIO_Port, &GPIO_InitStruct);
+	GPIO_InitStruct.Pin = TIM2_CH2_Pin;
+	LL_GPIO_Init(TIM2_CH2_GPIO_Port, &GPIO_InitStruct);
+
+	LL_GPIO_SetAFPin_8_15(TIM2_CH1_GPIO_Port, TIM2_CH1_Pin, LL_GPIO_AF_1);
+	LL_GPIO_SetAFPin_0_7(TIM2_CH2_GPIO_Port, TIM2_CH2_Pin, LL_GPIO_AF_1);
+	LL_GPIO_SetAFPin_0_7(TIM2_CH3_GPIO_Port, TIM2_CH3_Pin, LL_GPIO_AF_1);
+	LL_GPIO_SetAFPin_0_7(TIM2_CH4_GPIO_Port, TIM2_CH4_Pin, LL_GPIO_AF_1);
 
   	//! Init Timer2 for base generation of PWM
 	LL_TIM_InitTypeDef LL_TIM_InitStruct;
@@ -52,46 +59,73 @@ extern void TIM2_Motor_Init(void) {
   	LL_TIM_OC_EnablePreload(TIM2, LL_TIM_CHANNEL_CH4);
 	LL_TIM_CC_EnableChannel(TIM2, LL_TIM_CHANNEL_CH4);
 
-  	motor_right_set_dir(MOTOR_DIR_FORWARD);
-  	motor_left_set_dir(MOTOR_DIR_FORWARD);
+  	motor_right_set_dir(MOTOR_DIR_DISABLE);
+  	motor_right_set_speed(0);
+  	motor_left_set_dir(MOTOR_DIR_DISABLE);
   	motor_left_set_speed(0);
   	LL_TIM_EnableCounter(TIM2);			//! Enable counter
 }
 
 
-extern void motor_right_set_dir(uint8_t dir) {
-	if(dir) {
+extern void motor_left_set_dir(uint8_t dir) {
+#ifdef INVERSE_MOTOR_G
+	dir = dir ^ 1;
+#endif
+	if(dir == MOTOR_DIR_FORWARD) {
+		LL_GPIO_ResetOutputPin(TIM2_CH1_GPIO_Port, TIM2_CH1_Pin);
+		LL_GPIO_ResetOutputPin(TIM2_CH2_GPIO_Port, TIM2_CH2_Pin);
 		LL_GPIO_SetPinMode(TIM2_CH1_GPIO_Port, TIM2_CH1_Pin, LL_GPIO_MODE_OUTPUT);
 		LL_GPIO_SetPinMode(TIM2_CH2_GPIO_Port, TIM2_CH2_Pin, LL_GPIO_MODE_ALTERNATE);
 
 		LL_GPIO_SetOutputPin(TIM2_CH1_GPIO_Port, TIM2_CH1_Pin);
 	}
-	else {
+	else if(dir == MOTOR_DIR_REVERSE) {
+		LL_GPIO_ResetOutputPin(TIM2_CH1_GPIO_Port, TIM2_CH1_Pin);
+		LL_GPIO_ResetOutputPin(TIM2_CH2_GPIO_Port, TIM2_CH2_Pin);
 		LL_GPIO_SetPinMode(TIM2_CH1_GPIO_Port, TIM2_CH1_Pin, LL_GPIO_MODE_ALTERNATE);
 		LL_GPIO_SetPinMode(TIM2_CH2_GPIO_Port, TIM2_CH2_Pin, LL_GPIO_MODE_OUTPUT);
 
 		LL_GPIO_SetOutputPin(TIM2_CH2_GPIO_Port, TIM2_CH2_Pin);
 	}
+	else {
+		LL_GPIO_SetPinMode(TIM2_CH1_GPIO_Port, TIM2_CH1_Pin, LL_GPIO_MODE_OUTPUT);
+		LL_GPIO_SetPinMode(TIM2_CH2_GPIO_Port, TIM2_CH2_Pin, LL_GPIO_MODE_OUTPUT);
+		LL_GPIO_ResetOutputPin(TIM2_CH1_GPIO_Port, TIM2_CH1_Pin);
+		LL_GPIO_ResetOutputPin(TIM2_CH2_GPIO_Port, TIM2_CH2_Pin);
+	}
 }
 
 
-extern void motor_left_set_dir(uint8_t dir) {
-	if(dir) {
+extern void motor_right_set_dir(uint8_t dir) {
+#ifdef INVERSE_MOTOR_R
+	dir = dir ^ 1;
+#endif
+	if(dir == MOTOR_DIR_FORWARD) {
+		LL_GPIO_ResetOutputPin(TIM2_CH3_GPIO_Port, TIM2_CH3_Pin);
+		LL_GPIO_ResetOutputPin(TIM2_CH4_GPIO_Port, TIM2_CH4_Pin);
 		LL_GPIO_SetPinMode(TIM2_CH3_GPIO_Port, TIM2_CH3_Pin, LL_GPIO_MODE_OUTPUT);
 		LL_GPIO_SetPinMode(TIM2_CH4_GPIO_Port, TIM2_CH4_Pin, LL_GPIO_MODE_ALTERNATE);
 
 		LL_GPIO_SetOutputPin(TIM2_CH3_GPIO_Port, TIM2_CH3_Pin);
 	}
-	else {
+	else if(dir == MOTOR_DIR_REVERSE) {
+		LL_GPIO_ResetOutputPin(TIM2_CH3_GPIO_Port, TIM2_CH3_Pin);
+		LL_GPIO_ResetOutputPin(TIM2_CH4_GPIO_Port, TIM2_CH4_Pin);
 		LL_GPIO_SetPinMode(TIM2_CH3_GPIO_Port, TIM2_CH3_Pin, LL_GPIO_MODE_ALTERNATE);
 		LL_GPIO_SetPinMode(TIM2_CH4_GPIO_Port, TIM2_CH4_Pin, LL_GPIO_MODE_OUTPUT);
 
 		LL_GPIO_SetOutputPin(TIM2_CH4_GPIO_Port, TIM2_CH4_Pin);
 	}
+	else {
+		LL_GPIO_SetPinMode(TIM2_CH3_GPIO_Port, TIM2_CH3_Pin, LL_GPIO_MODE_OUTPUT);
+		LL_GPIO_SetPinMode(TIM2_CH4_GPIO_Port, TIM2_CH4_Pin, LL_GPIO_MODE_OUTPUT);
+		LL_GPIO_ResetOutputPin(TIM2_CH3_GPIO_Port, TIM2_CH3_Pin);
+		LL_GPIO_ResetOutputPin(TIM2_CH4_GPIO_Port, TIM2_CH4_Pin);
+	}
 }
 
 
-extern void motor_right_set_speed(uint32_t speed_percent) {
+extern void motor_left_set_speed(uint32_t speed_percent) {
 	//! speed = MAX*percent/100
 	uint32_t period = (LL_TIM_GetAutoReload(TIM2) + 1);
 	uint32_t speed = (uint32_t)((uint64_t)period * (uint64_t)speed_percent) / 100;
@@ -101,7 +135,7 @@ extern void motor_right_set_speed(uint32_t speed_percent) {
 }
 
 
-extern void motor_left_set_speed(uint32_t speed_percent) {
+extern void motor_right_set_speed(uint32_t speed_percent) {
 	//! speed = MAX*percent/100
 	uint32_t period = (LL_TIM_GetAutoReload(TIM2) + 1);
 	uint32_t speed = (uint32_t)((uint64_t)period * (uint64_t)speed_percent) / 100;

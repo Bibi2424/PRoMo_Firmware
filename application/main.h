@@ -17,8 +17,8 @@
 //! NOTE: Go to BSP.h
 
 //! User button
-#define B1_Pin LL_GPIO_PIN_13
-#define B1_GPIO_Port GPIOC
+#define B1_Pin LL_GPIO_PIN_0
+#define B1_GPIO_Port GPIOA
 
 //! User LEDs
 #define LD1_Pin LL_GPIO_PIN_1

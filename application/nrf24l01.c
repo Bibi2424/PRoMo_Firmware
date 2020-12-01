@@ -103,6 +103,7 @@ extern void SPI2_NRF24L01_Init(void) {
 
 	if(config != nrf_read_register(NRF24L01_REGISTER_CONFIG)) {
 		printf("NRF Init Fail\r\n");
+		return;
 	}
 	printf("NRF Init OK\r\n");
 	// CE_HIGH;
