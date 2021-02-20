@@ -39,23 +39,33 @@ STM32_FLASHER_EXEC := "C:/Program Files (x86)/STMicroelectronics/STM32 ST-LINK U
 # source
 ######################################
 # C sources
-vpath %.c $(STM32_LIBRAIRIES_SRC)
-# vpath %.c $(STM32_LIBRAIRIES_SRC) ../lib/test
+# vpath %.c $(STM32_LIBRAIRIES_SRC)
+vpath %.c $(STM32_LIBRAIRIES_SRC) ../lib/VL53L0X/
 
+# Application
 C_SOURCES = main.c
 C_SOURCES += stm32f4xx_it.c
 C_SOURCES += system_stm32f4xx.c
 C_SOURCES += gpio.c
 C_SOURCES += usart.c
+C_SOURCES += i2c.c
 C_SOURCES += syscalls.c
 C_SOURCES += encoder.c
 C_SOURCES += motor.c
 C_SOURCES += process_serial_commands.c
 C_SOURCES += scheduler.c
 C_SOURCES += nrf24l01.c
+
+# Test lib
 # C_SOURCES += test.c
+
+# VL53L0X lib
+C_SOURCES += VL53L0X.c
+
+# STM32_HAL
 C_SOURCES += stm32f4xx_ll_gpio.c
 C_SOURCES += stm32f4xx_ll_usart.c
+C_SOURCES += stm32f4xx_ll_i2c.c
 C_SOURCES += stm32f4xx_ll_tim.c
 C_SOURCES += stm32f4xx_ll_dma.c
 C_SOURCES += stm32f4xx_ll_rcc.c
@@ -72,6 +82,8 @@ AS_INCLUDES =
 
 INCS  = .
 # INCS += ../lib/test
+INCS += ../lib/VL53L0X
+
 INCS += $(STM32_LIBRAIRIES_INC)
 INCS += $(STM32_LIBRAIRIES_PATH)/CMSIS/Device/ST/STM32F4xx/Include
 INCS += $(STM32_LIBRAIRIES_PATH)/CMSIS/Include

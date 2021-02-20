@@ -3,10 +3,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include "process_serial_commands.h"
+#include "main.h"
 #include "global.h"
+#include "gpio.h"
 #include "usart.h"
 #include "motor.h"
 #include "nrf24l01.h"
+#include "i2c.h"
 
 static char commands[RX_BUFFER_SIZE];
 
@@ -30,6 +33,58 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 			uint8_t echo = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
 			set_echo(echo);
 		}
+		else if(strcmp(word, "wait") == 0) {
+			word = get_next_word(commands, FALSE);
+			uint32_t time_ms = (uint32_t)(strtoul(word, NULL, 0));
+			LL_mDelay(time_ms);
+		}
+		else if(strcmp(word, "reset") == 0) {
+			NVIC_SystemReset();
+		}
+
+		//! I2C
+		else if(strcmp(word, "i2c.write") == 0) {
+			word = get_next_word(commands, FALSE);
+			uint8_t address = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
+			word = get_next_word(commands, FALSE);
+			uint8_t mem = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
+			word = get_next_word(commands, FALSE);
+			uint8_t size = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
+			if(size > 10) { size = 10; }
+
+			uint8_t i;
+			uint8_t buffer[10] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09};
+			uint8_t res = i2c1_full_write(address, mem, buffer, size);
+			if(res) {
+				printf("Error [%u]\n", res);
+			}
+			else {
+				printf("Buffer: [");
+				for(i = 0; i < size; i++) { printf("%02X:", buffer[i]); }
+				printf("\b]\n");
+			}
+		}
+		else if(strcmp(word, "i2c.read") == 0) {
+			word = get_next_word(commands, FALSE);
+			uint8_t address = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
+			word = get_next_word(commands, FALSE);
+			uint8_t mem = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
+			word = get_next_word(commands, FALSE);
+			uint8_t size = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
+
+			uint8_t i;
+			uint8_t buffer[20];
+			uint8_t res = i2c_full_read(I2C1, address, mem, buffer, size);
+			if(res) {
+				printf("Error [%u]\n", res);
+			}
+			else {
+				printf("Buffer: [");
+				for(i = 0; i < size; i++) { printf("%02X:", buffer[i]); }
+				printf("\b]\n");
+			}
+		}
+
 		//! MOTOR CONTROL COMMANDS
 		else if(strcmp(word, "set-speed") == 0) {
 			char wheels[10];
@@ -68,6 +123,7 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 				motor_left_set_dir(dir);
 			}
 		}
+
 		//! SPI COMMANDS
 		else if(strcmp(word, "spi-send") == 0) {
 			word = get_next_word(commands, FALSE);
@@ -85,6 +141,7 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 			printf("]\r\n");
 			CSN_HIGH;
 		}
+
 		//! NRF COMMANDS
 		else if(strcmp(word, "nrf-status") == 0) {
 			uint8_t status = nrf_get_status();
@@ -113,6 +170,7 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 			printf("R:[");for(i=0;i<5;i++){printf("%02X ", ret[i]);}printf("]\r\n");
 		}
 
+		//! LEDS
 		else if(strcmp(word, "set-led") == 0) {
 			word = get_next_word(commands, FALSE);
 			uint8_t led_id = (uint8_t)(strtoul(word, NULL, 0) & 0xff);

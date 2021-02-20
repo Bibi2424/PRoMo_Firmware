@@ -14,6 +14,7 @@
 #define DEBUG_SCHEDULER_FILE 					0
 #define DEBUG_USART_FILE						1
 #define DEBUG_NRF24L01_FILE						1
+#define DEBUG_I2C_FILE							1
 
 /*------------------------- MACRO -------------------------*/
 //! define DEBUG_THIS_FILE in each files you want to print

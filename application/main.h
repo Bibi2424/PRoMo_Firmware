@@ -2,6 +2,7 @@
 #define MAIN_H
 
 #include <stdio.h>
+#include "stm32f4xx.h"
 #include "stm32f4xx_ll_rcc.h"
 #include "stm32f4xx_ll_bus.h"
 #include "stm32f4xx_ll_system.h"
@@ -11,8 +12,10 @@
 #include "stm32f4xx_ll_pwr.h"
 #include "stm32f4xx_ll_dma.h"
 #include "stm32f4xx_ll_usart.h"
-#include "stm32f4xx.h"
 #include "stm32f4xx_ll_gpio.h"
+#include "stm32f4xx_ll_i2c.h"
+
+#include "debug.h"
 
 //! NOTE: Go to BSP.h
 
@@ -25,6 +28,11 @@
 #define LD1_GPIO_Port GPIOA
 #define LD2_Pin LL_GPIO_PIN_8
 #define LD2_GPIO_Port GPIOC
+
+//! User LEDs
+#define DEBUG_Pin_1 LL_GPIO_PIN_0
+#define DEBUG_Pin_2 LL_GPIO_PIN_1
+#define DEBUG_Pin_Port GPIOB
 
 //! Programming pins
 #define TMS_Pin LL_GPIO_PIN_13
@@ -69,20 +77,33 @@
 #define NRF_IRQ_Pin	LL_GPIO_PIN_2
 #define NRF_IRQ_GPIO_Port GPIOB
 
-//! FTDI on UART1
-
 //! VL53l01 on I2C1
-
-//! Aux UART6
-#define USART_TX_Pin LL_GPIO_PIN_6
-#define USART_TX_GPIO_Port GPIOC
-#define USART_RX_Pin LL_GPIO_PIN_7
-#define USART_RX_GPIO_Port GPIOC
-#define USART_GPIO_Port GPIOC
 
 //! MPU6050 and Aux I2C2
 
 //! Aux SPI1
+
+//! FTDI on UART1
+#define USART1_TX_Pin LL_GPIO_PIN_9
+#define USART1_TX_GPIO_Port GPIOA
+#define USART1_RX_Pin LL_GPIO_PIN_10
+#define USART1_RX_GPIO_Port GPIOA
+#define USART1_CTS_Pin LL_GPIO_PIN_11
+#define USART1_CTS_GPIO_Port GPIOA
+#define USART1_RTSPin LL_GPIO_PIN_12
+#define USART1_RTSGPIO_Port GPIOA
+#define USART1_GPIO_Port GPIOA
+
+//! Aux UART6
+#define USART6_TX_Pin LL_GPIO_PIN_6
+#define USART6_TX_GPIO_Port GPIOC
+#define USART6_RX_Pin LL_GPIO_PIN_7
+#define USART6_RX_GPIO_Port GPIOC
+#define USART6_GPIO_Port GPIOC
+
+//! Debug
+#define DEBUG_UART			6
+#define DEBUG_BAUDRATE		921600UL
 
 
 #ifndef NVIC_PRIORITYGROUP_0
@@ -98,6 +119,7 @@
 
 extern void UserButton_Callback(void);
 extern void _Error_Handler(char *, int);
+extern uint32_t millis(void);
 
 #define Error_Handler() _Error_Handler(__FILE__, __LINE__)
 
