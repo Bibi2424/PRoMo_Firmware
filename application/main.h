@@ -14,6 +14,7 @@
 #include "stm32f4xx_ll_usart.h"
 #include "stm32f4xx_ll_gpio.h"
 #include "stm32f4xx_ll_i2c.h"
+#include "stm32f4xx_ll_tim.h"
 
 #include "debug.h"
 
@@ -78,6 +79,14 @@
 #define NRF_IRQ_GPIO_Port GPIOB
 
 //! VL53l01 on I2C1
+#define VL53L0X_I2C_Port	GPIOB
+#define VL53L0X_I2C_SCL		LL_GPIO_PIN_8
+#define VL53L0X_I2C_SDA		LL_GPIO_PIN_9
+#define VL53L0X_XSHUT_Port	GPIOC
+#define VL53L0X_XSHUT1_Pin	LL_GPIO_PIN_0
+#define VL53L0X_XSHUT2_Pin	LL_GPIO_PIN_1
+#define VL53L0X_XSHUT3_Pin	LL_GPIO_PIN_2
+#define VL53L0X_XSHUT4_Pin	LL_GPIO_PIN_3
 
 //! MPU6050 and Aux I2C2
 

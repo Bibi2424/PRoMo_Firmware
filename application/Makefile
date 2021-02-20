@@ -55,6 +55,7 @@ C_SOURCES += motor.c
 C_SOURCES += process_serial_commands.c
 C_SOURCES += scheduler.c
 C_SOURCES += nrf24l01.c
+C_SOURCES += sensors.c
 
 # Test lib
 # C_SOURCES += test.c

@@ -12,48 +12,11 @@ static uint32_t TM_I2C_Timeout;
 
 
 extern void i2c_init(I2C_TypeDef *I2Cx) {
-    LL_I2C_InitTypeDef I2C_InitStruct = {0};
-
-    //! Move GPIO init elsewhere
-    LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-    //! Move to VL53L0X_multi
-    LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
-    /**VL53L0X XSHUT Pins
-    PC0   ------> VL53L0X_SHUT_1
-    PC1   ------> VL53L0X_SHUT_2
-    PC2   ------> VL53L0X_SHUT_3
-    PC3   ------> VL53L0X_SHUT_4
-    */
-    GPIO_InitStruct.Pin = LL_GPIO_PIN_0 | LL_GPIO_PIN_1 | LL_GPIO_PIN_2 | LL_GPIO_PIN_3;
-    GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
-    GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-    GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-    LL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-    LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_0);
-    LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_1);
-    LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_2);
-    LL_GPIO_SetOutputPin(GPIOC, LL_GPIO_PIN_3);
-
-    LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
-    /**I2C1 GPIO Configuration
-    PB8   ------> I2C1_SCL
-    PB9   ------> I2C1_SDA
-    */
-    GPIO_InitStruct.Pin = LL_GPIO_PIN_8 | LL_GPIO_PIN_9;
-    GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
-    GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
-    GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
-    GPIO_InitStruct.Alternate = LL_GPIO_AF_4;
-    LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-    /* Peripheral clock enable */
+    //! Peripheral clock enable
     LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C1);
 
-    /** I2C Initialization
-    */
+    //! I2C Initialization
+    LL_I2C_InitTypeDef I2C_InitStruct = {0};
     LL_I2C_DisableOwnAddress2(I2Cx);
     LL_I2C_DisableGeneralCall(I2Cx);
     LL_I2C_EnableClockStretching(I2Cx);
@@ -65,11 +28,7 @@ extern void i2c_init(I2C_TypeDef *I2Cx) {
     I2C_InitStruct.OwnAddrSize = LL_I2C_OWNADDRESS1_7BIT;
     LL_I2C_Init(I2Cx, &I2C_InitStruct);
     LL_I2C_SetOwnAddress2(I2Cx, 0);
-
 }
-
-
-
 
 
 extern uint8_t i2c_full_write(I2C_TypeDef *I2Cx, uint8_t address, uint8_t mem, uint8_t const *buffer, uint8_t size) {

@@ -1,8 +1,6 @@
 #ifndef MOTOR_H
 #define MOTOR_H
 
-#include "stm32f4xx_ll_tim.h"
-#include "stm32f4xx_ll_rcc.h"
 #include "main.h"
 
 #define MOTOR_DIR_FORWARD	1
