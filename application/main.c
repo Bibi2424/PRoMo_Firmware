@@ -11,9 +11,20 @@
 #include "scheduler.h"
 #include "VL53L0X.h"
 #include "sensors.h"
+#include "pid_controller.h"
+
 
 static void LL_Init(void);
 void SystemClock_Config(void);
+
+
+
+#define NRF_INTERVAL                10
+static uint32_t nrf_last_execution = 0;
+#define MOTOR_CONTROL_INTERVAL      50
+static uint32_t motor_control_last_execution = 0;
+
+static int32_t target_speed_left = 0, target_speed_right = 0;
 
 
 /******************************************************************************/
@@ -31,14 +42,12 @@ extern void blink_led(void) {
     LL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
 }
 
-extern void range_one(void) {
-    
-}
-
 
 static void lost_connection(void) {
-    motor_left_set_speed(0);
-    motor_right_set_speed(0);
+    target_speed_left = 0;
+    target_speed_right = 0;
+    // motor_left_set_speed(0);
+    // motor_right_set_speed(0);
     printf("Lost Connection with Remote\r\n");
 }
 
@@ -62,19 +71,13 @@ extern int main(void) {
     TIM34_Encoder_Init();
     TIM2_Motor_Init();
 
-    SPI2_NRF24L01_Init();
+    SPI2_NRF24L01_Init(2);
+
+    sensors_VL53L0X_init();
 
     scheduler_init();
     scheduler_add_event(0, 1*SECOND, SCHEDULER_ALWAYS, blink_led);
     // scheduler_add_event(1, 100*MS, SCHEDULER_ONE, blink_led);
-    // scheduler_add_event(1, 500*MS, SCHEDULER_ALWAYS, range_one);
-
-    sensors_VL53L0X_init();
-    // i2c1_init();
-    // bool res = initVL53L0X(1);
-    // if(res == false) { printf("Error Init VL53L0X\n"); }
-    // res = setMeasurementTimingBudget( 50 * 1000UL );     // integrate over 500 ms per measurement
-    // if(res == false) { printf("Error setring VL53L0X\n"); }
 
     debugf("Init Done\r\n");
 
@@ -82,9 +85,19 @@ extern int main(void) {
 
     uint8_t nrf_rx_size = 0;
     uint8_t nrf_data[32] = {0};
+    nrf_set_rx_mode();
 
     statInfo_t xTraStats;
     statInfo_t ranges[4];
+
+    pid_controller_t pid_speed_left = {
+        .compute_interval = 50,
+        .proportional_gain = 1,
+        .integral_gain = 0,
+        .derivative_gain = 0
+    };
+    pid_controller_t pid_speed_right = pid_speed_left;
+
 
     while (1) {
         // printf("Left - [Speed: %u, Dir:%u]\r\n", encoder_left_get_value(), READ_BIT(TIM3->CR1, TIM_CR1_DIR)==TIM_CR1_DIR);
@@ -92,10 +105,10 @@ extern int main(void) {
         // printf("plot %d %d\n", encoder_left_get_value(),encoder_right_get_value());
 
         //! Basic ranging
-        printf("VL53L0X Range...\n");
-        LL_mDelay(500);
-        sensors_VL53L0X_range_all(ranges);
-        printf("F: %u, L: %u, R: %u, B: %u\n", ranges[0].rawDistance, ranges[1].rawDistance, ranges[2].rawDistance, ranges[3].rawDistance);
+        // printf("VL53L0X Range...\n");
+        // LL_mDelay(500);
+        // sensors_VL53L0X_range_all(ranges);
+        // printf("F: %u, L: %u, R: %u, B: %u\n", ranges[0].rawDistance, ranges[1].rawDistance, ranges[2].rawDistance, ranges[3].rawDistance);
         
         // uint16_t range_value;
         // range_value = readRangeSingleMillimeters( &xTraStats );  // blocks until measurement is finished
@@ -108,43 +121,67 @@ extern int main(void) {
         // if(timeoutOccurred()) { debugf(" !!! Timeout !!! \n"); }
         // else { debugf("\n"); }
 
-        //! Remote to motor
-        // LL_mDelay(50);
-        // nrf_rx_size = nrf_read_data(nrf_data);
-        // if(nrf_rx_size) {
-        //  scheduler_add_event(1, 200*MS, SCHEDULER_ONE_SHOT, lost_connection);
+        //! Remote 
+        // debugf("NRF status: [%02X]\n", nrf_get_status());
 
-        //  printf("NRF RX (%u): [", nrf_rx_size);
-        //  for(uint8_t i = 0; i < nrf_rx_size; i++) { printf("%02X:", nrf_data[i]); }
-        //  printf("]\r\n");
+        uint32_t current_time = millis();
 
-        //  int8_t forward_speed = (int8_t)nrf_data[0];
-        //  int8_t steer_speed = (int8_t)nrf_data[1];
+        if(current_time - nrf_last_execution > NRF_INTERVAL) {
+            nrf_last_execution = current_time;
 
-        //  int8_t left_speed = forward_speed + steer_speed;
-        //  int8_t right_speed = forward_speed - steer_speed;
+            nrf_rx_size = nrf_has_data();
+            if(nrf_rx_size) {
+                nrf_read_data(nrf_data);
+                scheduler_add_event(1, 200*MS, SCHEDULER_ONE_SHOT, lost_connection);
+
+                int8_t forward_speed = (int8_t)nrf_data[0];
+                int8_t steer_speed = (int8_t)nrf_data[1];
+
+                target_speed_left = forward_speed + (int32_t)steer_speed / 3;
+                target_speed_right = forward_speed - (int32_t)steer_speed / 3;
+                debugf("NRF: %ld - %ld\n", target_speed_left, target_speed_right);
+            }
+            // else {
+            //     printf(".");
+            //     LL_mDelay(100);
+            // }
+        } 
 
 
-        //  if(left_speed > 0) {
-        //      motor_left_set_dir(1);
-        //      motor_left_set_speed((uint16_t)left_speed);
-        //  } 
-        //  else {
-        //      motor_left_set_dir(0);
-        //      motor_left_set_speed((uint16_t)-left_speed);
-        //  }
-        //  if(right_speed > 0) {
-        //      motor_right_set_dir(1);
-        //      motor_right_set_speed((uint16_t)right_speed);
-        //  } 
-        //  else {
-        //      motor_right_set_dir(0);
-        //      motor_right_set_speed((uint16_t)-right_speed);
-        //  }
-        // }
-        // else {
-        //  printf(".\n");
-        // }
+        if(current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL) {
+            motor_control_last_execution = current_time;
+
+            //! Encoder
+            int32_t current_left_speed = encoder_left_get_speed();
+            int32_t current_right_speed = encoder_right_get_speed();
+            debugf("ENCODER: %ld - %ld\n", current_left_speed, current_right_speed);
+
+
+            //! PID
+            int32_t motor_left_command = target_speed_left;
+            int32_t motor_right_command = target_speed_right;
+            // int32_t motor_left_command = pid_compute(&pid_speed_left, target_speed_left, current_left_speed);
+            // int32_t motor_right_command = pid_compute(&pid_speed_right, target_speed_right, current_right_speed);
+            debugf("PID OUT: %ld - %ld\n", motor_left_command, motor_right_command);
+
+            //! Motors
+            if(motor_left_command > 0) {
+                motor_left_set_dir(1);
+                motor_left_set_speed((uint16_t)motor_left_command);
+            } 
+            else {
+                motor_left_set_dir(0);
+                motor_left_set_speed((uint16_t)-motor_left_command);
+            }
+            if(motor_right_command > 0) {
+                motor_right_set_dir(1);
+                motor_right_set_speed((uint16_t)motor_right_command);
+            } 
+            else {
+                motor_right_set_dir(0);
+                motor_right_set_speed((uint16_t)-motor_right_command);
+            }
+        }
 
         //! Basic blink
         // printf("Status: %02X\r\n", nrf_get_status());

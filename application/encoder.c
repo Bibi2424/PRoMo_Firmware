@@ -58,3 +58,25 @@ extern uint16_t encoder_left_get_value(void) {
 extern uint16_t encoder_right_get_value(void) {
 	return LL_TIM_ReadReg(TIM4, CCR1);
 }
+
+//! Add dt
+extern int16_t encoder_left_get_speed(void) {
+	static uint16_t last_value;
+
+	uint16_t current_value = encoder_left_get_value();
+	int16_t speed = (int16_t)current_value - (int16_t)last_value;
+	last_value = current_value;
+
+	return speed;
+}
+
+
+extern int16_t encoder_right_get_speed(void) {
+	static uint16_t last_value;
+
+	uint16_t current_value = encoder_right_get_value();
+	int16_t speed = (int16_t)current_value - (int16_t)last_value;
+	last_value = current_value;
+
+	return speed;
+}

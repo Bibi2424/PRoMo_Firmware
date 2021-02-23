@@ -56,6 +56,7 @@ C_SOURCES += process_serial_commands.c
 C_SOURCES += scheduler.c
 C_SOURCES += nrf24l01.c
 C_SOURCES += sensors.c
+C_SOURCES += pid_controller.c
 
 # Test lib
 # C_SOURCES += test.c
@@ -223,7 +224,7 @@ clean:
 #######################################
 # flash: all
 flash: $(BUILD_DIR)/$(TARGET).hex | $(BUILD_DIR)
-	@$(STM32_FLASHER_EXEC)ST-LINK_CLI.exe -c -P $< 0x08000000 -Rst
+	@$(STM32_FLASHER_EXEC)ST-LINK_CLI.exe -c HOTPLUG -P $< 0x08000000 -Rst
 
 
 reset:

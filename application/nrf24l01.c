@@ -1,20 +1,21 @@
 #define DEBUG_THIS_FILE	DEBUG_NRF24L01_FILE
 
+#include <string.h>
 #include "nrf24l01.h"
 #include "global.h"
 #include "gpio.h"
-#include "main.h"
 
-#include "stm32f4xx_ll_spi.h"
 
-static nrf24l01_config nrf24l01_default_config = {
+#define CONFIG_FOR_RX_MODE 	(NRF24L01_CONFIG_CRC_ENABLE | NRF24L01_CONFIG_POWER_UP | NRF24L01_CONFIG_PRIM_RX)
+
+static nrf24l01_config_t nrf24l01_config = {
 	.rx_address = {1, 2, 3, 4, 0},
 	.channel = 100,
 	.payload_size = 32,
 };
 
 //! TODO: Split the file into SPI and NRF stuff
-extern void SPI2_NRF24L01_Init(void) {
+extern bool SPI2_NRF24L01_Init(uint8_t radio_id) {
 	LL_GPIO_InitTypeDef GPIO_InitStruct;
 
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
@@ -44,8 +45,8 @@ extern void SPI2_NRF24L01_Init(void) {
 
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_SPI2);
 
-	// LL_SPI_SetBaudRatePrescaler(SPI2, LL_SPI_BAUDRATEPRESCALER_DIV32); //1.3MHz
-	LL_SPI_SetBaudRatePrescaler(SPI2, LL_SPI_BAUDRATEPRESCALER_DIV64); //666kHz
+	LL_SPI_SetBaudRatePrescaler(SPI2, LL_SPI_BAUDRATEPRESCALER_DIV32); //1.3MHz
+	// LL_SPI_SetBaudRatePrescaler(SPI2, LL_SPI_BAUDRATEPRESCALER_DIV64); //666kHz
 	LL_SPI_SetTransferDirection(SPI2, LL_SPI_FULL_DUPLEX);
 	LL_SPI_SetClockPhase(SPI2, LL_SPI_PHASE_1EDGE);
 	LL_SPI_SetClockPolarity(SPI2, LL_SPI_POLARITY_LOW);
@@ -63,50 +64,51 @@ extern void SPI2_NRF24L01_Init(void) {
 	LL_mDelay(100);
 
 	//! NOTE: Need reset of all register
-	// Set rx_address
-	nrf_write_multiple_bytes_register(NRF24L01_REGISTER_RX_ADDR_P1, nrf24l01_default_config.rx_address, 5);
 	// Set chanel
-	nrf_write_register(NRF24L01_REGISTER_RF_CH, nrf24l01_default_config.channel);
-	// Set pipeline size
-	// nrf_write_register(NRF24L01_REGISTER_RX_PW_P0, &nrf24l01_default_config.payload_size);
-	// nrf_write_register(NRF24L01_REGISTER_RX_PW_P1, &nrf24l01_default_config.payload_size);
-	// nrf_write_register(NRF24L01_REGISTER_RX_PW_P2, &nrf24l01_default_config.payload_size);
-	// nrf_write_register(NRF24L01_REGISTER_RX_PW_P3, &nrf24l01_default_config.payload_size);
-	// nrf_write_register(NRF24L01_REGISTER_RX_PW_P4, &nrf24l01_default_config.payload_size);
-	// nrf_write_register(NRF24L01_REGISTER_RX_PW_P5, &nrf24l01_default_config.payload_size);
+	nrf_write_register(NRF24L01_REGISTER_RF_CH, nrf24l01_config.channel);
 	// Set RF settings
 	nrf_write_register(NRF24L01_REGISTER_RF_SETUP, NRF24L01_RF_SETTINGS_2MBPS | NRF24L01_RF_SETTINGS_0DBM);
 	// Set retransmission
-	nrf_write_register(NRF24L01_REGISTER_SETUP_RETR, NRF24L01_RETR_DELAY_IN_250MS(2) | NRF24L01_RETR_COUNT(15));
+	// nrf_write_register(NRF24L01_REGISTER_SETUP_RETR, NRF24L01_RETR_DELAY_IN_250MS(2) | NRF24L01_RETR_COUNT(15));
+	nrf_write_register(NRF24L01_REGISTER_SETUP_RETR, NRF24L01_RETR_DELAY_IN_250MS(1) | NRF24L01_RETR_COUNT(15));
+	// Set rx_address
+	nrf24l01_config.rx_address[4] = radio_id;
+	nrf_write_multiple_bytes_register(NRF24L01_REGISTER_RX_ADDR_P1, nrf24l01_config.rx_address, 5);
 	// Set Dynamic payload length
 	nrf_write_register(NRF24L01_REGISTER_DYNPD, NRF24L01_DYNPD_ENABLE_PIPE(0) | NRF24L01_DYNPD_ENABLE_PIPE(1));
 	// Enable dynamic payload size, ACK
 	nrf_write_register(NRF24L01_REGISTER_FEATURE, 
 		NRF24L01_FEATURE_NOACK_PAYLOAD_ENABLE | NRF24L01_FEATURE_ACK_ENABLE | NRF24L01_FEATURE_DYN_PAYLAOD_ENABLE
+		// 0x01 | 0x02 | 0x041
 	);
+	// Set pipeline size
+	// nrf_write_register(NRF24L01_REGISTER_RX_PW_P0, nrf24l01_config.payload_size);
+	// nrf_write_register(NRF24L01_REGISTER_RX_PW_P1, nrf24l01_config.payload_size);
+	// nrf_write_register(NRF24L01_REGISTER_RX_PW_P2, nrf24l01_config.payload_size);
+	// nrf_write_register(NRF24L01_REGISTER_RX_PW_P3, nrf24l01_config.payload_size);
+	// nrf_write_register(NRF24L01_REGISTER_RX_PW_P4, nrf24l01_config.payload_size);
+	// nrf_write_register(NRF24L01_REGISTER_RX_PW_P5, nrf24l01_config.payload_size);
 	// Flush buffers
 	nrf_flush_rx_buffer();
 	nrf_flush_tx_buffer();
 	// Clear Pending Interrupt
 	nrf_clear_interrupt();
 	// Set Config
-	uint8_t config = 	NRF24L01_CONFIG_RX_DR_INT_ON | NRF24L01_CONFIG_TX_DS_INT_ON | NRF24L01_CONFIG_MAX_RT_INT_ON |
-						NRF24L01_CONFIG_CRC_ENABLE | NRF24L01_CONFIG_CRC_1BIT | NRF24L01_CONFIG_POWER_UP | NRF24L01_CONFIG_PRIM_RX;
-	nrf_write_register(NRF24L01_REGISTER_CONFIG,
-		config
-		// NRF24L01_CONFIG_RX_DR_INT_ON | NRF24L01_CONFIG_TX_DS_INT_ON | NRF24L01_CONFIG_MAX_RT_INT_ON |
-		// NRF24L01_CONFIG_CRC_ENABLE | NRF24L01_CONFIG_CRC_1BIT | NRF24L01_CONFIG_POWER_UP | NRF24L01_CONFIG_PRIM_RX
-	);
+	// uint8_t config = 	NRF24L01_CONFIG_RX_DR_INT_ON | NRF24L01_CONFIG_TX_DS_INT_ON | NRF24L01_CONFIG_MAX_RT_INT_ON |
+	// 					NRF24L01_CONFIG_CRC_ENABLE | NRF24L01_CONFIG_CRC_1BIT | NRF24L01_CONFIG_POWER_UP | NRF24L01_CONFIG_PRIM_RX;
+	// nrf_write_register(NRF24L01_REGISTER_CONFIG,
+	// 	config
+	// 	// NRF24L01_CONFIG_RX_DR_INT_ON | NRF24L01_CONFIG_TX_DS_INT_ON | NRF24L01_CONFIG_MAX_RT_INT_ON |
+	// 	// NRF24L01_CONFIG_CRC_ENABLE | NRF24L01_CONFIG_CRC_1BIT | NRF24L01_CONFIG_POWER_UP | NRF24L01_CONFIG_PRIM_RX
+	// );
 
-	CE_HIGH;
-	LL_mDelay(5);
-
-	if(config != nrf_read_register(NRF24L01_REGISTER_CONFIG)) {
-		printf("NRF Init Fail\r\n");
-		return;
+	if(nrf_set_rx_mode() == FALSE) {
+		debugf("NRF Init Fail\r\n");
+		return FALSE;
 	}
-	printf("NRF Init OK\r\n");
-	// CE_HIGH;
+
+	debugf("NRF Init OK\r\n");
+	return TRUE;
 }
 
 
@@ -203,8 +205,9 @@ extern uint8_t nrf_get_status(void) {
 }
 
 
-extern void nrf_set_my_address(uint8_t *address) {
-	nrf_write_multiple_bytes_register(NRF24L01_REGISTER_RX_ADDR_P1, address, 5);
+extern void nrf_set_my_address(uint8_t *address, uint8_t size) {
+	memcpy(&nrf24l01_config.rx_address[5-size], address, size);
+	nrf_write_multiple_bytes_register(NRF24L01_REGISTER_RX_ADDR_P1, nrf24l01_config.rx_address, 5);
 }
 
 
@@ -229,34 +232,130 @@ extern void nrf_clear_interrupt(void) {
 }
 
 
-extern uint8_t nrf_read_data(uint8_t *data) {
-	uint8_t status;
-	CSN_LOW;
-	status = spi_send_byte_waiting(NRF24L01_COMMAND_R_RX_PL_WID);
-	uint8_t rx_size = spi_send_byte_waiting(0xff);
-	CSN_HIGH;
-	
-	if(rx_size == 0 || !(status & NRF24L01_STATUS_DATA_READY_INT)) { return 0; }
+
+extern uint8_t nrf_set_rx_mode(void) {
+	wait_for_tx_end();
 
 	CE_LOW;
+	nrf_write_register(NRF24L01_REGISTER_CONFIG, CONFIG_FOR_RX_MODE);
+	// nrf_write_register(NRF24L01_REGISTER_CONFIG, NRF24L01_CONFIG_POWER_UP);
+	// nrf_write_register(NRF24L01_REGISTER_CONFIG, NRF24L01_CONFIG_PRIM_RX);
+	CE_HIGH;
+
+	LL_mDelay(5);
+
+	if(nrf_read_register(NRF24L01_REGISTER_CONFIG) == CONFIG_FOR_RX_MODE) {
+		return TRUE;
+	}
+	else {
+		return FALSE;
+	}
+}
+
+
+extern uint8_t nrf_has_data(void) {
+	if(nrf_read_register(NRF24L01_REGISTER_CONFIG) != NRF24L01_REGISTER_CONFIG) {
+		nrf_set_rx_mode();
+	}
+
+	if(((nrf_read_register(NRF24L01_REGISTER_STATUS) >> 1) & 0x07) == 1) { //! Data in pipe 1
+
+		CSN_LOW;
+		spi_send_byte_waiting(NRF24L01_COMMAND_R_RX_PL_WID);
+		uint8_t rx_size = spi_send_byte_waiting(0xff);
+		CSN_HIGH;
+		if(rx_size <= 32) { return rx_size; }
+	}
+	return 0;
+}
+
+
+extern uint8_t nrf_read_data(uint8_t *data) {
+
+	CSN_LOW;
+	spi_send_byte_waiting(NRF24L01_COMMAND_R_RX_PL_WID);
+	uint8_t rx_size = spi_send_byte_waiting(0xff);
+	CSN_HIGH;
+
 	LL_mDelay(1);
 
 	CSN_LOW;
-	status = spi_send_byte_waiting(NRF24L01_COMMAND_READ_RX_PAYLOAD);
+	spi_send_byte_waiting(NRF24L01_COMMAND_READ_RX_PAYLOAD);
 	spi_send_multiple_bytes_waiting(NULL, data, rx_size);
 	CSN_HIGH;
 
+    uint8_t status_reg = nrf_read_register(NRF24L01_REGISTER_STATUS);
+    if(status_reg & NRF24L01_STATUS_DATA_READY_INT) {
+    	nrf_write_register(NRF24L01_REGISTER_STATUS, (status_reg | NRF24L01_STATUS_DATA_READY_INT));
+    }
 
-	nrf_clear_interrupt();
-	// nrf_flush_rx_buffer();
-	//! Clear tx buffer from ack payloadnrf_get_status
-	nrf_flush_tx_buffer();
+    return rx_size;
 
-	//! Clear NRF24L01_STATUS_DATA_READY_INT
-	nrf_write_register(NRF24L01_REGISTER_STATUS, status | NRF24L01_STATUS_DATA_READY_INT);
+	// uint8_t status;
+	// CSN_LOW;
+	// status = spi_send_byte_waiting(NRF24L01_COMMAND_R_RX_PL_WID);
+	// // debugf("NRF status: %02X\n", status);
+	// uint8_t rx_size = spi_send_byte_waiting(0xff);
+	// CSN_HIGH;
+	
+	// if(rx_size == 0 || !(status & NRF24L01_STATUS_DATA_READY_INT)) { return 0; }
 
-	LL_mDelay(1);
-	CE_HIGH;
-	return rx_size;
+	// CE_LOW;
+	// LL_mDelay(1);
+
+	// CSN_LOW;
+	// status = spi_send_byte_waiting(NRF24L01_COMMAND_READ_RX_PAYLOAD);
+	// spi_send_multiple_bytes_waiting(NULL, data, rx_size);
+	// CSN_HIGH;
+
+
+	// nrf_clear_interrupt();
+	// // nrf_flush_rx_buffer();
+	// //! Clear tx buffer from ack payloadnrf_get_status
+	// nrf_flush_tx_buffer();
+
+	// //! Clear NRF24L01_STATUS_DATA_READY_INT
+	// nrf_write_register(NRF24L01_REGISTER_STATUS, status | NRF24L01_STATUS_DATA_READY_INT);
+
+	// LL_mDelay(1);
+	// CE_HIGH;
+	// return rx_size;
+}
+
+
+extern uint8_t wait_for_tx_end(void) {
+    // _resetInterruptFlags = 0; // Disable interrupt flag reset logic in 'whatHappened'.
+
+	uint8_t result = FALSE;
+	uint8_t reg;
+	uint8_t tx_remaining_attempt = 90;
+
+	while(tx_remaining_attempt-- > 0) {
+		reg = nrf_read_register(NRF24L01_REGISTER_FIFO_STATUS);
+		if(reg & NRF24L01_FIFO_TX_EMPTY) {
+			result = TRUE;
+			break;
+		}
+
+		CE_HIGH;
+		LL_mDelay(10);
+		CE_LOW;
+
+		LL_mDelay(1); //! 600uS
+
+		reg = nrf_read_register(NRF24L01_REGISTER_STATUS);
+		if(reg & NRF24L01_STATUS_DATA_SENT_INT) {
+			nrf_write_register(NRF24L01_REGISTER_STATUS, NRF24L01_STATUS_DATA_SENT_INT);
+
+		}
+		else if(reg & NRF24L01_STATUS_MAX_RT_INT) {
+			spi_send_byte_waiting(NRF24L01_COMMAND_FLUSH_TX);
+			nrf_write_register(NRF24L01_REGISTER_STATUS, NRF24L01_STATUS_MAX_RT_INT);
+			break;
+		}
+	}
+
+    // _resetInterruptFlags = 1; // Re-enable interrupt reset logic in 'whatHappened'.
+    return result;
 }
 

@@ -15,16 +15,28 @@ GND   -> GND
 
 */
 
+#define TRUE  1
+#define FALSE 0
+
 #include <SPI.h>
 #include <NRFLite.h>
 
-int verticalPin = A0;
-int verticalValue = 0;
-int horizontalPin = A1;
-int horizontalValue = 0;
+int left_vertical_pin = A0;
+int left_vertical_value = 0;
+bool left_vertical_inversed = TRUE;
+int left_horizontal_pin = A1;
+int left_horizontal_value = 0;
+bool left_horizontal_inversed = FALSE;
+
+int right_vertical_pin = A2;
+int right_vertical_value = 0;
+bool right_vertical_inversed = TRUE;
+int right_horizontal_pin = A3;
+int right_horizontal_value = 0;
+bool right_horizontal_inversed = TRUE;
 
 const static uint8_t RADIO_ID = 1;             // Our radio's id.
-const static uint8_t DESTINATION_RADIO_ID = 0; // Id of the radio we will transmit to.
+const static uint8_t DESTINATION_RADIO_ID = 2; // Id of the radio we will transmit to.
 const static uint8_t PIN_RADIO_CE = 9;
 const static uint8_t PIN_RADIO_CSN = 10;
 
@@ -46,56 +58,84 @@ NRFLite _radio;
 RadioPacketJoystick _radioJoystick;
 RadioPacketDebug _radioDebug;
 
-void setup()
-{
+void setup() {
     Serial.begin(115200);
         
-    if (!_radio.init(RADIO_ID, PIN_RADIO_CE, PIN_RADIO_CSN))
-    {
+    if (!_radio.init(RADIO_ID, PIN_RADIO_CE, PIN_RADIO_CSN)) {
         Serial.println("Cannot communicate with radio");
         while (1); // Wait here forever.
     }
+    else {
+      Serial.println("Init Radio OK");
+    }
     
-    _radioDebug.FromRadioId = RADIO_ID;
+    // _radioDebug.FromRadioId = RADIO_ID;
 }
 
-void loop()
-{
+void loop() {
     _radioDebug.OnTimeMillis = millis();
 
-    verticalValue = analogRead(verticalPin);
-    horizontalValue = analogRead(horizontalPin);
+    left_vertical_value = analogRead(left_vertical_pin);
+    if(left_vertical_inversed) { left_vertical_value = 1024 - left_vertical_value; }
+    left_horizontal_value = analogRead(left_horizontal_pin);
+    if(left_horizontal_inversed) { left_horizontal_value = 1024 - left_horizontal_value; }
 
-    Serial.print("V: ");
-    Serial.print(verticalValue);
-    Serial.print(",H:");
-    Serial.println(horizontalValue);
+    right_vertical_value = analogRead(right_vertical_pin);
+    if(right_vertical_inversed) { right_vertical_value = 1024 - right_vertical_value; }
+    right_horizontal_value = analogRead(right_horizontal_pin);
+    if(right_horizontal_inversed) { right_horizontal_value = 1024 - right_horizontal_value; }
 
-    verticalValue = map(verticalValue, 0, 1024, -100, 100);
-    if(verticalValue > 0 && verticalValue < 10) {
-      verticalValue = 0;
+    // Serial.print("Left V: ");
+    // Serial.print(left_vertical_value);
+    // Serial.print(",H:");
+    // Serial.println(left_horizontal_value);
+    
+    // Serial.print("Right V: ");
+    // Serial.print(right_vertical_value);
+    // Serial.print(",H:");
+    // Serial.println(right_horizontal_value);
+
+    left_vertical_value = map(left_vertical_value, 0, 1024, -100, 100);
+    if(left_vertical_value > 0 && left_vertical_value < 10) {
+      left_vertical_value = 0;
     }
-    else if(verticalValue < 0 && verticalValue > -10) {
-      verticalValue = 0;
+    else if(left_vertical_value < 0 && left_vertical_value > -10) {
+      left_vertical_value = 0;
     }
 
-    horizontalValue = map(horizontalValue, 0, 1024, -100, 100);
-    if(horizontalValue > 0 && horizontalValue < 10) {
-      horizontalValue = 0;
+    left_horizontal_value = map(left_horizontal_value, 0, 1024, -100, 100);
+    if(left_horizontal_value > 0 && left_horizontal_value < 10) {
+      left_horizontal_value = 0;
     }
-    else if(horizontalValue < 0 && horizontalValue > -10) {
-      horizontalValue = 0;
+    else if(left_horizontal_value < 0 && left_horizontal_value > -10) {
+      left_horizontal_value = 0;
+    }
+
+    right_vertical_value = map(right_vertical_value, 0, 1024, -100, 100);
+    if(right_vertical_value > 0 && right_vertical_value < 10) {
+      right_vertical_value = 0;
+    }
+    else if(right_vertical_value < 0 && right_vertical_value > -10) {
+      right_vertical_value = 0;
+    }
+
+    right_horizontal_value = map(right_horizontal_value, 0, 1024, -100, 100);
+    if(right_horizontal_value > 0 && right_horizontal_value < 10) {
+      right_horizontal_value = 0;
+    }
+    else if(right_horizontal_value < 0 && right_horizontal_value > -10) {
+      right_horizontal_value = 0;
     }
     
-    // verticalValue = verticalValue - 512;
-    // float angle = ((float)(horizontalValue-512)/512.0*3.1416);
-    // int sign = (horizontalValue-512)/abs((horizontalValue-512));
+    // left_vertical_value = left_vertical_value - 512;
+    // float angle = ((float)(left_horizontal_value-512)/512.0*3.1416);
+    // int sign = (left_horizontal_value-512)/abs((left_horizontal_value-512));
 
-    // _radioJoystick.leftWheel = verticalValue + (int)((float)(verticalValue)*sin(angle));
-    // _radioJoystick.rightWheel = verticalValue - (int)((float)(verticalValue)*sin(angle));
+    // _radioJoystick.leftWheel = left_vertical_value + (int)((float)(left_vertical_value)*sin(angle));
+    // _radioJoystick.rightWheel = left_vertical_value - (int)((float)(left_vertical_value)*sin(angle));
     
-    _radioJoystick.vertical = verticalValue;
-    _radioJoystick.horizontal = horizontalValue;
+    _radioJoystick.vertical = left_vertical_value;
+    _radioJoystick.horizontal = left_horizontal_value;
 
     Serial.print("V: ");
     Serial.print(_radioJoystick.vertical);
@@ -107,7 +147,7 @@ void loop()
     Serial.print(_radioDebug.OnTimeMillis);
     Serial.print(" ms");
 
-    if (_radio.send(DESTINATION_RADIO_ID, &_radioJoystick, sizeof(_radioJoystick))) // Note how '&' must be placed in front of the variable name.
+    if (_radio.send(DESTINATION_RADIO_ID, &_radioJoystick, sizeof(_radioJoystick))) 
     {
         Serial.println("...Success");
     }
@@ -118,7 +158,7 @@ void loop()
     }
 
     // delay(1000);
-    delay(100);
+    delay(50);
     
     /*
     By default, 'send' transmits data and waits for an acknowledgement.

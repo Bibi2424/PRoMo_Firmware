@@ -2,6 +2,7 @@
 #define MAIN_H
 
 #include <stdio.h>
+#include <stdbool.h>
 #include "stm32f4xx.h"
 #include "stm32f4xx_ll_rcc.h"
 #include "stm32f4xx_ll_bus.h"
@@ -15,6 +16,7 @@
 #include "stm32f4xx_ll_gpio.h"
 #include "stm32f4xx_ll_i2c.h"
 #include "stm32f4xx_ll_tim.h"
+#include "stm32f4xx_ll_spi.h"
 
 #include "debug.h"
 

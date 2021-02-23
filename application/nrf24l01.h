@@ -3,7 +3,7 @@
 
 #include "main.h"
 
-
+//! NRF commands
 #define NRF24L01_COMMAND_READ_REGISTER			0x00
 #define NRF24L01_COMMAND_WRITE_REGISTER			0x20
 #define NRF24L01_COMMAND_READ_RX_PAYLOAD		0x61
@@ -17,6 +17,7 @@
 #define NRF24L01_COMMAND_W_TX_PAYLOAD_NO_ACK	0xB0
 #define NRF24L01_COMMAND_NOP					0xFF
 
+//! NRF Registers
 #define NRF24L01_REGISTER_CONFIG		0x00
 #define NRF24L01_REGISTER_EN_AA			0x01
 #define NRF24L01_REGISTER_EN_RXADDR		0x02
@@ -66,13 +67,13 @@
 #define NRF24L01_CONFIG_PRIM_TX			0x00	// Default
 #define NRF24L01_CONFIG_PRIM_RX			0x01
 
-//Params for status register
+//Params for STATUS register
 #define NRF24L01_STATUS_DATA_READY_INT	0x40
 #define NRF24L01_STATUS_DATA_SENT_INT	0x20
 #define NRF24L01_STATUS_MAX_RT_INT		0x10
 
 // Params for the AUTO Retransmission Register
-#define NRF24L01_RETR_DELAY_IN_250MS(x) (x & 0x0F << 4)
+#define NRF24L01_RETR_DELAY_IN_250MS(x) ((x & 0x0F) << 4)
 #define NRF24L01_RETR_COUNT(x) 			(x & 0x0F)
 
 // Params for the RF_SETTINGS Register
@@ -97,6 +98,13 @@
 #define NRF24L01_FEATURE_DYN_PAYLAOD_DISABLE	0x00
 #define NRF24L01_FEATURE_DYN_PAYLAOD_ENABLE		0x04
 
+// Params for the FIFO Register
+#define NRF24L01_FIFO_TX_REUSE			(1 << 6)
+#define NRF24L01_FIFO_TX_FULL			(1 << 5)
+#define NRF24L01_FIFO_TX_EMPTY			(1 << 4)
+#define NRF24L01_FIFO_RX_FULL			(1 << 1)
+#define NRF24L01_FIFO_RX_EMPTY			(1 << 0)
+
 
 #define CE_LOW		LL_GPIO_ResetOutputPin(NRF_CE_GPIO_Port, NRF_CE_Pin)
 #define CE_HIGH		LL_GPIO_SetOutputPin(NRF_CE_GPIO_Port, NRF_CE_Pin);
@@ -108,10 +116,10 @@ typedef struct {
 	uint8_t rx_address[5];
 	uint8_t channel;
 	uint8_t payload_size;
-} nrf24l01_config;
+} nrf24l01_config_t;
 
 
-extern void SPI2_NRF24L01_Init(void);
+extern bool SPI2_NRF24L01_Init(uint8_t radio_id);
 
 //* SPI *****************************************************************************
 extern uint8_t spi_send_byte_waiting(uint8_t data);
@@ -126,6 +134,9 @@ extern uint8_t nrf_get_status(void);
 extern void nrf_flush_rx_buffer(void);
 extern void nrf_flush_tx_buffer(void);
 extern void nrf_clear_interrupt(void);
+extern uint8_t nrf_set_rx_mode(void);
+extern uint8_t nrf_has_data(void);
 extern uint8_t nrf_read_data(uint8_t *data);
+extern uint8_t wait_for_tx_end(void);
 
 #endif
