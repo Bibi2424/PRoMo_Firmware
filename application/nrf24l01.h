@@ -71,6 +71,8 @@
 #define NRF24L01_STATUS_DATA_READY_INT	0x40
 #define NRF24L01_STATUS_DATA_SENT_INT	0x20
 #define NRF24L01_STATUS_MAX_RT_INT		0x10
+#define NRF24L01_STATUS_RX_PIPE_NO		0x01 	// 3bits
+#define NRF24L01_STATUS_TX_FULL_INT		0x00
 
 // Params for the AUTO Retransmission Register
 #define NRF24L01_RETR_DELAY_IN_250MS(x) ((x & 0x0F) << 4)
@@ -119,7 +121,7 @@ typedef struct {
 } nrf24l01_config_t;
 
 
-extern bool SPI2_NRF24L01_Init(uint8_t radio_id);
+extern bool SPI2_NRF24L01_Init(uint8_t radio_rx_id);
 
 //* SPI *****************************************************************************
 extern uint8_t spi_send_byte_waiting(uint8_t data);
@@ -137,6 +139,6 @@ extern void nrf_clear_interrupt(void);
 extern uint8_t nrf_set_rx_mode(void);
 extern uint8_t nrf_has_data(void);
 extern uint8_t nrf_read_data(uint8_t *data);
-extern uint8_t wait_for_tx_end(void);
+extern bool nrf_write_data(uint8_t radio_tx_id, uint8_t *data, uint8_t data_size, bool ack);
 
 #endif

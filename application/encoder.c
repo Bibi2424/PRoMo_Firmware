@@ -1,5 +1,11 @@
 #define DEBUG_THIS_FILE	DEBUG_ENCODER_FILE
 
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "global.h"
+#include "debug.h"
+
 #include "encoder.h"
 #include "gpio.h"
 

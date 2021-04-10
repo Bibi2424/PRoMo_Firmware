@@ -2,6 +2,7 @@
 #define MAIN_H
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include "stm32f4xx.h"
 #include "stm32f4xx_ll_rcc.h"

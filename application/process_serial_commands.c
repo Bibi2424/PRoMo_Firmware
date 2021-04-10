@@ -1,10 +1,15 @@
 #define DEBUG_THIS_FILE	DEBUG_PROCESS_SERIAL_COMMANDS_FILE
 
+#include <stdint.h>
+#include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include "global.h"
+#include "debug.h"
+
 #include "process_serial_commands.h"
 #include "main.h"
-#include "global.h"
 #include "gpio.h"
 #include "usart.h"
 #include "motor.h"

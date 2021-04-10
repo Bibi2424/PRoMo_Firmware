@@ -1,6 +1,8 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
+#include "main.h"
+
 /*------------------------- DEFINE -------------------------*/
 #define SHEDULER_MAX_EVENT	10
 

@@ -1,11 +1,15 @@
 #define DEBUG_THIS_FILE		DEBUG_SCHEDULER_FILE
 
+#include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
-#include "stm32f4xx_ll_bus.h"
-#include "stm32f4xx_ll_tim.h"
-#include "scheduler.h"
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "global.h"
 #include "debug.h"
+
+#include "scheduler.h"
 
 #define SCHEDULER_TIM 		TIM9
 #define SCHEDULER_TIM_IRQn	TIM1_BRK_TIM9_IRQn

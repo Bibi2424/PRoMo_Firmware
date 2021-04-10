@@ -1,7 +1,12 @@
 #define DEBUG_THIS_FILE	DEBUG_SENSORS_FILE
 
-#include "sensors.h"
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "global.h"
+#include "debug.h"
+
+#include "sensors.h"
 #include "gpio.h"
 #include "i2c.h"
 

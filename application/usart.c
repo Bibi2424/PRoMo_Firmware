@@ -1,8 +1,13 @@
 #define DEBUG_THIS_FILE		DEBUG_USART_FILE
 
+#include <stdint.h>
+#include <stdbool.h>
 #include <string.h>
-#include "usart.h"
+
 #include "global.h"
+#include "debug.h"
+
+#include "usart.h"
 #include "gpio.h"
 #include "process_serial_commands.h"
 

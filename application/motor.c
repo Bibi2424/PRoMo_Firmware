@@ -1,7 +1,12 @@
 #define DEBUG_THIS_FILE	DEBUG_MOTOR_FILE
 
-#include "motor.h"
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "global.h"
+#include "debug.h"
+
+#include "motor.h"
 #include "gpio.h"
 
 

@@ -1,7 +1,12 @@
 #define DEBUG_THIS_FILE	DEBUG_GPIO_FILE
 
-#include "gpio.h"
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "global.h"
+#include "debug.h"
+
+#include "gpio.h"
 
 
 void MX_GPIO_Init(void) {
