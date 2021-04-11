@@ -1,7 +1,5 @@
 #ifndef DEBUG_H
 #define DEBUG_H
-#include <stdint.h>
-#include "global.h"
 
 /*------------------------- DEFINE -------------------------*/
 // #define DBG_USART_BAUDRATE 		115200

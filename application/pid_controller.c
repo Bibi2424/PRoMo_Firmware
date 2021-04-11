@@ -1,7 +1,12 @@
 #define DEBUG_THIS_FILE	DEBUG_PID_FILE
 
-#include "pid_controller.h"
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "global.h"
+#include "debug.h"
+
+#include "pid_controller.h"
 
 
 extern int32_t pid_compute(pid_controller_t *pid, int32_t set_point, int32_t current_value) {

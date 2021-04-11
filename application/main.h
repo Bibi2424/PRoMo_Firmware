@@ -2,6 +2,7 @@
 #define MAIN_H
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include "stm32f4xx.h"
 #include "stm32f4xx_ll_rcc.h"
@@ -69,6 +70,8 @@
 #define NRF_CE_GPIO_Port GPIOB
 #define NRF_CSN_Pin LL_GPIO_PIN_12
 #define NRF_CSN_GPIO_Port GPIOB
+#define NRF_IRQ_Pin LL_GPIO_PIN_2
+#define NRF_IRQ_GPIO_Port GPIOB
 
 #define NRF_SCK_Pin	LL_GPIO_PIN_13
 #define NRF_SCK_GPIO_Port GPIOB

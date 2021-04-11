@@ -71,6 +71,8 @@
 #define NRF24L01_STATUS_DATA_READY_INT	0x40
 #define NRF24L01_STATUS_DATA_SENT_INT	0x20
 #define NRF24L01_STATUS_MAX_RT_INT		0x10
+#define NRF24L01_STATUS_RX_PIPE_NO		0x01 	// 3bits
+#define NRF24L01_STATUS_TX_FULL_INT		0x00
 
 // Params for the AUTO Retransmission Register
 #define NRF24L01_RETR_DELAY_IN_250MS(x) ((x & 0x0F) << 4)
@@ -112,14 +114,28 @@
 #define CSN_HIGH	LL_GPIO_SetOutputPin(NRF_CSN_GPIO_Port, NRF_CSN_Pin);
 
 
-typedef struct {
+typedef struct nrf24l01_config {
 	uint8_t rx_address[5];
 	uint8_t channel;
 	uint8_t payload_size;
 } nrf24l01_config_t;
 
+typedef union nrf24l01_status {
+	struct {
+		uint8_t unused : 4;
+		uint8_t tx_ok : 1;
+		uint8_t tx_fail : 1;
+		uint8_t rx_ready : 1;	
+	};
+	uint8_t value;
+} nrf24l01_status_t;
 
-extern bool SPI2_NRF24L01_Init(uint8_t radio_id);
+// #if sizeof(nrf24l01_status_t) != 1
+// 	#error "Check nrf24l01_status_t bit field (should be 1B)."
+// #endif
+
+
+extern bool SPI2_NRF24L01_Init(uint8_t radio_rx_id);
 
 //* SPI *****************************************************************************
 extern uint8_t spi_send_byte_waiting(uint8_t data);
@@ -135,8 +151,9 @@ extern void nrf_flush_rx_buffer(void);
 extern void nrf_flush_tx_buffer(void);
 extern void nrf_clear_interrupt(void);
 extern uint8_t nrf_set_rx_mode(void);
+extern nrf24l01_status_t * nrf_has_data_isr(void);
 extern uint8_t nrf_has_data(void);
 extern uint8_t nrf_read_data(uint8_t *data);
-extern uint8_t wait_for_tx_end(void);
+extern bool nrf_write_data(uint8_t radio_tx_id, uint8_t *data, uint8_t data_size, bool ack);
 
 #endif

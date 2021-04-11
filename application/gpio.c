@@ -1,7 +1,12 @@
 #define DEBUG_THIS_FILE	DEBUG_GPIO_FILE
 
-#include "gpio.h"
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "global.h"
+#include "debug.h"
+
+#include "gpio.h"
 
 
 void MX_GPIO_Init(void) {
@@ -12,12 +17,12 @@ void MX_GPIO_Init(void) {
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOA);
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
-	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOH);
+	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOD);
 
 	// LL_GPIO_ResetOutputPin(LD2_GPIO_Port, LD2_Pin);
 
 	//! BP1
-	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTC, LL_SYSCFG_EXTI_LINE13);
+	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTA, LL_SYSCFG_EXTI_LINE0);
 
 	EXTI_InitStruct.Line_0_31 = LL_EXTI_LINE_0;
 	EXTI_InitStruct.LineCommand = ENABLE;
@@ -28,15 +33,8 @@ void MX_GPIO_Init(void) {
 	LL_GPIO_SetPinPull(B1_GPIO_Port, B1_Pin, LL_GPIO_PULL_NO);
 	LL_GPIO_SetPinMode(B1_GPIO_Port, B1_Pin, LL_GPIO_MODE_INPUT);
 
-	/* Configure NVIC for USER_BUTTON_EXTI_IRQn */
-	LL_EXTI_EnableIT_0_31(LL_EXTI_LINE_0);
-	LL_EXTI_EnableFallingTrig_0_31(LL_EXTI_LINE_0);
+	NVIC_SetPriority(EXTI0_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 8, 0));
 	NVIC_EnableIRQ(EXTI0_IRQn); 
-	NVIC_SetPriority(EXTI0_IRQn,0x03);
-	do {
-		LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
-		LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTC, LL_SYSCFG_EXTI_LINE13);
-	} while(0);
 
 	//! LD1
 	GPIO_InitStruct.Pin = LD1_Pin;

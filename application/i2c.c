@@ -1,5 +1,11 @@
 #define DEBUG_THIS_FILE   DEBUG_I2C_FILE
 
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "global.h"
+#include "debug.h"
+
 #include "i2c.h"
 #include "gpio.h"
 
