@@ -89,7 +89,7 @@ extern int main(void) {
     sensors_VL53L0X_init();
 
     scheduler_init();
-    scheduler_add_event(0, 1*SECOND, SCHEDULER_ALWAYS, blink_led1);
+    scheduler_add_event(SCHEDULER_TASK_LED1, 1*SECOND, SCHEDULER_ALWAYS, blink_led1);
 
     debugf("Init Done\r\n");
 
@@ -145,29 +145,24 @@ extern int main(void) {
 
         uint32_t current_time = millis();
 
-        if(current_time - nrf_last_execution > NRF_INTERVAL) {
-            nrf_last_execution = current_time;
+        nrf24l01_status_t * nrf_status = nrf_has_data_isr(); 
+        if(nrf_status->rx_ready) {
+            nrf_status->rx_ready = 0;
+            nrf_read_data(nrf_data);
 
-            nrf_rx_size = nrf_has_data();
-            if(nrf_rx_size) {
-                nrf_read_data(nrf_data);
-                scheduler_add_event(1, 200*MS, SCHEDULER_ONE_SHOT, lost_connection);
+            int8_t forward_speed = (int8_t)nrf_data[0];
+            int8_t steer_speed = (int8_t)nrf_data[1];
 
-                int8_t forward_speed = (int8_t)nrf_data[0];
-                int8_t steer_speed = (int8_t)nrf_data[1];
+            target_speed_left = forward_speed + (int32_t)steer_speed / 3;
+            target_speed_right = forward_speed - (int32_t)steer_speed / 3;
+            debugf("NRF: %ld - %ld\n", target_speed_left, target_speed_right);
 
-                target_speed_left = forward_speed + (int32_t)steer_speed / 3;
-                target_speed_right = forward_speed - (int32_t)steer_speed / 3;
-                debugf("NRF: %ld - %ld\n", target_speed_left, target_speed_right);
-                SET_PIN(LD2_GPIO_Port, LD2_Pin, 1);
-                scheduler_add_event(1, 50*MS, SCHEDULER_ONE_SHOT, blink_led2);
-            }
-            else {
-                printf(".");
-                LL_mDelay(10);
-            }
-        } 
+            SET_PIN(LD2_GPIO_Port, LD2_Pin, 1);
+            scheduler_add_event(SCHEDULER_TASK_LED2, 50*MS, SCHEDULER_ONE_SHOT, blink_led2);
 
+            scheduler_remove_event(SCHEDULER_TASK_LOST_CONNECTION);
+            scheduler_add_event(SCHEDULER_TASK_LOST_CONNECTION, 200*MS, SCHEDULER_ONE_SHOT, lost_connection);
+        }
 
         // if(current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL) {
         //     motor_control_last_execution = current_time;

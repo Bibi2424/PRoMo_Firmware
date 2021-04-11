@@ -15,7 +15,7 @@
 #define SCHEDULER_TIM_IRQn	TIM1_BRK_TIM9_IRQn
 
 /*------------------------- VARIABLES -------------------------*/
-volatile scheduler_event_t scheduler[SHEDULER_MAX_EVENT];
+volatile scheduler_event_t scheduler[SCHEDULER_MAX_EVENT];
 
 /*------------------------- PROTOTYPES -------------------------*/
 static void 	scheduler_handler(uint32_t elapse_time);
@@ -40,13 +40,13 @@ extern void scheduler_init(void) {
 	LL_TIM_InitStruct.RepetitionCounter = (uint8_t)0x00;
 	LL_TIM_Init(SCHEDULER_TIM, &LL_TIM_InitStruct);
 
-	NVIC_SetPriority(TIM1_BRK_TIM9_IRQn, 0);
+	NVIC_SetPriority(TIM1_BRK_TIM9_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 8, 8));
 	NVIC_EnableIRQ(TIM1_BRK_TIM9_IRQn);
 
 	//! NOTE: Do not need to start counter as long as no event is added
   	// LL_TIM_EnableCounter(SCHEDULER_TIM);			//! Enable counter
 	
-	for(i = 0; i < SHEDULER_MAX_EVENT; i++) {
+	for(i = 0; i < SCHEDULER_MAX_EVENT; i++) {
 		scheduler[i].status = UNUSED;
 		scheduler[i].n = 0;
 		scheduler[i].time_left = 0;
@@ -58,7 +58,7 @@ extern void scheduler_init(void) {
 
 extern void scheduler_add_event(uint8_t id, uint32_t period, int16_t number_of_trigger, void (*callback)(void)) {
 	debugf("Add event [%u] in %lums for %d times\r\n", id, period, number_of_trigger);
-	if(id >= SHEDULER_MAX_EVENT) {return;}
+	if(id >= SCHEDULER_MAX_EVENT) {return;}
 	if(period == 0) {
 		scheduler[id].status = UNUSED;
 		callback();
@@ -109,18 +109,18 @@ static void scheduler_handler(uint32_t elapse_time) {
 	LL_TIM_SetCounter(SCHEDULER_TIM, 0);
 	update_schedules(elapse_time);
 
-	for(i = 0; i < SHEDULER_MAX_EVENT; i++) {
+	for(i = 0; i < SCHEDULER_MAX_EVENT; i++) {
 		if(scheduler[i].status == USED && scheduler[i].time_left == 0) {
 			if(scheduler[i].n != 0) {
-				if(scheduler[i].n > 0) {scheduler[i].n--;}
+				if(scheduler[i].n > 0) { scheduler[i].n--; }
 				scheduler[i].time_left = scheduler[i].period;
 			}
-			else {
+			if(scheduler[i].n == 0) {
 				debugf("Event[%u] stoped\r", i);
 				scheduler[i].status = UNUSED;
 			}
 			if(scheduler[i].callback != NULL) {
-				// debugf("Callback for event [%d]\r\n", i);
+				debugf("Callback for event %u [%u]\r\n", i, scheduler[i].n);
 				scheduler[i].callback();
 			}
 		}
@@ -141,7 +141,7 @@ static void update_schedules(uint32_t elapse_time) {
 	uint8_t i;
 
 	// debugf("Remove %lums to all events\r\n", elapse_time/10);
-	for(i = 0; i < SHEDULER_MAX_EVENT; i++) {
+	for(i = 0; i < SCHEDULER_MAX_EVENT; i++) {
 		if(scheduler[i].status == USED) {
 			if(elapse_time >= scheduler[i].time_left) {
 				scheduler[i].time_left = 0;
@@ -161,7 +161,7 @@ static int16_t find_next_event(void) {
 	uint8_t i;
 	int16_t id = -1;
 	uint32_t min_time = 0xFFFFFFFFUL;
-	for(i = 0; i < SHEDULER_MAX_EVENT; i++) {
+	for(i = 0; i < SCHEDULER_MAX_EVENT; i++) {
 		if(scheduler[i].status == USED && scheduler[i].time_left < min_time) {
 			min_time = scheduler[i].time_left;
 			id = i;
