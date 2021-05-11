@@ -126,10 +126,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         QtWidgets.QMessageBox.about(self, "About",""" about """)
 
 
-qApp = QtWidgets.QApplication(sys.argv)
+def main():
+    qApp = QtWidgets.QApplication(sys.argv)
 
-aw = ApplicationWindow()
-aw.setWindowTitle("%s" % progname)
-aw.show()
-sys.exit(qApp.exec_())
-#qApp.exec_()
+    aw = ApplicationWindow()
+    aw.setWindowTitle("%s" % progname)
+    aw.show()
+    sys.exit(qApp.exec_())
+
+
+if __name__ == '__main__':
+    main()
+    
