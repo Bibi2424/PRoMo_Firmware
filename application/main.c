@@ -12,6 +12,7 @@
 #include "encoder.h"
 #include "motor.h"
 #include "radio.h"
+#include "nrf24l01.h"
 #include "scheduler.h"
 #include "VL53L0X.h"
 #include "sensors.h"
@@ -23,12 +24,10 @@ void SystemClock_Config(void);
 
 
 
-#define NRF_INTERVAL                10
-static uint32_t nrf_last_execution = 0;
 #define MOTOR_CONTROL_INTERVAL      50
 static uint32_t motor_control_last_execution = 0;
 
-static int32_t target_speed_left = 0, target_speed_right = 0;
+// static int32_t target_speed_left = 0, target_speed_right = 0;
 
 volatile static bool gpio_pressed = false;
 
@@ -81,16 +80,16 @@ extern int main(void) {
 
     debugf("Init Done\r\n");
 
-    statInfo_t xTraStats;
-    statInfo_t ranges[4];
+    // statInfo_t xTraStats;
+    // statInfo_t ranges[4];
 
-    pid_controller_t pid_speed_left = {
-        .compute_interval = 50,
-        .proportional_gain = 1,
-        .integral_gain = 0,
-        .derivative_gain = 0
-    };
-    pid_controller_t pid_speed_right = pid_speed_left;
+    // pid_controller_t pid_speed_left = {
+    //     .compute_interval = 50,
+    //     .proportional_gain = 1,
+    //     .integral_gain = 0,
+    //     .derivative_gain = 0
+    // };
+    // pid_controller_t pid_speed_right = pid_speed_left;
 
 
     while (1) {
