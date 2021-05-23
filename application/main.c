@@ -11,7 +11,7 @@
 #include "gpio.h"
 #include "encoder.h"
 #include "motor.h"
-#include "i2c.h"
+#include "radio.h"
 #include "nrf24l01.h"
 #include "scheduler.h"
 #include "VL53L0X.h"
@@ -24,26 +24,14 @@ void SystemClock_Config(void);
 
 
 
-#define NRF_INTERVAL                10
-static uint32_t nrf_last_execution = 0;
 #define MOTOR_CONTROL_INTERVAL      50
 static uint32_t motor_control_last_execution = 0;
 
-static int32_t target_speed_left = 0, target_speed_right = 0;
+// static int32_t target_speed_left = 0, target_speed_right = 0;
 
 volatile static bool gpio_pressed = false;
 
 
-/******************************************************************************/
-/* IO Mapping on Nucleo                                                       */
-/* PA11/PA12, NA/NA - USART6 RX/TX                                            */
-/* PA6/PA7, D11/D12 - RightEncoder A/B, TIM3 CH1/CH2                          */
-/* PB6/PB7, D10/NA - LeftEncoder  A/B, TIM4 CH1/CH2                           */
-/* PA0/P1, A0/A1 - Right Motor AIN1/AIN2, TIM2 CH1/CH2                        */
-/* PA2/P3, D0/D1 - Right Motor BIN1/BIN2, TIM2 CH3/CH4                        */
-/* PA5, D13 - LED                                                             */
-/* PC13, N/A - BP                                                             */
-/******************************************************************************/
 extern void blink_led1(void) {
     TOGGLE_PIN(LD1_GPIO_Port, LD1_Pin);
 }
@@ -54,16 +42,15 @@ extern void blink_led2(void) {
 }
 
 
-static void lost_connection(void) {
-    target_speed_left = 0;
-    target_speed_right = 0;
-    // motor_left_set_speed(0);
-    // motor_right_set_speed(0);
-    printf("Lost Connection with Remote\r\n");
-}
+// static void lost_connection(void) {
+//     target_speed_left = 0;
+//     target_speed_right = 0;
+//     // motor_left_set_speed(0);
+//     // motor_right_set_speed(0);
+//     printf("Lost Connection with Remote\r\n");
+// }
 
 
-static uint8_t tx_data[5] = { 0xAA, 0x55, 0xff };
 
 extern int main(void) {
     LL_Init();
@@ -77,36 +64,29 @@ extern int main(void) {
     #endif
     setbuf(stdout, NULL);       //! For unbuffered ouput
     debugf("\r\n**************************************\r\n");
-    debugf(    "* Boot..\r\n");
-    debugf(    "* System_Frequency: %lu  MHz\n", SystemCoreClock);
+    debugf(    "* " xstr(TARGET) " v" xstr(FW_VERSION_MAJOR) "." xstr(FW_VERSION_MINOR) "." xstr(FW_VERSION_REV) " - " xstr(HW_TYPE)  "\r\n");
+    debugf(    "* System_Frequency: %lu MHz\n", SystemCoreClock);
+    debugf(    "* Booting...\r\n");
     debugf(    "**************************************\r\n");
-
-    TIM34_Encoder_Init();
-    TIM2_Motor_Init();
-
-    SPI2_NRF24L01_Init(2);
-
-    sensors_VL53L0X_init();
 
     scheduler_init();
     scheduler_add_event(SCHEDULER_TASK_LED1, 1*SECOND, SCHEDULER_ALWAYS, blink_led1);
 
+    TIM34_Encoder_Init();
+    TIM2_Motor_Init();
+
+    sensors_vl53l0x_init();
+    radio_init();
+
     debugf("Init Done\r\n");
 
-    uint8_t nrf_rx_size = 0;
-    uint8_t nrf_data[32] = {0};
-    nrf_set_rx_mode();
-
-    statInfo_t xTraStats;
-    statInfo_t ranges[4];
-
-    pid_controller_t pid_speed_left = {
-        .compute_interval = 50,
-        .proportional_gain = 1,
-        .integral_gain = 0,
-        .derivative_gain = 0
-    };
-    pid_controller_t pid_speed_right = pid_speed_left;
+    // pid_controller_t pid_speed_left = {
+    //     .compute_interval = 50,
+    //     .proportional_gain = 1,
+    //     .integral_gain = 0,
+    //     .derivative_gain = 0
+    // };
+    // pid_controller_t pid_speed_right = pid_speed_left;
 
 
     while (1) {
@@ -115,6 +95,7 @@ extern int main(void) {
             gpio_pressed = false;
             // debugf("Press\n");
 
+            uint8_t tx_data[5] = { 0xAA, 0x55, 0xff };
             bool res = nrf_write_data(1, tx_data, 3, true);
             debugf("Sending... %u\n", res);
         }
@@ -125,47 +106,16 @@ extern int main(void) {
 
         //! Basic ranging
         // debugf("VL53L0X Range...\n");
-        // LL_mDelay(500);
-        // sensors_VL53L0X_range_all(ranges);
+        // statInfo_t ranges[4];
+        // sensors_vl53l0x_get_all(&ranges);
         // debugf("F: %u, L: %u, R: %u, B: %u\n", ranges[0].rawDistance, ranges[1].rawDistance, ranges[2].rawDistance, ranges[3].rawDistance);
-        
-        // uint16_t range_value;
-        // range_value = readRangeSingleMillimeters( &xTraStats );  // blocks until measurement is finished
-        // if(range_value == false) { debugf("Error ranging with VL53L0X\n"); }
-        // debugf("\n\nstatus = %X", xTraStats.rangeStatus);
-        // debugf("\ndist = %u mm", xTraStats.rawDistance);
-        // debugf("\nsignCnt = %07u MCPS", xTraStats.signalCnt);
-        // debugf("\nambiCnt = %07u MCPS", xTraStats.ambientCnt);
-        // debugf("\nspadCnt = %07u MCPS", xTraStats.spadCnt);
-        // if(timeoutOccurred()) { debugf(" !!! Timeout !!! \n"); }
-        // else { debugf("\n"); }
-
-        //! Remote 
-        // debugf("NRF status: [%02X]\n", nrf_get_status());
 
         uint32_t current_time = millis();
 
-        nrf24l01_status_t * nrf_status = nrf_has_data_isr(); 
-        if(nrf_status->rx_ready) {
-            nrf_status->rx_ready = 0;
-            nrf_read_data(nrf_data);
+        radio_run();
 
-            int8_t forward_speed = (int8_t)nrf_data[0];
-            int8_t steer_speed = (int8_t)nrf_data[1];
-
-            target_speed_left = forward_speed + (int32_t)steer_speed / 3;
-            target_speed_right = forward_speed - (int32_t)steer_speed / 3;
-            debugf("NRF: %ld - %ld\n", target_speed_left, target_speed_right);
-
-            SET_PIN(LD2_GPIO_Port, LD2_Pin, 1);
-            scheduler_add_event(SCHEDULER_TASK_LED2, 50*MS, SCHEDULER_ONE_SHOT, blink_led2);
-
-            scheduler_remove_event(SCHEDULER_TASK_LOST_CONNECTION);
-            scheduler_add_event(SCHEDULER_TASK_LOST_CONNECTION, 200*MS, SCHEDULER_ONE_SHOT, lost_connection);
-        }
-
-        // if(current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL) {
-        //     motor_control_last_execution = current_time;
+        if(current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL) {
+            motor_control_last_execution = current_time;
 
         //     //! Encoder
         //     int32_t current_left_speed = encoder_left_get_speed();
@@ -197,7 +147,7 @@ extern int main(void) {
         //         motor_right_set_dir(0);
         //         motor_right_set_speed((uint16_t)-motor_right_command);
         //     }
-        // }
+        }
     }
     return 0;
 }
@@ -220,33 +170,31 @@ static void LL_Init(void) {
 
 
 void SystemClock_Config(void) {
-    LL_FLASH_SetLatency(LL_FLASH_LATENCY_2);
-    if(LL_FLASH_GetLatency() != LL_FLASH_LATENCY_2) {
-        Error_Handler();  
-    }
-    LL_PWR_SetRegulVoltageScaling(LL_PWR_REGU_VOLTAGE_SCALE1);
-    LL_RCC_HSI_SetCalibTrimming(16);
-    LL_RCC_HSI_Enable();
-    /* Wait till HSI is ready */
-    while(LL_RCC_HSI_IsReady() != 1) {}
-    LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI, LL_RCC_PLLM_DIV_16, 336, LL_RCC_PLLP_DIV_4);
-    LL_RCC_PLL_Enable();
-    /* Wait till PLL is ready */
-    while(LL_RCC_PLL_IsReady() != 1) {}
-    LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
-    LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_2);
-    LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);
-    LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
-     /* Wait till System clock is ready */
-    while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL) {}
-    LL_Init1msTick(84000000);
-    LL_SYSTICK_SetClkSource(LL_SYSTICK_CLKSOURCE_HCLK);
-    LL_SetSystemCoreClock(84000000);
-    LL_RCC_SetTIMPrescaler(LL_RCC_TIM_PRESCALER_TWICE);
-    /* SysTick_IRQn interrupt configuration */
-    NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));
+    LL_FLASH_SetLatency(LL_FLASH_LATENCY_0);
+    while(LL_FLASH_GetLatency()!= LL_FLASH_LATENCY_0) { }
+    LL_PWR_SetRegulVoltageScaling(LL_PWR_REGU_VOLTAGE_SCALE2);
+    LL_RCC_HSE_Enable();
 
-    SysTick_Config(SystemCoreClock / 1000);
+    /* Wait till HSE is ready */
+    while(LL_RCC_HSE_IsReady() != 1) { }
+    LL_RCC_PLL_ConfigDomain_48M(LL_RCC_PLLSOURCE_HSE, LL_RCC_PLLM_DIV_15, 144, LL_RCC_PLLQ_DIV_5);
+    LL_RCC_PLL_Enable();
+
+    /* Wait till PLL is ready */
+    while(LL_RCC_PLL_IsReady() != 1) { }
+    LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
+    LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
+    LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);
+    LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_HSE);
+    /* Wait till System clock is ready */
+    while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_HSE) { }
+    LL_Init1msTick(25000000);
+    LL_SetSystemCoreClock(25000000);
+    SysTick_Config(SystemCoreClock / 1000); 
+
+    /* Update the time base */
+    // if (HAL_InitTick (TICK_INT_PRIORITY) != HAL_OK) { Error_Handler(); }
+    // LL_RCC_SetTIMPrescaler(LL_RCC_TIM_PRESCALER_TWICE);
 }
 
 
@@ -268,7 +216,8 @@ extern void _Error_Handler(char *file, int line) {
 }
 
 
-static uint32_t counter = 0;
+//! FIXME: millis doesnt seems to update inside some function (could be irq related)
+volatile static uint32_t counter = 0;
 extern uint32_t millis(void) {
     return counter;
 }

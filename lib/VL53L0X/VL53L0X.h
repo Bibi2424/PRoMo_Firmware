@@ -5,8 +5,12 @@
 //------------------------------------------------------------
 // For quick and dirty C++ compatibility
 //------------------------------------------------------------
+#ifndef true
 #define true  1
+#endif
+#ifndef true
 #define false 0
+#endif
 
 //------------------------------------------------------------
 // Defines
@@ -16,7 +20,7 @@
 #define ADDRESS_DEFAULT 0b01010010
 
 // Record the current time to check an upcoming timeout against
-#define startTimeout() (g_timeoutStartMs = millis())
+#define startTimeout() (g_timeoutStartMs = (uint16_t)millis())
 
 // Check if timeout is enabled (set to nonzero value) and has expired
 #define checkTimeoutExpired() (g_ioTimeout > 0 && ((uint16_t)millis() - g_timeoutStartMs) > g_ioTimeout)
@@ -120,7 +124,7 @@ enum regAddr {
   ALGO_PHASECAL_CONFIG_TIMEOUT                = 0x30,
 };
 
-typedef enum { VcselPeriodPreRange, VcselPeriodFinalRange }vcselPeriodType;
+typedef enum { VcselPeriodPreRange, VcselPeriodFinalRange } vcselPeriodType;
 
 // Additional info for one measurement
 typedef struct{
@@ -207,20 +211,6 @@ uint16_t getTimeout(void);
 
 // Indicates whether a read timeout has occurred since the last call to timeoutOccurred().
 bool timeoutOccurred(void);
-
-//---------------------------------------------------------
-// I2C communication Functions
-//---------------------------------------------------------
-void writeReg(uint8_t reg, uint8_t value);        // Write an 8-bit register
-void writeReg16Bit(uint8_t reg, uint16_t value);  // Write a 16-bit register
-void writeReg32Bit(uint8_t reg, uint32_t value);  // Write a 32-bit register
-uint8_t readReg(uint8_t reg);                     // Read an 8-bit register
-uint16_t readReg16Bit(uint8_t reg);               // Read a 16-bit register
-uint32_t readReg32Bit(uint8_t reg);               // Read a 32-bit register
-// Write `count` number of bytes from `src` to the sensor, starting at `reg`
-void writeMulti(uint8_t reg, uint8_t const *src, uint8_t count);
-// Read `count` number of bytes from the sensor, starting at `reg`, to `dst`
-void readMulti(uint8_t reg, uint8_t *dst, uint8_t count);
 
 // TCC: Target CentreCheck
 // MSRC: Minimum Signal Rate Check
