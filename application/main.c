@@ -34,16 +34,6 @@ static int32_t target_speed_left = 0, target_speed_right = 0;
 volatile static bool gpio_pressed = false;
 
 
-/******************************************************************************/
-/* IO Mapping on Nucleo                                                       */
-/* PA11/PA12, NA/NA - USART6 RX/TX                                            */
-/* PA6/PA7, D11/D12 - RightEncoder A/B, TIM3 CH1/CH2                          */
-/* PB6/PB7, D10/NA - LeftEncoder  A/B, TIM4 CH1/CH2                           */
-/* PA0/P1, A0/A1 - Right Motor AIN1/AIN2, TIM2 CH1/CH2                        */
-/* PA2/P3, D0/D1 - Right Motor BIN1/BIN2, TIM2 CH3/CH4                        */
-/* PA5, D13 - LED                                                             */
-/* PC13, N/A - BP                                                             */
-/******************************************************************************/
 extern void blink_led1(void) {
     TOGGLE_PIN(LD1_GPIO_Port, LD1_Pin);
 }
@@ -77,8 +67,9 @@ extern int main(void) {
     #endif
     setbuf(stdout, NULL);       //! For unbuffered ouput
     debugf("\r\n**************************************\r\n");
-    debugf(    "* Boot..\r\n");
-    debugf(    "* System_Frequency: %lu  MHz\n", SystemCoreClock);
+    debugf(    "* " xstr(TARGET) " v" xstr(FW_VERSION_MAJOR) "." xstr(FW_VERSION_MINOR) "." xstr(FW_VERSION_REV) " - " xstr(HW_TYPE)  "\r\n");
+    debugf(    "* System_Frequency: %lu MHz\n", SystemCoreClock);
+    debugf(    "* Booting...\r\n");
     debugf(    "**************************************\r\n");
 
     scheduler_init();

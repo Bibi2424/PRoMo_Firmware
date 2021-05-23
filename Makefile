@@ -15,6 +15,12 @@ TARGET = PRoMo
 # MCU = STM32F411
 MCU_TYPE = STM32F405
 
+FW_VERSION_MAJOR = 0
+FW_VERSION_MINOR = 1
+FW_VERSION_REV 	 = 0
+
+HW_TYPE = HW_PROMO_V0_1
+
 ######################################
 # building variables
 ######################################
@@ -31,8 +37,9 @@ BUILD_DIR = _build
 
 APP_DIR = application
 
-LIB_DIR = lib
+BSP_DIR = bsp
 
+LIB_DIR = lib
 
 # GCC toolchain path
 # GCC_PATH = "C:/Program Files (x86)/GNU Tools Arm Embedded/7 2018-q2-update/bin/"
@@ -44,7 +51,6 @@ STM32_LIBRAIRIES_INC = $(STM32_LIBRAIRIES_PATH)/STM32F4xx_HAL_Driver/Inc
 # STL-Link Flasher Path
 STM32_FLASHER_EXEC := "C:/Program Files (x86)/STMicroelectronics/STM32 ST-LINK Utility/ST-LINK Utility/"
 
-
 # If you need to select some libaries....
 USED_LIBS += VL53L0X
 # USED_LIBS += test
@@ -52,7 +58,7 @@ APP_LIBS = $(foreach dir, $(USED_LIBS), $(LIB_DIR)/$(dir))
 # Or just use them all
 # APP_LIBS = $(sort $(dir $(wildcard $(LIB_DIR)/*/)))
 
-SOURCE_FOLDER = $(APP_DIR) $(APP_LIBS)
+SOURCE_FOLDER = $(APP_DIR) $(BSP_DIR) $(APP_LIBS)
 
 ######################################
 # source
@@ -146,6 +152,9 @@ C_DEFS =  \
 -DPREFETCH_ENABLE=1 \
 -DINSTRUCTION_CACHE_ENABLE=1 \
 -DDATA_CACHE_ENABLE=1
+
+USER_DEFS = TARGET=$(TARGET) FW_VERSION_MAJOR=$(FW_VERSION_MAJOR) FW_VERSION_MINOR=$(FW_VERSION_MINOR) FW_VERSION_REV=$(FW_VERSION_REV) HW_TYPE=$(HW_TYPE)
+C_DEFS += $(addprefix -D,$(USER_DEFS))
 
 ifeq ($(MCU_TYPE), STM32F405)
 	C_DEFS += -DSTM32F405xx
