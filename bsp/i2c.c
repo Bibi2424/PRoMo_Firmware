@@ -18,23 +18,22 @@ extern void i2c_init(I2C_TypeDef *I2Cx) {
     uint32_t clock_periph;
     IRQn_Type i2c_event_irq, i2c_error_irq;
 
-    switch(I2Cx) {
-        case(I2C1):
-            clock_periph = LL_APB1_GRP1_PERIPH_I2C1;
-            i2c_event_irq = I2C1_EV_IRQn;
-            i2c_event_irq = I2C1_ER_IRQn;
-        break;
-        case(I2C2):
-            clock_periph = LL_APB1_GRP1_PERIPH_I2C2;
-            i2c_event_irq = I2C2_EV_IRQn;
-            i2c_event_irq = I2C2_ER_IRQn;
-        break;
-        case(I2C3):
-            clock_periph = LL_APB1_GRP1_PERIPH_I2C3;
-            i2c_event_irq = I2C3_EV_IRQn;
-            i2c_event_irq = I2C3_ER_IRQn;
-        break;
+    if(I2Cx == I2C1) {
+        clock_periph = LL_APB1_GRP1_PERIPH_I2C1;
+        i2c_event_irq = I2C1_EV_IRQn;
+        i2c_error_irq = I2C1_ER_IRQn;
     }
+    else if(I2Cx == I2C2) {
+        clock_periph = LL_APB1_GRP1_PERIPH_I2C2;
+        i2c_event_irq = I2C2_EV_IRQn;
+        i2c_error_irq = I2C2_ER_IRQn;
+    }
+    else if(I2Cx == I2C3) {
+        clock_periph = LL_APB1_GRP1_PERIPH_I2C3;
+        i2c_event_irq = I2C3_EV_IRQn;
+        i2c_error_irq = I2C3_ER_IRQn;
+    }
+    else { return; }
 
     //! Peripheral clock enable
     LL_APB1_GRP1_EnableClock(clock_periph);

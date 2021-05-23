@@ -13,20 +13,19 @@ extern void spi_init(SPI_TypeDef *SPIx) {
 	uint32_t clock_periph;
 	IRQn_Type spi_irq_type;
 
-	switch(SPIx) {
-		case(SPI1):
-			clock_periph = LL_APB2_GRP1_PERIPH_SPI1;
-			spi_irq_type = SPI1_IRQn;
-		break;
-		case(SPI2):
-			clock_periph = LL_APB1_GRP1_PERIPH_SPI2;
-			spi_irq_type = SPI2_IRQn;
-		break;
-		case(SPI3):
-			clock_periph = LL_APB1_GRP1_PERIPH_SPI3;
-			spi_irq_type = SPI3_IRQn;
-		break;
+	if(SPIx == SPI1) {
+		clock_periph = LL_APB2_GRP1_PERIPH_SPI1;
+		spi_irq_type = SPI1_IRQn;
 	}
+	else if(SPIx == SPI2) {
+		clock_periph = LL_APB1_GRP1_PERIPH_SPI2;
+		spi_irq_type = SPI2_IRQn;
+	}
+	else if(SPIx == SPI3) {
+		clock_periph = LL_APB1_GRP1_PERIPH_SPI3;
+		spi_irq_type = SPI3_IRQn;
+	}
+	else { return; }
 
 	LL_APB1_GRP1_EnableClock(clock_periph);
 

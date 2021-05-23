@@ -239,7 +239,7 @@ extern uint8_t nrf_set_rx_mode(void) {
 
 
 extern nrf24l01_status_t * nrf_has_data_isr(void) {
-	return &last_nrf_status;
+	return (nrf24l01_status_t *) &last_nrf_status;
 }
 
 

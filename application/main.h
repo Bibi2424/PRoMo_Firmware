@@ -47,9 +47,12 @@
 //! NOTE Comment/Uncomment the line below to expanse the "assert_param" macro in the HAL drivers code
 #define USE_FULL_ASSERT    1U 
 
+extern uint32_t millis(void);
+extern void blink_led1(void);
+extern void blink_led2(void);
+
 extern void UserButton_Callback(void);
 extern void _Error_Handler(char *, int);
-extern uint32_t millis(void);
 
 #define Error_Handler() _Error_Handler(__FILE__, __LINE__)
 

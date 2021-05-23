@@ -11,7 +11,7 @@
 #include "i2c.h"
 
 
-static void VL53L0X_gpio_init(void) {
+static void vl53l0x_gpio_init(void) {
     LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
 
     LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
@@ -47,11 +47,10 @@ static void VL53L0X_gpio_init(void) {
 }
 
 
-extern void sensors_VL53L0X_init(void) {
+extern void sensors_vl53l0x_init(void) {
 	bool res;
-	statInfo_t xTraStats;
 
-	VL53L0X_gpio_init();
+	vl53l0x_gpio_init();
 	i2c1_init();
 
 	setAddress(ADDRESS_DEFAULT);
@@ -85,13 +84,13 @@ extern void sensors_VL53L0X_init(void) {
 }
 
 
-extern uint16_t sensors_VL53L0X_range_one(uint8_t sensor_id, statInfo_t *range) {
+extern uint16_t sensors_vl53l0x_range_one(uint8_t sensor_id, statInfo_t *range) {
 	setAddress(sensor_id);
 	return readRangeSingleMillimeters( range );
 }
 
 
-extern uint16_t sensors_VL53L0X_range_all(statInfo_t *ranges) {
+extern uint16_t sensors_vl53l0x_range_all(statInfo_t *ranges) {
 	uint16_t error = 0;;
 	setAddress(VL53L0X_FRONT_ADDRESS);
 	if(readRangeSingleMillimeters( &ranges[0] ) == 65535) { error = 65535; }

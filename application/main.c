@@ -11,8 +11,7 @@
 #include "gpio.h"
 #include "encoder.h"
 #include "motor.h"
-#include "i2c.h"
-#include "nrf24l01.h"
+#include "radio.h"
 #include "scheduler.h"
 #include "VL53L0X.h"
 #include "sensors.h"
@@ -44,16 +43,15 @@ extern void blink_led2(void) {
 }
 
 
-static void lost_connection(void) {
-    target_speed_left = 0;
-    target_speed_right = 0;
-    // motor_left_set_speed(0);
-    // motor_right_set_speed(0);
-    printf("Lost Connection with Remote\r\n");
-}
+// static void lost_connection(void) {
+//     target_speed_left = 0;
+//     target_speed_right = 0;
+//     // motor_left_set_speed(0);
+//     // motor_right_set_speed(0);
+//     printf("Lost Connection with Remote\r\n");
+// }
 
 
-static uint8_t tx_data[5] = { 0xAA, 0x55, 0xff };
 
 extern int main(void) {
     LL_Init();
@@ -78,15 +76,10 @@ extern int main(void) {
     TIM34_Encoder_Init();
     TIM2_Motor_Init();
 
-    nrf_init(2);
-
-    sensors_VL53L0X_init();
+    sensors_vl53l0x_init();
+    radio_init();
 
     debugf("Init Done\r\n");
-
-    uint8_t nrf_rx_size = 0;
-    uint8_t nrf_data[32] = {0};
-    nrf_set_rx_mode();
 
     statInfo_t xTraStats;
     statInfo_t ranges[4];
@@ -106,6 +99,7 @@ extern int main(void) {
             gpio_pressed = false;
             // debugf("Press\n");
 
+            uint8_t tx_data[5] = { 0xAA, 0x55, 0xff };
             bool res = nrf_write_data(1, tx_data, 3, true);
             debugf("Sending... %u\n", res);
         }
@@ -117,46 +111,15 @@ extern int main(void) {
         //! Basic ranging
         // debugf("VL53L0X Range...\n");
         // LL_mDelay(500);
-        // sensors_VL53L0X_range_all(ranges);
+        // sensors_vl53l0x_range_all(ranges);
         // debugf("F: %u, L: %u, R: %u, B: %u\n", ranges[0].rawDistance, ranges[1].rawDistance, ranges[2].rawDistance, ranges[3].rawDistance);
-        
-        // uint16_t range_value;
-        // range_value = readRangeSingleMillimeters( &xTraStats );  // blocks until measurement is finished
-        // if(range_value == false) { debugf("Error ranging with VL53L0X\n"); }
-        // debugf("\n\nstatus = %X", xTraStats.rangeStatus);
-        // debugf("\ndist = %u mm", xTraStats.rawDistance);
-        // debugf("\nsignCnt = %07u MCPS", xTraStats.signalCnt);
-        // debugf("\nambiCnt = %07u MCPS", xTraStats.ambientCnt);
-        // debugf("\nspadCnt = %07u MCPS", xTraStats.spadCnt);
-        // if(timeoutOccurred()) { debugf(" !!! Timeout !!! \n"); }
-        // else { debugf("\n"); }
-
-        //! Remote 
-        // debugf("NRF status: [%02X]\n", nrf_get_status());
 
         uint32_t current_time = millis();
 
-        nrf24l01_status_t * nrf_status = nrf_has_data_isr(); 
-        if(nrf_status->rx_ready) {
-            nrf_status->rx_ready = 0;
-            nrf_read_data(nrf_data);
+        radio_run();
 
-            int8_t forward_speed = (int8_t)nrf_data[0];
-            int8_t steer_speed = (int8_t)nrf_data[1];
-
-            target_speed_left = forward_speed + (int32_t)steer_speed / 3;
-            target_speed_right = forward_speed - (int32_t)steer_speed / 3;
-            debugf("NRF: %ld - %ld\n", target_speed_left, target_speed_right);
-
-            SET_PIN(LD2_GPIO_Port, LD2_Pin, 1);
-            scheduler_add_event(SCHEDULER_TASK_LED2, 50*MS, SCHEDULER_ONE_SHOT, blink_led2);
-
-            scheduler_remove_event(SCHEDULER_TASK_LOST_CONNECTION);
-            scheduler_add_event(SCHEDULER_TASK_LOST_CONNECTION, 200*MS, SCHEDULER_ONE_SHOT, lost_connection);
-        }
-
-        // if(current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL) {
-        //     motor_control_last_execution = current_time;
+        if(current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL) {
+            motor_control_last_execution = current_time;
 
         //     //! Encoder
         //     int32_t current_left_speed = encoder_left_get_speed();
@@ -188,7 +151,7 @@ extern int main(void) {
         //         motor_right_set_dir(0);
         //         motor_right_set_speed((uint16_t)-motor_right_command);
         //     }
-        // }
+        }
     }
     return 0;
 }

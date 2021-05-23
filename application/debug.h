@@ -11,7 +11,10 @@
 #define DEBUG_PROCESS_SERIAL_COMMANDS_FILE		1
 #define DEBUG_SCHEDULER_FILE 					0
 #define DEBUG_USART_FILE						1
+#define DEBUG_RADIO_FILE						1
 #define DEBUG_NRF24L01_FILE						1
+#define DEBUG_SPI_FILE							1
+#define DEBUG_SENSORS_FILE						1
 #define DEBUG_I2C_FILE							1
 #define DEBUG_PID_FILE							1
 
