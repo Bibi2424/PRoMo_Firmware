@@ -16,6 +16,7 @@
 #include "spi.h"
 #include "nrf24l01.h"
 #include "i2c.h"
+#include "sensors.h"
 
 static char commands[RX_BUFFER_SIZE];
 
@@ -46,6 +47,23 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 		}
 		else if(strcmp(word, "reset") == 0) {
 			NVIC_SystemReset();
+		}
+		else if(strcmp(word, "millis") == 0) {
+			printf("%lu\n", millis());
+		}
+
+		//! VL53L0X
+		else if(strcmp(word, "vl53.get") == 0) {
+			word = get_next_word(commands, FALSE);
+			uint8_t id = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
+			statInfo_t range;
+			uint16_t distance = sensors_vl53l0x_range_one(id, &range);
+			printf("%u - %u\n", id, distance);
+		}
+		else if(strcmp(word, "vl53.get-all") == 0) {
+			statInfo_t ranges[4];
+			sensors_vl53l0x_range_all(ranges);
+			printf("L:%u F:%u R:%u\n", ranges[0].rawDistance, ranges[1].rawDistance, ranges[2].rawDistance);
 		}
 
 		//! I2C

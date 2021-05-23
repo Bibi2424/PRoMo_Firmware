@@ -34,130 +34,61 @@ static uint32_t timeoutMicrosecondsToMclks(uint32_t timeout_period_us, uint8_t v
 // I2C communication Functions
 //---------------------------------------------------------
 // Write an 8-bit register
-void writeReg(uint8_t reg, uint8_t value) {
+static void writeReg(uint8_t reg, uint8_t value) {
     i2c1_full_write(g_i2cAddr, reg, &value, 1);
-    // i2c1_start( g_i2cAddr | I2C_WRITE );
-    // i2c1_write(reg);
-    // i2c1_write(value);
-    // i2c1_stop();
 }
 
 // Write a 16-bit register
-void writeReg16Bit(uint8_t reg, uint16_t value) {
+static void writeReg16Bit(uint8_t reg, uint16_t value) {
     uint8_t buffer[2];
     buffer[0] = (uint8_t)((value >> 8) & 0xff);
     buffer[1] = (uint8_t)((value     ) & 0xff);
     i2c1_full_write(g_i2cAddr, reg, buffer, 2);
-
-    // i2c1_start( g_i2cAddr | I2C_WRITE );
-    // i2c1_write(reg);
-    // i2c1_write((value >> 8) & 0xFF);
-    // i2c1_write((value     ) & 0xFF);
-    // i2c1_stop();
 }
 
 // Write a 32-bit register
-void writeReg32Bit(uint8_t reg, uint32_t value){
+static void writeReg32Bit(uint8_t reg, uint32_t value){
     uint8_t buffer[4];
     buffer[0] = (uint8_t)((value >> 24) & 0xff);
     buffer[1] = (uint8_t)((value >> 16) & 0xff);
     buffer[2] = (uint8_t)((value >>  8) & 0xff);
     buffer[3] = (uint8_t)((value      ) & 0xff);
     i2c1_full_write(g_i2cAddr, reg, buffer, 4);
-
-    // i2c1_start( g_i2cAddr | I2C_WRITE );
-    // i2c1_write(reg);
-    // i2c1_write((value >>24) & 0xFF);
-    // i2c1_write((value >>16) & 0xFF);
-    // i2c1_write((value >> 8) & 0xFF);
-    // i2c1_write((value     ) & 0xFF);
-    // i2c1_stop();
 }
 
 // Read an 8-bit register
-uint8_t readReg(uint8_t reg) {
+static uint8_t readReg(uint8_t reg) {
     uint8_t value;
     i2c1_full_read(g_i2cAddr, reg, &value, 1);
-
-    // i2c1_start( g_i2cAddr | I2C_WRITE );
-    // i2c1_write( reg );
-    // i2c1_rep_start( g_i2cAddr | I2C_READ );
-    // i2c1_readNak(&value);
-    // i2c1_stop();
     return value;
 }
 
 // Read a 16-bit register
-uint16_t readReg16Bit(uint8_t reg) {
+static uint16_t readReg16Bit(uint8_t reg) {
     uint8_t buffer[2];
     i2c1_full_read(g_i2cAddr, reg, buffer, 1);
     uint16_t value = (buffer[0] << 8) | buffer[1];
-    // uint8_t data;
-    // i2c1_start( g_i2cAddr | I2C_WRITE );
-    // i2c1_write( reg );
-    // i2c1_rep_start( g_i2cAddr | I2C_READ );
-    // i2c1_readAck(&data);
-    // value  = data << 8;
-    // i2c1_readNak(&data);
-    // value |= data;
-    // i2c1_stop();
     return value;
 }
 
 // Read a 32-bit register
-uint32_t readReg32Bit(uint8_t reg) {
+static uint32_t readReg32Bit(uint8_t reg) {
     uint8_t buffer[4];
     i2c1_full_read(g_i2cAddr, reg, buffer, 1);
     uint32_t value = (buffer[0] << 24) | (buffer[1] << 16) | (buffer[2] << 8) | buffer[3];
-
-    // uint32_t value;
-    // uint8_t data;
-    // i2c1_start( g_i2cAddr | I2C_WRITE );
-    // i2c1_write( reg );
-    // i2c1_rep_start( g_i2cAddr | I2C_READ );
-    // i2c1_readAck(&data);
-    // value  = data << 24;
-    // i2c1_readAck(&data);
-    // value  = data << 16;
-    // i2c1_readAck(&data);
-    // value  = data << 8;
-    // i2c1_readNak(&data);
-    // value |= data;
-    // i2c1_stop();
     return value;
 }
 
 // Write an arbitrary number of bytes from the given array to the sensor,
 // starting at the given register
-void writeMulti(uint8_t reg, uint8_t const *src, uint8_t count) {
+static void writeMulti(uint8_t reg, uint8_t const *src, uint8_t count) {
     i2c1_full_write(g_i2cAddr, reg, src, count);
-
-    // i2c1_start( g_i2cAddr | I2C_WRITE );
-    // i2c1_write( reg );
-    // while ( count-- > 0 ) {
-    //     i2c1_write( *src++ );
-    // }
-    // i2c1_stop();
 }
 
 // Read an arbitrary number of bytes from the sensor, starting at the given
 // register, into the given array
-void readMulti(uint8_t reg, uint8_t * dst, uint8_t count) {
+static void readMulti(uint8_t reg, uint8_t * dst, uint8_t count) {
     i2c1_full_read(g_i2cAddr, reg, dst, count);
-    // i2c1_start( g_i2cAddr | I2C_WRITE );
-    // i2c1_write( reg );
-    // i2c1_rep_start( g_i2cAddr | I2C_READ );
-    // uint8_t data;
-    // while ( count > 0 ) {
-    //     if ( count > 1 ) {
-    //         i2c1_readAck(&data);
-    //     } else {
-    //         i2c1_readNak(&data);
-    //     }
-    //     *dst++ = data;
-    //     count--;
-    // }
-    // i2c1_stop();
 }
 
 

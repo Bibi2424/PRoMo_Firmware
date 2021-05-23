@@ -46,7 +46,7 @@ extern void MX_USART1_UART_Init(uint32_t baudrate) {
 	LL_USART_Init(USART1, &USART_InitStruct);
 	LL_USART_ConfigAsyncMode(USART1);
 
-	NVIC_SetPriority(USART1_IRQn, 0);  
+	NVIC_SetPriority(USART1_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 6, 0));  
 	NVIC_EnableIRQ(USART1_IRQn);
 
 	memset((void*)rx_buffer, 0, RX_BUFFER_SIZE);
@@ -84,7 +84,8 @@ extern void MX_USART6_UART_Init(uint32_t baudrate) {
 	LL_USART_Init(USART6, &USART_InitStruct);
 	LL_USART_ConfigAsyncMode(USART6);
 
-	NVIC_SetPriority(USART6_IRQn, 0);  
+	NVIC_SetPriority(USART6_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 6, 0)); 
+
 	NVIC_EnableIRQ(USART6_IRQn);
 
 	memset((void*)rx_buffer, 0, RX_BUFFER_SIZE);

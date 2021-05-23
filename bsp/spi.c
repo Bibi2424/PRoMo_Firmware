@@ -50,6 +50,10 @@ extern void spi_init(SPI_TypeDef *SPIx) {
 	// LL_SPI_EnableIT_RXNE(SPIx);
 	// LL_SPI_EnableIT_TXE(SPIx);
 	// LL_SPI_EnableIT_ERR(SPIx);
+	
+	//! Interrupt
+	// NVIC_SetPriority(SPIx, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 4, 8));
+	// NVIC_EnableIRQ(SPIx);	
 
 	LL_SPI_Enable(SPIx);
 

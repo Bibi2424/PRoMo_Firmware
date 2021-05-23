@@ -80,9 +80,6 @@ extern int main(void) {
 
     debugf("Init Done\r\n");
 
-    // statInfo_t xTraStats;
-    // statInfo_t ranges[4];
-
     // pid_controller_t pid_speed_left = {
     //     .compute_interval = 50,
     //     .proportional_gain = 1,
@@ -109,8 +106,8 @@ extern int main(void) {
 
         //! Basic ranging
         // debugf("VL53L0X Range...\n");
-        // LL_mDelay(500);
-        // sensors_vl53l0x_range_all(ranges);
+        // statInfo_t ranges[4];
+        // sensors_vl53l0x_get_all(&ranges);
         // debugf("F: %u, L: %u, R: %u, B: %u\n", ranges[0].rawDistance, ranges[1].rawDistance, ranges[2].rawDistance, ranges[3].rawDistance);
 
         uint32_t current_time = millis();
@@ -186,13 +183,14 @@ void SystemClock_Config(void) {
     /* Wait till PLL is ready */
     while(LL_RCC_PLL_IsReady() != 1) { }
     LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
-    LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_2);
+    LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
     LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);
     LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_HSE);
     /* Wait till System clock is ready */
     while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_HSE) { }
     LL_Init1msTick(25000000);
     LL_SetSystemCoreClock(25000000);
+    SysTick_Config(SystemCoreClock / 1000); 
 
     /* Update the time base */
     // if (HAL_InitTick (TICK_INT_PRIORITY) != HAL_OK) { Error_Handler(); }
@@ -218,7 +216,8 @@ extern void _Error_Handler(char *file, int line) {
 }
 
 
-static uint32_t counter = 0;
+//! FIXME: millis doesnt seems to update inside some function (could be irq related)
+volatile static uint32_t counter = 0;
 extern uint32_t millis(void) {
     return counter;
 }

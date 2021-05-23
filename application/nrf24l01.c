@@ -69,10 +69,6 @@ static void nrf24l01_gpio_init(void) {
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	GPIO_InitStruct.Alternate = LL_GPIO_AF_5;
 	LL_GPIO_Init(NRF_SCK_GPIO_Port, &GPIO_InitStruct);
-
-	//! Interrupt
-	// NVIC_SetPriority(SPI2_IRQn, 0);
-	// NVIC_EnableIRQ(SPI2_IRQn);	
 }
 
 
