@@ -1,8 +1,5 @@
 #define DEBUG_THIS_FILE   DEBUG_I2C_FILE
 
-#include <stdint.h>
-#include <stdbool.h>
-
 #include "global.h"
 #include "debug.h"
 
@@ -18,8 +15,29 @@ static uint32_t TM_I2C_Timeout;
 
 
 extern void i2c_init(I2C_TypeDef *I2Cx) {
+    uint32_t clock_periph;
+    IRQn_Type i2c_event_irq, i2c_error_irq;
+
+    switch(I2Cx) {
+        case(I2C1):
+            clock_periph = LL_APB1_GRP1_PERIPH_I2C1;
+            i2c_event_irq = I2C1_EV_IRQn;
+            i2c_event_irq = I2C1_ER_IRQn;
+        break;
+        case(I2C2):
+            clock_periph = LL_APB1_GRP1_PERIPH_I2C2;
+            i2c_event_irq = I2C2_EV_IRQn;
+            i2c_event_irq = I2C2_ER_IRQn;
+        break;
+        case(I2C3):
+            clock_periph = LL_APB1_GRP1_PERIPH_I2C3;
+            i2c_event_irq = I2C3_EV_IRQn;
+            i2c_event_irq = I2C3_ER_IRQn;
+        break;
+    }
+
     //! Peripheral clock enable
-    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C1);
+    LL_APB1_GRP1_EnableClock(clock_periph);
 
     //! I2C Initialization
     LL_I2C_InitTypeDef I2C_InitStruct = {0};
@@ -233,167 +251,6 @@ extern uint8_t i2c_full_read(I2C_TypeDef *I2Cx, uint8_t address, uint8_t mem, ui
 }
 
 //! ---- OLD -----
-// extern uint8_t i2c_start(I2C_TypeDef *I2Cx, unsigned char address) {
-
-//     LL_I2C_AcknowledgeNextData(I2Cx, LL_I2C_ACK);
-//     // LL_I2C_AcknowledgeNextData(I2Cx, LL_I2C_NACK);
-    
-//     /* Generate I2C start pulse */
-//     LL_I2C_GenerateStartCondition(I2Cx);
-    
-//     /* Wait till I2C is busy */
-//     TM_I2C_Timeout = TM_I2C_TIMEOUT;
-//     while (!LL_I2C_IsActiveFlag_SB(I2Cx)) {
-//         if (!LL_SYSTICK_IsActiveCounterFlag()) { continue; }
-//         if (--TM_I2C_Timeout == 0x00) {
-//             printf("i2c_start timeout step 0\n");
-//             TOGGLE_PIN(DEBUG_Pin_Port, DEBUG_Pin_2);
-//             return 0x01;
-//         }
-//     }
-
-//     /* Send write/read bit */
-//     if ((address & I2C_OAR1_ADD0) == I2C_TRANSMITTER_MODE) {
-//         /* Send address with zero last bit */
-//         LL_I2C_TransmitData8(I2Cx, address & ~I2C_OAR1_ADD0);
-
-//         TM_I2C_Timeout = TM_I2C_TIMEOUT;
-//         while (!LL_I2C_IsActiveFlag_ADDR(I2Cx)) {
-//             if (!LL_SYSTICK_IsActiveCounterFlag()) { continue; }
-//             if (--TM_I2C_Timeout == 0x00) {
-//                 printf("i2c_start timeout step T1\n");
-//                 TOGGLE_PIN(DEBUG_Pin_Port, DEBUG_Pin_2);
-//                 return 0x10;
-//             }
-//         }
-//     }
-//     if ((address & I2C_OAR1_ADD0) == I2C_RECEIVER_MODE) {
-//         /* Send address with 1 last bit */
-//         LL_I2C_TransmitData8(I2Cx, address | I2C_OAR1_ADD0);
-
-//         TM_I2C_Timeout = TM_I2C_TIMEOUT;
-//         while (LL_I2C_IsActiveFlag_ADDR(I2Cx)) {
-//             if (!LL_SYSTICK_IsActiveCounterFlag()) { continue; }
-//             if (--TM_I2C_Timeout == 0x00) {
-//                 printf("i2c_start timeout step R1\n");
-//                 TOGGLE_PIN(DEBUG_Pin_Port, DEBUG_Pin_2);
-//                 return 0x11;
-//             }
-//         }
-//     }
-
-//     /* Read status register to clear ADDR flag */
-//     LL_I2C_ClearFlag_ADDR(I2Cx);
-//     printf("s0 i2c_flags [0x%02X]\n", (uint8_t)(I2Cx->SR1 & 0xff));
-    
-//     return 0;
-// }
-
-
-// extern uint8_t i2c_rep_start(I2C_TypeDef *I2Cx, uint8_t address) {
-//     return i2c_start(I2Cx, address);
-// }
-
-
-// extern uint8_t i2c_write(I2C_TypeDef *I2Cx, uint8_t data) {
-//     /* Wait till I2C is not busy anymore */
-//     TM_I2C_Timeout = TM_I2C_TIMEOUT;
-//     while (!LL_I2C_IsActiveFlag_TXE(I2Cx)) {
-//         if (!LL_SYSTICK_IsActiveCounterFlag()) { continue; }
-//         if(--TM_I2C_Timeout == 0) {
-//             printf("i2c_write timeout\n");
-//             TOGGLE_PIN(DEBUG_Pin_Port, DEBUG_Pin_2);
-//             return 1;
-//         }
-//     }
-    
-//     /* Send I2C data */
-//     LL_I2C_TransmitData8(I2Cx, data);
-//     return 0;
-// }
-
-
-// extern uint8_t i2c_readAck(I2C_TypeDef *I2Cx, uint8_t *out) {
-//     uint8_t data;
-    
-//     // if(LL_I2C_IsActiveFlag_ADDR(I2Cx)) { LL_I2C_ClearFlag_ADDR(I2Cx); }
-
-//     /* Enable ACK */
-//     LL_I2C_AcknowledgeNextData(I2Cx, LL_I2C_ACK);
-    
-//     /* Wait till not received */
-//     TM_I2C_Timeout = TM_I2C_TIMEOUT;
-//     // while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_RECEIVED)) {
-//     while (!LL_I2C_IsActiveFlag_BTF(I2Cx)) {
-//         if (!LL_SYSTICK_IsActiveCounterFlag()) { continue; }
-//         if (--TM_I2C_Timeout == 0x00) {
-//             printf("t0 i2c_readAck timeout [0x%02X]\n", (uint8_t)(I2Cx->SR1 & 0xff));
-//             TOGGLE_PIN(DEBUG_Pin_Port, DEBUG_Pin_2);
-//             return 1;
-//         }
-//     }
-    
-//     /* Read data */
-//     data = LL_I2C_ReceiveData8(I2Cx);
-    
-//     /* Return data */
-//     if(out != NULL) { *out = data; }
-//     return 0;
-// }
-
-
-// extern uint8_t i2c_readNak(I2C_TypeDef *I2Cx, uint8_t *out) {
-//     uint8_t data;
-
-//     if(LL_I2C_IsActiveFlag_ADDR(I2Cx)) { LL_I2C_ClearFlag_ADDR(I2Cx); }
-//     printf("r0 i2c_flags [0x%02X]\n", (uint8_t)(I2Cx->SR1 & 0xff));
-    
-//     /* Disable ACK */
-//     LL_I2C_AcknowledgeNextData(I2Cx, LL_I2C_NACK);
-    
-//     /* Generate stop */
-//     LL_I2C_GenerateStopCondition(I2Cx);
-    
-//     /* Wait till received */
-//     TM_I2C_Timeout = TM_I2C_TIMEOUT;
-//     // while (!I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_RECEIVED)) {
-//     while (!LL_I2C_IsActiveFlag_RXNE(I2Cx) || !LL_I2C_IsActiveFlag_BTF(I2Cx)) {
-//         if (!LL_SYSTICK_IsActiveCounterFlag()) { continue; }
-//         if (--TM_I2C_Timeout == 0x00) {
-//             printf("i2c_readNack timeout [0x%02X]\n", (uint8_t)(I2Cx->SR1 & 0xff));
-//             TOGGLE_PIN(DEBUG_Pin_Port, DEBUG_Pin_2);
-//             return 1;
-//         }
-//     }
-
-//     /* Read data */
-//     data = LL_I2C_ReceiveData8(I2Cx);
-    
-//     /* Return data */
-//     if(out != NULL) { *out = data; }
-//     return 0;
-// }
-
-
-// extern uint8_t i2c_stop(I2C_TypeDef *I2Cx) {
-//     printf("stop i2c_flags [0x%02X]\n", (uint8_t)(I2Cx->SR1 & 0xff));
-
-//     /* Wait till transmitter not empty */
-//     TM_I2C_Timeout = TM_I2C_TIMEOUT;
-//     while ( !LL_I2C_IsActiveFlag_TXE(I2Cx) || !LL_I2C_IsActiveFlag_BTF(I2Cx) ) {
-//         if (!LL_SYSTICK_IsActiveCounterFlag()) { continue; }
-//         if (--TM_I2C_Timeout == 0x00) {
-//             printf("i2c_stop timeout [0x%02X]\n", (uint8_t)(I2Cx->SR1 & 0xff));
-//             TOGGLE_PIN(DEBUG_Pin_Port, DEBUG_Pin_2);
-//             return 1;
-//         }
-//     }
-    
-//     /* Generate stop */
-//     // I2Cx->CR1 |= I2C_CR1_STOP;
-//     LL_I2C_GenerateStopCondition(I2Cx);
-//     return 0;
-// }
 
 
 // Print out all the active I2C addresses on the bus

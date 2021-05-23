@@ -135,11 +135,8 @@ typedef union nrf24l01_status {
 // #endif
 
 
-extern bool SPI2_NRF24L01_Init(uint8_t radio_rx_id);
+extern bool nrf_init(uint8_t radio_rx_id);
 
-//* SPI *****************************************************************************
-extern uint8_t spi_send_byte_waiting(uint8_t data);
-extern void spi_send_multiple_bytes_waiting(uint8_t* write_data, uint8_t* read_data, uint8_t size);
 //* NRF Low Level *******************************************************************
 extern uint8_t nrf_read_register(uint8_t reg);
 extern void nrf_write_register(uint8_t reg, uint8_t value);

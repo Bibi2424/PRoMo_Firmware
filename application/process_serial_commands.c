@@ -13,6 +13,7 @@
 #include "gpio.h"
 #include "usart.h"
 #include "motor.h"
+#include "spi.h"
 #include "nrf24l01.h"
 #include "i2c.h"
 
@@ -140,7 +141,7 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 				spi_write_data[i] = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
 			}
 			CSN_LOW;
-			spi_send_multiple_bytes_waiting(spi_write_data, spi_read_data, size);
+			spi2_send_multiple_bytes_waiting(spi_write_data, spi_read_data, size);
 			printf("SPI-READ:[");
 			for(uint8_t i = 0; i < size; i++) { printf("%02X:", spi_read_data[i]); }
 			printf("]\r\n");

@@ -78,7 +78,7 @@ extern int main(void) {
     TIM34_Encoder_Init();
     TIM2_Motor_Init();
 
-    SPI2_NRF24L01_Init(2);
+    nrf_init(2);
 
     sensors_VL53L0X_init();
 
