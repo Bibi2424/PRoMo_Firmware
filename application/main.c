@@ -27,7 +27,7 @@ void SystemClock_Config(void);
 #define MOTOR_CONTROL_INTERVAL      50
 static uint32_t motor_control_last_execution = 0;
 
-// static int32_t target_speed_left = 0, target_speed_right = 0;
+static int8_t target_speed_left = 0, target_speed_right = 0;
 
 volatile static bool gpio_pressed = false;
 
@@ -42,14 +42,24 @@ extern void blink_led2(void) {
 }
 
 
-// static void lost_connection(void) {
-//     target_speed_left = 0;
-//     target_speed_right = 0;
-//     // motor_left_set_speed(0);
-//     // motor_right_set_speed(0);
-//     printf("Lost Connection with Remote\r\n");
-// }
+static void get_data_from_radio(uint8_t *data, uint8_t size) {
 
+    int8_t forward_speed = (int8_t)data[0];
+    int8_t steer_speed = (int8_t)data[1];
+    // debugf("NRF: %d - %d\n", forward_speed, steer_speed);
+
+    target_speed_left = forward_speed + (int8_t)steer_speed / 3;
+    target_speed_right = forward_speed - (int8_t)steer_speed / 3;
+    debugf("NRF: %d - %d\n", target_speed_left, target_speed_right);
+}
+
+static void lost_connection(void) {
+    target_speed_left = 0;
+    target_speed_right = 0;
+    // motor_left_set_speed(0);
+    // motor_right_set_speed(0);
+    debugf("Lost Connection with Remote\r\n");
+}
 
 
 extern int main(void) {
@@ -76,7 +86,13 @@ extern int main(void) {
     TIM2_Motor_Init();
 
     sensors_vl53l0x_init();
-    radio_init();
+
+    radio_settings_t radio_settings = {
+        .radio_rx_id = 2,
+        .get_data = get_data_from_radio,
+        .on_connection_lost = lost_connection,
+    };
+    radio_init(&radio_settings);
 
     debugf("Init Done\r\n");
 
@@ -87,7 +103,6 @@ extern int main(void) {
     //     .derivative_gain = 0
     // };
     // pid_controller_t pid_speed_right = pid_speed_left;
-
 
     while (1) {
 
@@ -100,16 +115,6 @@ extern int main(void) {
             debugf("Sending... %u\n", res);
         }
 
-        // debugf("Left - [Speed: %u, Dir:%u]\r\n", encoder_left_get_value(), READ_BIT(TIM3->CR1, TIM_CR1_DIR)==TIM_CR1_DIR);
-        // debugf("Right -[Speed: %u, Dir:%u]\r\n", encoder_right_get_value(), READ_BIT(TIM4->CR1, TIM_CR1_DIR)==TIM_CR1_DIR);
-        // debugf("plot %d %d\n", encoder_left_get_value(),encoder_right_get_value());
-
-        //! Basic ranging
-        // debugf("VL53L0X Range...\n");
-        // statInfo_t ranges[4];
-        // sensors_vl53l0x_get_all(&ranges);
-        // debugf("F: %u, L: %u, R: %u, B: %u\n", ranges[0].rawDistance, ranges[1].rawDistance, ranges[2].rawDistance, ranges[3].rawDistance);
-
         uint32_t current_time = millis();
 
         radio_run();
@@ -117,36 +122,35 @@ extern int main(void) {
         if(current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL) {
             motor_control_last_execution = current_time;
 
-        //     //! Encoder
-        //     int32_t current_left_speed = encoder_left_get_speed();
-        //     int32_t current_right_speed = encoder_right_get_speed();
-        //     debugf("ENCODER: %ld - %ld\n", current_left_speed, current_right_speed);
+            //! Encoder
+            int32_t current_left_speed = encoder_left_get_speed();
+            int32_t current_right_speed = encoder_right_get_speed();
+            debugf("ENCODER: %ld - %ld\n", current_left_speed, -current_right_speed);
 
+            //! PID
+            // int32_t motor_left_command = target_speed_left;
+            // int32_t motor_right_command = target_speed_right;
+            // // int32_t motor_left_command = pid_compute(&pid_speed_left, target_speed_left, current_left_speed);
+            // // int32_t motor_right_command = pid_compute(&pid_speed_right, target_speed_right, current_right_speed);
+            // debugf("PID OUT: %ld - %ld\n", motor_left_command, motor_right_command);
 
-        //     //! PID
-        //     int32_t motor_left_command = target_speed_left;
-        //     int32_t motor_right_command = target_speed_right;
-        //     // int32_t motor_left_command = pid_compute(&pid_speed_left, target_speed_left, current_left_speed);
-        //     // int32_t motor_right_command = pid_compute(&pid_speed_right, target_speed_right, current_right_speed);
-        //     debugf("PID OUT: %ld - %ld\n", motor_left_command, motor_right_command);
-
-        //     //! Motors
-        //     if(motor_left_command > 0) {
-        //         motor_left_set_dir(1);
-        //         motor_left_set_speed((uint16_t)motor_left_command);
-        //     } 
-        //     else {
-        //         motor_left_set_dir(0);
-        //         motor_left_set_speed((uint16_t)-motor_left_command);
-        //     }
-        //     if(motor_right_command > 0) {
-        //         motor_right_set_dir(1);
-        //         motor_right_set_speed((uint16_t)motor_right_command);
-        //     } 
-        //     else {
-        //         motor_right_set_dir(0);
-        //         motor_right_set_speed((uint16_t)-motor_right_command);
-        //     }
+            // //! Motors
+            if(target_speed_left > 0) {
+                motor_left_set_dir(1);
+                motor_left_set_speed((uint32_t)target_speed_left);
+            } 
+            else {
+                motor_left_set_dir(0);
+                motor_left_set_speed((uint32_t)-target_speed_left);
+            }
+            if(target_speed_right > 0) {
+                motor_right_set_dir(1);
+                motor_right_set_speed((uint32_t)target_speed_right);
+            } 
+            else {
+                motor_right_set_dir(0);
+                motor_right_set_speed((uint32_t)-target_speed_right);
+            }
         }
     }
     return 0;

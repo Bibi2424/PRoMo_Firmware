@@ -14,7 +14,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from pyqt_serial import SerialWidget
 
 
-progname = os.path.basename(sys.argv[0])
+progname = "Serial Plotter"
 progversion = "0.1"
 
 
@@ -43,17 +43,19 @@ class MyStaticMplCanvas(MyMplCanvas):
     """Simple canvas with a sine plot."""
 
     def compute_initial_figure(self):
-        t = np.arange(0.0, 3.0, 0.01)
-        s = np.sin(2*np.pi*t)
-        self.axes.plot(t, s)
+        pass
+        # t = np.arange(0.0, 3.0, 0.01)
+        # s = np.sin(2*np.pi*t)
+        # self.axes.plot(t, s)
 
 
 class MyDynamicMplCanvas(MyMplCanvas):
     """A canvas that updates itself every second with a new plot."""
+    MAXLEN = 100
 
     def __init__(self, *args, **kwargs):
-        self.x = deque(maxlen=100)
-        self.y = deque(maxlen=100)
+        self.x = deque(maxlen=self.MAXLEN)
+        self.data = []
         MyMplCanvas.__init__(self, *args, **kwargs)
         timer = QtCore.QTimer(self)
         timer.timeout.connect(self.update_figure)
@@ -63,16 +65,20 @@ class MyDynamicMplCanvas(MyMplCanvas):
 
 
     def compute_initial_figure(self):
-        self.axes.plot(list(self.x), list(self.y))
+        self.axes.plot([], [])
 
-    def add_data(self, x, y):
-        self.x.append(self.start_time - x)
-        self.y.append(y)
+    def add_data(self, x, data):
+        while len(data) > len(self.data):
+            self.data.append(deque([0] * len(self.x), maxlen=self.MAXLEN))
+        self.x.append(x - self.start_time)
+        for y, d, in zip(self.data, data):
+            y.append(d)
 
     def update_figure(self):
         # Build a list of 4 random integers between 0 and 10 (both inclusive)
         self.axes.cla()
-        self.axes.plot(list(self.x), list(self.y), 'r')
+        for y in self.data:
+            self.axes.plot(list(self.x), list(y))
         self.draw()
 
 
@@ -98,12 +104,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         h = QtWidgets.QHBoxLayout(self.main_widget)
 
         l = QtWidgets.QVBoxLayout()
-        # sc = MyStaticMplCanvas(self.main_widget, width=5, height=4, dpi=100)
-        # l.addWidget(sc)
         self.dc = MyDynamicMplCanvas(self.main_widget, width=5, height=4, dpi=100)
         l.addWidget(self.dc)
+        self.dc2 = MyDynamicMplCanvas(self.main_widget, width=5, height=4, dpi=100)
+        l.addWidget(self.dc2)
 
         h.addLayout(l)
+
+
         ser = SerialWidget(parent=self.main_widget, callback=self.get_data)
         h.addWidget(ser)
 
@@ -112,9 +120,26 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         self.statusBar().showMessage("All hail matplotlib!", 2000)
 
-    def get_data(self, timestamp, data):
-        # print(timestamp, data)
-        self.dc.add_data(timestamp, data[0])
+    def get_data(self, timestamp, text):
+
+        key = 'NRF:'
+        if text.startswith(key):
+            try:
+                r = map(int, text[len(key):].split(' - '))
+                data = list(r)
+                self.dc.add_data(timestamp, data)
+            except Exception as e:
+                print(f'Error decoding: {text}')
+
+        key = 'ENCODER:'
+        if text.startswith(key):
+            try:
+                r = map(int, text[len(key):].split(' - '))
+                data = list(r)
+                self.dc2.add_data(timestamp, data)
+            except Exception as e:
+                print(f'Error decoding: {text}')
+
 
     def fileQuit(self):
         self.close()

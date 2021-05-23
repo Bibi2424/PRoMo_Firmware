@@ -47,7 +47,7 @@ class SerialWidget(QtWidgets.QWidget):
         self.port_input.setText('COM10')
         self.baudrate_input.setText('921600')
 
-        self.text_received = deque(maxlen=10)
+        self.text_received = deque(maxlen=50)
 
     @QtCore.pyqtSlot()
     def receive(self):
@@ -58,14 +58,12 @@ class SerialWidget(QtWidgets.QWidget):
                 continue
             text = text.rstrip('\r\n')
             self.text_received.append(text)
-            # self.output_text.append(text)
             self.output_text.clear()
             self.output_text.setPlainText('\r\n'.join((self.text_received)))
 
-            if text.startswith('NRF:'):
-                r = map(int, text[5:].split(' - '))
-                if self.callback: 
-                    self.callback(time.time(), list(r))
+            if self.callback:
+                self.callback(time.time(), text)
+
 
     @QtCore.pyqtSlot()
     def send(self):
@@ -76,6 +74,7 @@ class SerialWidget(QtWidgets.QWidget):
         self.connect_button.setText("Disconnect" if checked else "Connect")
         if checked:
             if not self.serial.isOpen():
+                self.output_text.clear()
                 self.serial.setPortName(self.port_input.text())
                 self.port_input.setReadOnly(True)
                 self.serial.setBaudRate(int(self.baudrate_input.text()))
@@ -86,7 +85,6 @@ class SerialWidget(QtWidgets.QWidget):
             self.serial.close()
             self.port_input.setReadOnly(False)
             self.baudrate_input.setReadOnly(False)
-            self.output_text.clear()
 
 if __name__ == '__main__':
     import sys
