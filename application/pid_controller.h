@@ -13,7 +13,7 @@ typedef struct {
 	// uint32_t max;
 	// uint32_t min;
 
-}pid_controller_t;
+} pid_controller_t;
 
 
 extern int32_t pid_compute(pid_controller_t *pid, int32_t set_point, int32_t current_value);

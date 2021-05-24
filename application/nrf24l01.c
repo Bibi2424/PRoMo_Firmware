@@ -118,13 +118,13 @@ extern bool nrf_init(uint8_t radio_rx_id) {
 	// 	// NRF24L01_CONFIG_CRC_ENABLE | NRF24L01_CONFIG_CRC_1BIT | NRF24L01_CONFIG_POWER_UP | NRF24L01_CONFIG_PRIM_RX
 	// );
 
-	if(nrf_set_rx_mode() == FALSE) {
+	if(nrf_set_rx_mode() == false) {
 		debugf("NRF Init Fail\r\n");
-		return FALSE;
+		return false;
 	}
 
 	debugf("NRF Init OK\r\n");
-	return TRUE;
+	return true;
 }
 
 
@@ -225,11 +225,11 @@ extern uint8_t nrf_set_rx_mode(void) {
 
 	if(nrf_read_register(NRF24L01_REGISTER_CONFIG) == CONFIG_FOR_RX_MODE) {
 		debugf("OK\n");
-		return TRUE;
+		return true;
 	}
 	else {
 		debugf("FAIL\n");
-		return FALSE;
+		return false;
 	}
 }
 

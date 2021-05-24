@@ -44,6 +44,10 @@
 #define TIM2_CH4_Pin LL_GPIO_PIN_3
 #define TIM2_CH4_GPIO_Port GPIOA
 
+//! Motor enable on PC4
+#define MOTOR_ENABLE_Pin LL_GPIO_PIN_4
+#define MOTOR_ENABLE_Pin_Port GPIOC
+
 //! NRF24L01 on SPI2
 #define NRF_CE_Pin LL_GPIO_PIN_10
 #define NRF_CE_GPIO_Port GPIOB
