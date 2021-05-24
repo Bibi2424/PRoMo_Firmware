@@ -23,8 +23,6 @@ static void 	update_schedules(uint32_t elapse_time);
 static int16_t 	find_next_event(void);
 
 /*------------------------- EXTERN FUNCTIONS -------------------------*/
-
-//! TODO: Change from using TIM9 overflow to CH1
 extern void scheduler_init(void) {
 	uint8_t i;
 
@@ -32,7 +30,7 @@ extern void scheduler_init(void) {
 
   	//! Init Timer9 for base generation of PWM
 	LL_TIM_InitTypeDef LL_TIM_InitStruct;
-	LL_TIM_InitStruct.Prescaler = __LL_TIM_CALC_PSC(SystemCoreClock, 10000);
+	LL_TIM_InitStruct.Prescaler = __LL_TIM_CALC_PSC(SystemCoreClock, 100000);
 	LL_TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
 	// LL_TIM_InitStruct.Autoreload = __LL_TIM_CALC_ARR(SystemCoreClock, LL_TIM_InitStruct.Prescaler, 1000);
 	LL_TIM_InitStruct.Autoreload = 0x0; //! This will be set by the lib
@@ -40,7 +38,7 @@ extern void scheduler_init(void) {
 	LL_TIM_InitStruct.RepetitionCounter = (uint8_t)0x00;
 	LL_TIM_Init(SCHEDULER_TIM, &LL_TIM_InitStruct);
 
-	NVIC_SetPriority(TIM1_BRK_TIM9_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 8, 8));
+	NVIC_SetPriority(TIM1_BRK_TIM9_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 15, 0));
 	NVIC_EnableIRQ(TIM1_BRK_TIM9_IRQn);
 
 	//! NOTE: Do not need to start counter as long as no event is added
@@ -67,8 +65,8 @@ extern void scheduler_add_event(uint8_t id, uint32_t period, int16_t number_of_t
 	//! Mark as new to skip the first update_schedules() call
 	scheduler[id].status = NEW;
 	scheduler[id].n = number_of_trigger;
-	scheduler[id].time_left = period*10;
-	scheduler[id].period = period*10;
+	scheduler[id].time_left = period;
+	scheduler[id].period = period;
 	scheduler[id].callback = callback;
 	
 	// if
@@ -92,8 +90,8 @@ extern uint8_t scheduler_get_state(uint8_t id) {
 void TIM1_BRK_TIM9_IRQHandler(void) {
   /* Check whether update interrupt is pending */
 	if(LL_TIM_IsActiveFlag_UPDATE(SCHEDULER_TIM) == 1) {
-		scheduler_handler(LL_TIM_GetAutoReload(SCHEDULER_TIM));
 		LL_TIM_ClearFlag_UPDATE(SCHEDULER_TIM); 			// Clear the update interrupt flag
+		scheduler_handler(LL_TIM_GetAutoReload(SCHEDULER_TIM));
 	}
 }
 
@@ -129,7 +127,7 @@ static void scheduler_handler(uint32_t elapse_time) {
 	next_id = find_next_event();
 	//! Configure Timer for next event if any
 	if(next_id >= 0) {
-		debugf("Next event [%d] in %lums\r\n", next_id, scheduler[next_id].time_left/10);
+		debugf("Next event [%d] in %lums\r\n", next_id, scheduler[next_id].time_left / MS);
 		LL_TIM_SetAutoReload(SCHEDULER_TIM, scheduler[next_id].time_left);
 		LL_TIM_EnableCounter(SCHEDULER_TIM);
 		LL_TIM_EnableIT_UPDATE(SCHEDULER_TIM);

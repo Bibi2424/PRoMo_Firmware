@@ -19,7 +19,6 @@
 #include "pid_controller.h"
 
 
-static void LL_Init(void);
 void SystemClock_Config(void);
 
 
@@ -63,8 +62,17 @@ static void lost_connection(void) {
 
 
 extern int main(void) {
-    LL_Init();
+
+    LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
+    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
+
+    NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
+
     SystemClock_Config();
+
+    //! Note: Need to set the SysTick interrupt priority after SystemClock_Config() or it doesn't work
+    NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));           /* SysTick_IRQn interrupt configuration */
+    NVIC_EnableIRQ(SysTick_IRQn);
 
     MX_GPIO_Init();
     #if(DEBUG_UART == 1)
@@ -82,8 +90,8 @@ extern int main(void) {
     scheduler_init();
     scheduler_add_event(SCHEDULER_TASK_LED1, 1*SECOND, SCHEDULER_ALWAYS, blink_led1);
 
-    TIM34_Encoder_Init();
-    TIM2_Motor_Init();
+    encoders_init();
+    motors_init();
 
     sensors_vl53l0x_init();
 
@@ -157,22 +165,6 @@ extern int main(void) {
 }
 
 
-static void LL_Init(void) {
-    LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
-    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
-
-    NVIC_SetPriorityGrouping(NVIC_PRIORITYGROUP_4);
-    /* System interrupt init*/
-    NVIC_SetPriority(MemoryManagement_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));  /* MemoryManagement_IRQn interrupt configuration */
-    NVIC_SetPriority(BusFault_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));          /* BusFault_IRQn interrupt configuration */
-    NVIC_SetPriority(UsageFault_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));        /* UsageFault_IRQn interrupt configuration */
-    NVIC_SetPriority(SVCall_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));            /* SVCall_IRQn interrupt configuration */
-    NVIC_SetPriority(DebugMonitor_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));      /* DebugMonitor_IRQn interrupt configuration */
-    NVIC_SetPriority(PendSV_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));            /* PendSV_IRQn interrupt configuration */
-    NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));           /* SysTick_IRQn interrupt configuration */
-}
-
-
 void SystemClock_Config(void) {
     LL_FLASH_SetLatency(LL_FLASH_LATENCY_0);
     while(LL_FLASH_GetLatency()!= LL_FLASH_LATENCY_0) { }
@@ -202,15 +194,8 @@ void SystemClock_Config(void) {
 }
 
 
-// static uint32_t duty_cycle_percent = 0;
 extern void UserButton_Callback(void) {
     gpio_pressed = true;
-
-    // duty_cycle_percent += 10;
-    // if(duty_cycle_percent > 100) { duty_cycle_percent = 0; } 
-    // motor_right_set_speed(duty_cycle_percent);
-    // motor_left_set_speed(duty_cycle_percent);
-    // debugf("Press, new DC: %lu\n", duty_cycle_percent);
 }
 
 
@@ -220,7 +205,6 @@ extern void _Error_Handler(char *file, int line) {
 }
 
 
-//! FIXME: millis doesnt seems to update inside some function (could be irq related)
 volatile static uint32_t counter = 0;
 extern uint32_t millis(void) {
     return counter;

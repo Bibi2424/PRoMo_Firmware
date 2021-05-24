@@ -58,7 +58,7 @@ static void nrf24l01_gpio_init(void) {
   	LL_GPIO_SetPinPull(NRF_IRQ_GPIO_Port, NRF_IRQ_Pin, LL_GPIO_PULL_NO);
   	LL_GPIO_SetPinMode(NRF_IRQ_GPIO_Port, NRF_IRQ_Pin, LL_GPIO_MODE_INPUT);
 
-	NVIC_SetPriority(EXTI2_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 4, 8));
+	NVIC_SetPriority(EXTI2_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 4, 0));
 	NVIC_EnableIRQ(EXTI2_IRQn);
 
 	//! SCK - PB13, MISO - PB14, MOSI - PB15

@@ -9,7 +9,7 @@
 #include "encoder.h"
 #include "gpio.h"
 
-extern void TIM34_Encoder_Init(void) {
+extern void encoders_init(void) {
 
   	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM3);
   	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM4);
@@ -48,7 +48,7 @@ extern void TIM34_Encoder_Init(void) {
 	LL_TIM_ENCODER_Init(TIM3, &TIM_EncoderInitStruct);
 	LL_TIM_ENCODER_Init(TIM4, &TIM_EncoderInitStruct);
 
-	// NVIC_SetPriority(TIM3_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 6, 4));
+	// NVIC_SetPriority(TIM3_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 6, 0));
 	// NVIC_EnableIRQ(TIM3_IRQn);			//! Configure the NVIC to handle TIM3 capture/compare interrupt
 	// LL_TIM_EnableIT_CC1(TIM3);			//! Enable the capture/compare interrupt for channel 1
 	LL_TIM_EnableCounter(TIM3);			//! Enable counter
