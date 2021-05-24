@@ -4,12 +4,14 @@
 #include "main.h"
 
 
-#define SCHEDULER_MAX_EVENT	10
+#define SCHEDULER_MAX_EVENT	20
 
 #define SCHEDULER_TASK_LED1				0
 #define SCHEDULER_TASK_LED2				1
 #define SCHEDULER_TASK_LOST_CONNECTION	2
 #define SCHEDULER_TASK_VL53_GET			3
+
+#define SCHEDULER_TASK_TEST				(SCHEDULER_MAX_EVENT - 1)
 
 
 #define UNUSED 		0x00
@@ -20,7 +22,7 @@
 #define SCHEDULER_ALWAYS	-1
 
 #define NOW		0
-#define MS		1
+#define MS		100
 #define SECOND  1000*MS
 #define MINUTE	60*SECOND
 
