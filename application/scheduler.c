@@ -23,8 +23,6 @@ static void 	update_schedules(uint32_t elapse_time);
 static int16_t 	find_next_event(void);
 
 /*------------------------- EXTERN FUNCTIONS -------------------------*/
-
-//! TODO: Change from using TIM9 overflow to CH1
 extern void scheduler_init(void) {
 	uint8_t i;
 
@@ -41,7 +39,6 @@ extern void scheduler_init(void) {
 	LL_TIM_Init(SCHEDULER_TIM, &LL_TIM_InitStruct);
 
 	NVIC_SetPriority(TIM1_BRK_TIM9_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 15, 0));
-	// NVIC_SetPriority(TIM1_BRK_TIM9_IRQn, 0);
 	NVIC_EnableIRQ(TIM1_BRK_TIM9_IRQn);
 
 	//! NOTE: Do not need to start counter as long as no event is added
