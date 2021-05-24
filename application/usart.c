@@ -14,7 +14,7 @@
 static char rx_buffer[RX_BUFFER_SIZE];
 static uint16_t rx_index = 0;
 
-static uint8_t echo = TRUE;
+static uint8_t echo = true;
 
 //! TODO: In the future, use USART with DMA and either circular buffer or double buffering
 extern void MX_USART1_UART_Init(uint32_t baudrate) {

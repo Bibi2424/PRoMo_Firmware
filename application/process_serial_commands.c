@@ -32,17 +32,17 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 	strncpy(commands, buffer, buffer_size);
 	// debugf("RX[%u]: %s\r\n", buffer_size, buffer);
 
-	char *word = get_next_word(commands, TRUE);
+	char *word = get_next_word(commands, true);
 	while(word) {
 		// debugf("W[%X]: %s\n", commands, word);
 
 		if(strcmp(word, "echo") == 0) {
-			word = get_next_word(commands, FALSE);
+			word = get_next_word(commands, false);
 			uint8_t echo = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
 			set_echo(echo);
 		}
 		else if(strcmp(word, "wait") == 0) {
-			word = get_next_word(commands, FALSE);
+			word = get_next_word(commands, false);
 			uint32_t time_ms = (uint32_t)(strtoul(word, NULL, 0));
 			LL_mDelay(time_ms);
 		}
@@ -55,7 +55,7 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 
 		//! VL53L0X
 		else if(strcmp(word, "vl53.get") == 0) {
-			word = get_next_word(commands, FALSE);
+			word = get_next_word(commands, false);
 			uint8_t id = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
 			statInfo_t range;
 			uint16_t distance = sensors_vl53l0x_range_one(id, &range);
@@ -69,11 +69,11 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 
 		//! I2C
 		else if(strcmp(word, "i2c.write") == 0) {
-			word = get_next_word(commands, FALSE);
+			word = get_next_word(commands, false);
 			uint8_t address = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
-			word = get_next_word(commands, FALSE);
+			word = get_next_word(commands, false);
 			uint8_t mem = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
-			word = get_next_word(commands, FALSE);
+			word = get_next_word(commands, false);
 			uint8_t size = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
 			if(size > 10) { size = 10; }
 
@@ -90,11 +90,11 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 			}
 		}
 		else if(strcmp(word, "i2c.read") == 0) {
-			word = get_next_word(commands, FALSE);
+			word = get_next_word(commands, false);
 			uint8_t address = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
-			word = get_next_word(commands, FALSE);
+			word = get_next_word(commands, false);
 			uint8_t mem = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
-			word = get_next_word(commands, FALSE);
+			word = get_next_word(commands, false);
 			uint8_t size = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
 
 			uint8_t i;
@@ -112,9 +112,9 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 
 		//! CONTROL LOOP
 		else if(strcmp(word, "target-speed") == 0) {
-			word = get_next_word(commands, FALSE);
+			word = get_next_word(commands, false);
 			int8_t speed_left = (int8_t)(strtol(word, NULL, 0) & 0xff);
-			word = get_next_word(commands, FALSE);
+			word = get_next_word(commands, false);
 			int8_t speed_right = (int8_t)(strtol(word, NULL, 0) & 0xff);
 			set_target_speed(speed_left, speed_right);
 		}
@@ -122,9 +122,9 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 		//! MOTOR CONTROL COMMANDS
 		else if(strcmp(word, "set-speed") == 0) {
 			char wheels[10];
-			word = get_next_word(commands, FALSE);
+			word = get_next_word(commands, false);
 			strncpy(wheels, word, 10);
-			word = get_next_word(commands, FALSE);
+			word = get_next_word(commands, false);
 			uint8_t speed = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
 			if(speed > 100) { speed = 100; }
 			
@@ -141,9 +141,9 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 		}
 		else if(strcmp(word, "set-dir") == 0) {
 			char wheels[10];
-			word = get_next_word(commands, FALSE);
+			word = get_next_word(commands, false);
 			strncpy(wheels, word, 10);
-			word = get_next_word(commands, FALSE);
+			word = get_next_word(commands, false);
 			uint8_t dir = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
 
 			if(strcmp(wheels, "left") == 0) {
@@ -160,12 +160,12 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 
 		//! SPI COMMANDS
 		else if(strcmp(word, "spi-send") == 0) {
-			word = get_next_word(commands, FALSE);
+			word = get_next_word(commands, false);
 			uint8_t size = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
 			uint8_t spi_write_data[10];
 			uint8_t spi_read_data[10];
 			for(uint8_t i = 0; i < size; i++) {
-				word = get_next_word(commands, FALSE);
+				word = get_next_word(commands, false);
 				spi_write_data[i] = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
 			}
 			CSN_LOW;
@@ -182,7 +182,7 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 			printf("NRF status: 0x%02X\r\n", status);
 		}
 		else if(strcmp(word, "nrf-get-reg") == 0) {
-			word = get_next_word(commands, FALSE);
+			word = get_next_word(commands, false);
 			uint8_t data = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
 			uint8_t reg = nrf_read_register(data);
 			printf("NRF reg[%u]: 0x%02X\r\n", data, reg);
@@ -206,7 +206,7 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 
 		//! LEDS
 		else if(strcmp(word, "set-led") == 0) {
-			word = get_next_word(commands, FALSE);
+			word = get_next_word(commands, false);
 			uint8_t led_id = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
 			GPIO_TypeDef *led_port;
 			uint32_t led_pin;
@@ -221,7 +221,7 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 			else {
 				return 0;
 			}
-			word = get_next_word(commands, FALSE);
+			word = get_next_word(commands, false);
 			if(strcmp(word, "off") == 0) {
 				LL_GPIO_SetOutputPin(led_port, led_pin);
 			}
@@ -237,7 +237,7 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 			debugf("Unknown command \'%s\'\r\n", word);
 		}
 
-		word = get_next_word(commands, FALSE);
+		word = get_next_word(commands, false);
 	}
 
 	return 0xffff;
