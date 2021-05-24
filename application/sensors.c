@@ -105,7 +105,7 @@ static void sensors_get_event(void) {
 
 	statInfo_t ranges[4];
 	sensors_vl53l0x_get_all(ranges);
-	debugf("VL53 - F: %u, L: %u, R: %u, B: %u\n", ranges[0].rawDistance, ranges[1].rawDistance, ranges[2].rawDistance, ranges[3].rawDistance);
+	debugf("VL53 - L: %u, F: %u, R: %u, B: %u\n", ranges[1].rawDistance, ranges[0].rawDistance, ranges[2].rawDistance, ranges[3].rawDistance);
 }
 
 
