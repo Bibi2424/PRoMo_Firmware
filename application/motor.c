@@ -69,6 +69,14 @@ extern void motors_init(void) {
   	motor_left_set_dir(MOTOR_DIR_DISABLE);
   	motor_left_set_speed(0);
   	LL_TIM_EnableCounter(TIM2);			//! Enable counter
+
+	GPIO_InitStruct.Pin = MOTOR_ENABLE_Pin;
+	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
+	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
+	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+	LL_GPIO_Init(MOTOR_ENABLE_Pin_Port, &GPIO_InitStruct);
+  	SET_PIN(MOTOR_ENABLE_Pin_Port, MOTOR_ENABLE_Pin, 1);
 }
 
 

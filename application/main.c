@@ -31,7 +31,6 @@ static void SystemClock_Config(void);
 
 
 
-static int8_t target_speed_left = 0, target_speed_right = 0;
 volatile static bool gpio_pressed = false;
 
 
@@ -96,7 +95,7 @@ extern int main(void) {
         if(current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL) {
             motor_control_last_execution = current_time;
 
-            do_control_loop(target_speed_left, target_speed_right);
+            do_control_loop();
         }
     }
     return 0;
@@ -119,15 +118,15 @@ static void get_data_from_radio(uint8_t *data, uint8_t size) {
     int8_t steer_speed = (int8_t)data[1];
     // debugf("NRF: %d - %d\n", forward_speed, steer_speed);
 
-    target_speed_left = forward_speed + (int8_t)steer_speed / 3;
-    target_speed_right = forward_speed - (int8_t)steer_speed / 3;
-    debugf("NRF: %d - %d\n", target_speed_left, target_speed_right);
+    int8_t speed_left = forward_speed + (int8_t)steer_speed / 3;
+    int8_t speed_right = forward_speed - (int8_t)steer_speed / 3;
+    // debugf("NRF: %d - %d\n", speed_left, speed_right);
+    set_target_speed(speed_left, speed_right);
 }
 
 
 static void lost_connection(void) {
-    target_speed_left = 0;
-    target_speed_right = 0;
+    set_target_speed(0, 0);
     debugf("Lost Connection with Remote\r\n");
 }
 

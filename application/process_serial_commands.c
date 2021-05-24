@@ -12,6 +12,7 @@
 #include "main.h"
 #include "gpio.h"
 #include "usart.h"
+#include "control_loop.h"
 #include "motor.h"
 #include "spi.h"
 #include "nrf24l01.h"
@@ -107,6 +108,15 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 				for(i = 0; i < size; i++) { printf("%02X:", buffer[i]); }
 				printf("\b]\n");
 			}
+		}
+
+		//! CONTROL LOOP
+		else if(strcmp(word, "target-speed") == 0) {
+			word = get_next_word(commands, FALSE);
+			int8_t speed_left = (int8_t)(strtol(word, NULL, 0) & 0xff);
+			word = get_next_word(commands, FALSE);
+			int8_t speed_right = (int8_t)(strtol(word, NULL, 0) & 0xff);
+			set_target_speed(speed_left, speed_right);
 		}
 
 		//! MOTOR CONTROL COMMANDS
