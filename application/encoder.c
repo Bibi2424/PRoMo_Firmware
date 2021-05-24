@@ -9,7 +9,7 @@
 #include "encoder.h"
 #include "gpio.h"
 
-extern void TIM34_Encoder_Init(void) {
+extern void encoders_init(void) {
 
   	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM3);
   	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM4);

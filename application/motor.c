@@ -10,7 +10,7 @@
 #include "gpio.h"
 
 
-extern void TIM2_Motor_Init(void) {
+extern void motors_init(void) {
   	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
 
   	//! Init GPIOs associated with the generation of PWM

@@ -82,8 +82,8 @@ extern int main(void) {
     scheduler_init();
     scheduler_add_event(SCHEDULER_TASK_LED1, 1*SECOND, SCHEDULER_ALWAYS, blink_led1);
 
-    TIM34_Encoder_Init();
-    TIM2_Motor_Init();
+    encoders_init();
+    motors_init();
 
     sensors_vl53l0x_init();
 

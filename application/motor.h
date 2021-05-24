@@ -10,7 +10,7 @@
 // #define INVERSE_MOTOR_D
 #define INVERSE_MOTOR_G
 
-extern void TIM2_Motor_Init(void);
+extern void motors_init(void);
 extern void motor_right_set_dir(uint8_t dir);
 extern void motor_left_set_dir(uint8_t dir);
 extern void motor_right_set_speed(uint32_t speed_percent);
