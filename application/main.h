@@ -36,6 +36,13 @@
 #define DEBUG_BAUDRATE		921600UL
 
 
+//! For motor and encoder
+typedef enum {
+	LEFT_SIDE,
+	RIGHT_SIDE
+} actuator_t;
+
+
 #ifndef NVIC_PRIORITYGROUP_0
 #define NVIC_PRIORITYGROUP_0         ((uint32_t)0x00000007) /*!< 0 bit  for pre-emption priority, 4 bits for subpriority */
 #define NVIC_PRIORITYGROUP_1         ((uint32_t)0x00000006) /*!< 1 bit  for pre-emption priority, 3 bits for subpriority */

@@ -1,4 +1,5 @@
+*.pyc
+
 _build
 STM32_HAL_min/
-
-tools/serial_plotter.py/__pycache__/
+tools/serial_plotter/__pycache__/

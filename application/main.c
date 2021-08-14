@@ -27,7 +27,7 @@ static void SystemClock_Config(void);
 
 
 
-#define MOTOR_CONTROL_INTERVAL      50
+#define MOTOR_CONTROL_INTERVAL      20
 
 
 

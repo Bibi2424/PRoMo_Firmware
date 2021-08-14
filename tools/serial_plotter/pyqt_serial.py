@@ -8,8 +8,9 @@ from PyQt5 import QtCore, QtWidgets, QtSerialPort
 
 
 class SerialWidget(QtWidgets.QWidget):
-    def __init__(self, parent=None, callback=None):
-        super(SerialWidget, self).__init__(parent)
+    def __init__(self, window=None, callback=None):
+        super(SerialWidget, self).__init__(window)
+        self.window = window
         self.callback = callback
 
         self.port_input = QtWidgets.QLineEdit()
@@ -40,14 +41,15 @@ class SerialWidget(QtWidgets.QWidget):
         lay.addWidget(self.output_text)
 
         self.serial = QtSerialPort.QSerialPort(
-            'COM10',
+            'COM4',
             baudRate=921600,
             readyRead=self.receive
         )
-        self.port_input.setText('COM10')
+        self.port_input.setText('COM4')
         self.baudrate_input.setText('921600')
 
-        self.text_received = deque(maxlen=50)
+        self.text_received = deque(maxlen=100)
+
 
     @QtCore.pyqtSlot()
     def receive(self):
@@ -57,6 +59,7 @@ class SerialWidget(QtWidgets.QWidget):
             except UnicodeDecodeError:
                 continue
             text = text.rstrip('\r\n')
+            # print(text)
             self.text_received.append(text)
             self.output_text.clear()
             self.output_text.setPlainText('\r\n'.join((self.text_received)))
@@ -68,6 +71,7 @@ class SerialWidget(QtWidgets.QWidget):
     @QtCore.pyqtSlot()
     def send(self):
         self.serial.write(self.message_le.text().encode())
+
 
     @QtCore.pyqtSlot(bool)
     def on_toggled(self, checked):
@@ -81,10 +85,16 @@ class SerialWidget(QtWidgets.QWidget):
                 self.baudrate_input.setReadOnly(True)
                 if not self.serial.open(QtCore.QIODevice.ReadWrite):
                     self.connect_button.setChecked(False)
+
+            self.window.statusBar().showMessage(f'{self.port_input.text()}@{self.baudrate_input.text()} connected', 2000)
         else:
             self.serial.close()
             self.port_input.setReadOnly(False)
             self.baudrate_input.setReadOnly(False)
+
+            self.window.statusBar().showMessage(f'{self.port_input.text()} disconnected', 2000)
+
+
 
 if __name__ == '__main__':
     import sys

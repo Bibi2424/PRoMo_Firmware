@@ -129,14 +129,14 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 			if(speed > 100) { speed = 100; }
 			
 			if(strcmp(wheels, "left") == 0) {
-				motor_left_set_speed(speed);
+				motor_set_speed(LEFT_SIDE, speed);
 			}
 			else if(strcmp(wheels, "right") == 0) {
-				motor_right_set_speed(speed);
+				motor_set_speed(RIGHT_SIDE, speed);
 			}
 			else if(strcmp(wheels, "both") == 0) {
-				motor_right_set_speed(speed);
-				motor_left_set_speed(speed);
+				motor_set_speed(LEFT_SIDE, speed);
+				motor_set_speed(RIGHT_SIDE, speed);
 			}
 		}
 		else if(strcmp(word, "set-dir") == 0) {
@@ -147,14 +147,14 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 			uint8_t dir = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
 
 			if(strcmp(wheels, "left") == 0) {
-				motor_left_set_dir(dir);
+				motor_set_dir(LEFT_SIDE, dir);
 			}
 			else if(strcmp(wheels, "right") == 0) {
-				motor_right_set_dir(dir);
+				motor_set_dir(RIGHT_SIDE, dir);
 			}
 			else if(strcmp(wheels, "both") == 0) {
-				motor_right_set_dir(dir);
-				motor_left_set_dir(dir);
+				motor_set_dir(LEFT_SIDE, dir);
+				motor_set_dir(RIGHT_SIDE, dir);
 			}
 		}
 
