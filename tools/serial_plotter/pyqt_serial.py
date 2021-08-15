@@ -8,17 +8,18 @@ from PyQt5 import QtCore, QtWidgets, QtSerialPort
 
 
 class SerialWidget(QtWidgets.QWidget):
-    def __init__(self, window=None, callback=None):
+    def __init__(self, window=None, callback=None, show_data_draw = True):
         super(SerialWidget, self).__init__(window)
         self.window = window
         self.callback = callback
+        self.show_data_draw = show_data_draw
 
         self.port_input = QtWidgets.QLineEdit()
         self.baudrate_input = QtWidgets.QLineEdit()
         self.message_le = QtWidgets.QLineEdit()
         self.send_btn = QtWidgets.QPushButton(
             text="Send",
-            clicked=self.send
+            clicked=lambda: self.write(self.message_le.text())
         )
         self.output_text = QtWidgets.QTextEdit(readOnly=True)
         self.connect_button = QtWidgets.QPushButton(
@@ -37,18 +38,20 @@ class SerialWidget(QtWidgets.QWidget):
 
         lay.addLayout(hlay_connect_option)
         lay.addWidget(self.connect_button)
-        # lay.addLayout(hlay_send)
+        lay.addLayout(hlay_send)
         lay.addWidget(self.output_text)
 
         self.serial = QtSerialPort.QSerialPort(
             'COM4',
-            baudRate=921600,
+            baudRate=1000000,
             readyRead=self.receive
         )
         self.port_input.setText('COM4')
-        self.baudrate_input.setText('921600')
+        self.baudrate_input.setText('1000000')
 
         self.text_received = deque(maxlen=100)
+
+        self.data_to_send = []
 
 
     @QtCore.pyqtSlot()
@@ -60,17 +63,27 @@ class SerialWidget(QtWidgets.QWidget):
                 continue
             text = text.rstrip('\r\n')
             # print(text)
+
+            if self.data_to_send:
+                self.serial.write(self.data_to_send.pop().encode())
+
+            used = False
+            if self.callback:
+                used = self.callback(time.time(), text)
+
+            if used == True and self.show_data_draw:
+                continue
+
             self.text_received.append(text)
             self.output_text.clear()
-            self.output_text.setPlainText('\r\n'.join((self.text_received)))
+            self.output_text.setPlainText('\r\n'.join(reversed(self.text_received)))
 
-            if self.callback:
-                self.callback(time.time(), text)
 
 
     @QtCore.pyqtSlot()
-    def send(self):
-        self.serial.write(self.message_le.text().encode())
+    def write(self, data):
+        self.data_to_send.append(data)
+        # self.serial.write(data.encode())
 
 
     @QtCore.pyqtSlot(bool)

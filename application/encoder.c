@@ -11,6 +11,9 @@
 
 
 
+static int16_t last_value_left = 0, last_value_right = 0;
+
+
 extern void encoders_init(void) {
 
   	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM3);
@@ -58,78 +61,64 @@ extern void encoders_init(void) {
 	// LL_TIM_EnableIT_CC1(TIM3);			//! Enable the capture/compare interrupt for channel 1
 	LL_TIM_EnableCounter(TIM3);			//! Enable counter
 	LL_TIM_EnableCounter(TIM4);			//! Enable counter
+
+	//! NOTE: Should be 0 on init be leave it as a precaution
+	last_value_left = encoder_get_value(LEFT_SIDE);
+	last_value_right = encoder_get_value(RIGHT_SIDE);
 }
 
 
-static uint16_t encoder_left_get_value(void) {
-	return LL_TIM_ReadReg(TIM3, CCR1);
-}
-
-
-static uint16_t encoder_right_get_value(void) {
-	return LL_TIM_ReadReg(TIM4, CCR1);
-}
-
-
-extern uint16_t encoder_get_value(actuator_t side) {
+extern uint32_t encoder_get_value(actuator_t side) {
 	if(side == LEFT_SIDE) {
-		return encoder_left_get_value();
+		return LL_TIM_ReadReg(TIM3, CCR1);
 	}
 	else if(side == RIGHT_SIDE) {
-		return encoder_right_get_value();
+		return LL_TIM_ReadReg(TIM4, CCR1);
 	}
 	return 0;
 }
 
-//! Add dt
-static int16_t encoder_left_get_speed(void) {
-	static uint16_t last_value;
 
-	uint16_t current_value = encoder_left_get_value();
-	int16_t speed = (int16_t)current_value - (int16_t)last_value;
-	#if INVERSE_LEFT_ENCODER
-	speed = -speed;
-	#endif
-	last_value = current_value;
-
-	return speed;
+static /*inline*/ int32_t calibrate_speed(int32_t tick_speed, uint32_t elapse_time_ms) {
+	//! TODO: Change MOTOR_CONTROL_INTERVAL for an actual time difference since last measure
+	//! NOTE: 1/T * speed_ticks * wheel_radius * (PI / TICKS_PER_TURN)
+	return ((1000 / (int32_t)elapse_time_ms) * tick_speed * WHEEL_RADIUS_MM / TICKS_PER_WHEEL_TURN_DIV_PI);
 }
 
 
-static int16_t encoder_right_get_speed(void) {
-	// #define LAST_SPEEDS_SIZE	8
-	// static int16_t last_speeds[LAST_SPEEDS_SIZE];
-	// static uint8_t speed_index = 0;
+extern int32_t encoder_get_speed(actuator_t side) {
+	static uint32_t last_compute_time_left = 0, last_compute_time_right = 0;
 
-	static uint16_t last_value;
+	int32_t speed = 0;
+	uint32_t now_ms = millis();
 
-	uint16_t current_value = encoder_right_get_value();
-	int16_t speed = (int16_t)current_value - (int16_t)last_value;
-	#if INVERSE_RIGHT_ENCODER
-	speed = -speed;
-	#endif
-	last_value = current_value;
-
-	return speed;
-
-	// last_speeds[speed_index] = speed;
-	// speed_index = (speed_index + 1) % LAST_SPEEDS_SIZE;
-	// int32_t corrected_speed = 0;
-	// for(uint8_t i = 0; i < LAST_SPEEDS_SIZE; i++) {
-	// 	corrected_speed += last_speeds[i];
-	// }
-	// corrected_speed /= LAST_SPEEDS_SIZE;
-
-	// return (int16_t)corrected_speed;
-}
-
-
-extern int16_t encoder_get_speed(actuator_t side) {
 	if(side == LEFT_SIDE) {
-		return encoder_left_get_speed();
+		int16_t current_value = encoder_get_value(LEFT_SIDE);
+		//! Need to compute that diff from int16_t to not get errors, later moving to int32_t for avoiding overflow during calibration
+		int16_t speed16 = current_value - last_value_left;
+		speed = (int32_t)speed16;
+		#if INVERSE_LEFT_ENCODER
+			speed = -speed;
+		#endif
+		last_value_left = current_value;
+
+		speed = calibrate_speed(speed, now_ms - last_compute_time_left);
+		last_compute_time_left = now_ms;
+
 	}
 	else if(side == RIGHT_SIDE) {
-		return encoder_right_get_speed();
+		int16_t current_value = encoder_get_value(RIGHT_SIDE);
+		//! Need to compute that diff from int16_t to not get errors, later moving to int32_t for avoiding overflow during calibration
+		int16_t speed16 = current_value - last_value_right;
+		speed = (int32_t)speed16;
+		#if INVERSE_RIGHT_ENCODER
+			speed = -speed;
+		#endif
+		last_value_right = current_value;
+
+		speed = calibrate_speed(speed, now_ms - last_compute_time_right);
+		last_compute_time_right = now_ms;
 	}
-	return 0;
+
+	return speed;
 }

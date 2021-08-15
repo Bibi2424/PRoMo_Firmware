@@ -11,7 +11,7 @@
 
 extern void encoders_init(void);
 
-extern uint16_t encoder_get_value(actuator_t side);
-extern int16_t encoder_get_speed(actuator_t side);
+extern uint32_t encoder_get_value(actuator_t side);
+extern int32_t encoder_get_speed(actuator_t side);
 
 #endif

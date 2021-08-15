@@ -3,15 +3,20 @@
 
 #include "main.h"
 
+
+
+//! NOTE: To avoid floating point, those value will be / 100 when used
 typedef struct {
 	uint32_t compute_interval;
 	uint32_t proportional_gain;
 	uint32_t integral_gain;
 	uint32_t derivative_gain;
+	int32_t max_integral_error;
+	uint32_t max_output;
+	uint32_t min_output;
+	//! Internal stuff
 	int32_t last_error;
 	int32_t integral_error;
-	// uint32_t max;
-	// uint32_t min;
 
 } pid_controller_t;
 

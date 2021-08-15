@@ -14,6 +14,7 @@
 #include "usart.h"
 #include "control_loop.h"
 #include "motor.h"
+#include "encoder.h"
 #include "spi.h"
 #include "nrf24l01.h"
 #include "i2c.h"
@@ -51,6 +52,10 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 		}
 		else if(strcmp(word, "millis") == 0) {
 			printf("%lu\n", millis());
+		}
+		else if(strcmp(word, "say") == 0) {
+			word = get_next_word(commands, false);
+			printf("Say: %s\n", word);
 		}
 
 		//! VL53L0X
@@ -117,6 +122,35 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 			word = get_next_word(commands, false);
 			int8_t speed_right = (int8_t)(strtol(word, NULL, 0) & 0xff);
 			set_target_speed(speed_left, speed_right);
+		}
+
+		else if(strcmp(word, "pid.set") == 0) {
+			char side[10];
+			word = get_next_word(commands, false);
+			strncpy(side, word, 10);
+
+			word = get_next_word(commands, false);
+			uint32_t p = (uint32_t)(strtoul(word, NULL, 0));
+			word = get_next_word(commands, false);
+			uint32_t i = (uint32_t)(strtoul(word, NULL, 0));
+			word = get_next_word(commands, false);
+			uint32_t d = (uint32_t)(strtoul(word, NULL, 0));
+
+			if(strcmp(side, "left") == 0) {
+				update_speed_pid(LEFT_SIDE, p, i, d);
+			}
+			else if(strcmp(side, "right") == 0) {
+				update_speed_pid(RIGHT_SIDE, p, i, d);
+			}
+			else if(strcmp(side, "both") == 0) {
+				update_speed_pid(LEFT_SIDE, p, i, d);
+				update_speed_pid(RIGHT_SIDE, p, i, d);
+			}
+		}
+
+		//! ENCODER
+		else if(strcmp(word, "get-tick") == 0) {
+			printf("L=%lu, R=%lu\n", encoder_get_value(LEFT_SIDE), encoder_get_value(RIGHT_SIDE));
 		}
 
 		//! MOTOR CONTROL COMMANDS

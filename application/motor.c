@@ -169,6 +169,10 @@ static void motor_right_set_speed(uint32_t speed_percent) {
 
 
 extern void motor_set_speed(actuator_t side, uint32_t speed_percent) {
+	if(speed_percent > 100) {
+		speed_percent = 100;
+	}
+
 	if(side == LEFT_SIDE) {
 		motor_left_set_speed(speed_percent);
 	}

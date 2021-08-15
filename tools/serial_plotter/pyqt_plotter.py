@@ -54,7 +54,7 @@ class MyStaticMplCanvas(MyMplCanvas):
 
 # A canvas that updates itself every second with a new plot.
 class MyDynamicMplCanvas(MyMplCanvas):
-    MAXLEN = 200
+    MAXLEN = 100
 
     def __init__(self, *args, **kwargs):
         self.x = deque(maxlen=self.MAXLEN)
@@ -85,14 +85,16 @@ class MyDynamicMplCanvas(MyMplCanvas):
 
     def update_figure(self):
         self.axes.cla()
-        for y in self.data:
-            self.axes.plot(list(self.x), list(y))
+        for i, y in enumerate(self.data):
+            self.axes.plot(list(self.x), list(y), label = f'{i}')
+            self.axes.legend()
+            self.axes.set_ylim([-400, 400])
         self.draw()
 
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
-    def __init__(self, plot_names):
+    def __init__(self, plot_names, show_data_draw = True):
         QtWidgets.QMainWindow.__init__(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setWindowTitle("Serial Plotter")
@@ -114,6 +116,21 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         l = QtWidgets.QVBoxLayout()
 
+        pid_group = QtWidgets.QHBoxLayout()
+        l.addLayout(pid_group)
+
+        pid_group.addWidget(QtWidgets.QLabel("p"))
+        self.p = QtWidgets.QLineEdit("100")
+        pid_group.addWidget(self.p)
+        pid_group.addWidget(QtWidgets.QLabel("i"))
+        self.i = QtWidgets.QLineEdit("0")
+        pid_group.addWidget(self.i)
+        pid_group.addWidget(QtWidgets.QLabel("d"))
+        self.d = QtWidgets.QLineEdit("0")
+        pid_group.addWidget(self.d)
+        pid_group.addWidget(QtWidgets.QPushButton(text='upload', clicked = self.upload_pid))
+
+
         # TODO: Change to a collection that preserve order
         self.plots = {}
 
@@ -123,21 +140,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.plots[name] = dc
             print(f'Creating plot: \"{name}\"')
 
-
-        # dc = MyDynamicMplCanvas(self.main_widget, width=5, height=4, dpi=100)
-        # l.addWidget(dc)
-        # self.plots['Encoder'] = dc
-        # dc = MyDynamicMplCanvas(self.main_widget, width=5, height=4, dpi=100)
-        # l.addWidget(dc)
-        # self.plots['Target'] = dc
-        # dc = MyDynamicMplCanvas(self.main_widget, width=5, height=4, dpi=100)
-        # l.addWidget(dc)
-        # self.plots['PID'] = dc
-
         h.addLayout(l)
 
-        ser = SerialWidget(window=self, callback=self.get_data)
-        h.addWidget(ser)
+        self.ser = SerialWidget(window=self, callback=self.get_data, show_data_draw = show_data_draw)
+        h.addWidget(self.ser)
 
         self.main_widget.setFocus()
         self.setCentralWidget(self.main_widget)
@@ -148,20 +154,32 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def get_data(self, timestamp, text):
 
         if ':' not in text:
-            return
+            return False
         
         name, data = text.split(':')
 
         if name not in self.plots:
-            return
+            return False
 
         try:
             r = map(int, data.strip().split(' - '))
             data = list(r)
-            print(f'{name} add {data}')
             self.plots[name].add_data(timestamp, data)
         except Exception as e:
             print(f'Error decoding: {text}')
+            return False
+
+        return True
+
+
+    # @QtCore.pyqtSlot()
+    def upload_pid(self):
+        p = int(self.p.text())
+        i = int(self.i.text())
+        d = int(self.d.text())
+        command = f"pid.set both {p} {i} {d}\n"
+        print(command)
+        self.ser.write(command)
 
 
 
@@ -169,13 +187,12 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--names', '-n', nargs='*', default=['Left', 'Right'], help='List of names for the graph')
-    # parser.add_argument('--output-file', '-o', default=None, help='path to output file')
-    # parser.add_argument('--image-name', '-n', default='image', help='name to be used for array and define name, and file name if not specified')
+    parser.add_argument('--show_data_draw', action='store_false', help='Will prevent graph data to appear in serial console')
     args = parser.parse_args()
 
     qApp = QtWidgets.QApplication(sys.argv)
 
-    aw = ApplicationWindow(args.names)
+    aw = ApplicationWindow(args.names, show_data_draw = args.show_data_draw)
     # aw.setWindowTitle("%s" % progname)
     aw.show()
     sys.exit(qApp.exec_())
