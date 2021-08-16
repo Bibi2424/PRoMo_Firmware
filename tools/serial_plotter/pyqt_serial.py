@@ -99,13 +99,15 @@ class SerialWidget(QtWidgets.QWidget):
                 if not self.serial.open(QtCore.QIODevice.ReadWrite):
                     self.connect_button.setChecked(False)
 
-            self.window.statusBar().showMessage(f'{self.port_input.text()}@{self.baudrate_input.text()} connected', 2000)
+            if self.window:
+                self.window.statusBar().showMessage(f'{self.port_input.text()}@{self.baudrate_input.text()} connected', 2000)
         else:
             self.serial.close()
             self.port_input.setReadOnly(False)
             self.baudrate_input.setReadOnly(False)
 
-            self.window.statusBar().showMessage(f'{self.port_input.text()} disconnected', 2000)
+            if self.window:
+                self.window.statusBar().showMessage(f'{self.port_input.text()} disconnected', 2000)
 
 
 

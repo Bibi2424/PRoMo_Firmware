@@ -13,6 +13,7 @@ from PyQt5 import QtCore, QtWidgets, QtSerialPort
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from pyqt_serial import SerialWidget
+from pyqt_mqtt import MQTTWidget
 
 
 progname = "Serial Plotter"
@@ -94,7 +95,7 @@ class MyDynamicMplCanvas(MyMplCanvas):
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
-    def __init__(self, plot_names, show_data_draw = True):
+    def __init__(self, plot_names, use_serial = False, show_data_draw = True):
         QtWidgets.QMainWindow.__init__(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setWindowTitle("Serial Plotter")
@@ -142,7 +143,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         h.addLayout(l)
 
-        self.ser = SerialWidget(window=self, callback=self.get_data, show_data_draw = show_data_draw)
+        if use_serial:
+            self.ser = SerialWidget(window=self, callback=self.get_data, show_data_draw = show_data_draw)
+        else:
+            self.ser = MQTTWidget(window=self, callback=self.get_data, show_data_draw = show_data_draw)
         h.addWidget(self.ser)
 
         self.main_widget.setFocus()
@@ -156,7 +160,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if ':' not in text:
             return False
         
-        name, data = text.split(':')
+        try:
+            name, data = text.split(':')
+        except ValueError as e:
+            print(f'Error spliting :{text}')
+            return
 
         if name not in self.plots:
             return False
@@ -187,12 +195,13 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--names', '-n', nargs='*', default=['Left', 'Right'], help='List of names for the graph')
-    parser.add_argument('--show_data_draw', action='store_false', help='Will prevent graph data to appear in serial console')
+    parser.add_argument('--show-data-draw', action='store_false', help='Will prevent graph data to appear in serial console')
+    parser.add_argument('--use-serial', action='store_true', help='By default, will use mqtt, set this to use serial')
     args = parser.parse_args()
 
     qApp = QtWidgets.QApplication(sys.argv)
 
-    aw = ApplicationWindow(args.names, show_data_draw = args.show_data_draw)
+    aw = ApplicationWindow(args.names, use_serial=args.use_serial, show_data_draw = args.show_data_draw)
     # aw.setWindowTitle("%s" % progname)
     aw.show()
     sys.exit(qApp.exec_())
