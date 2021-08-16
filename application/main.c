@@ -27,10 +27,6 @@ static void SystemClock_Config(void);
 
 
 
-#define MOTOR_CONTROL_INTERVAL      50
-
-
-
 volatile static bool gpio_pressed = false;
 
 
@@ -92,7 +88,7 @@ extern int main(void) {
 
         radio_run();
 
-        if(current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL) {
+        if(current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL_MS) {
             motor_control_last_execution = current_time;
 
             do_control_loop();

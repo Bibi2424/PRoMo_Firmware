@@ -64,10 +64,10 @@ extern void motors_init(void) {
   	LL_TIM_OC_EnablePreload(TIM2, LL_TIM_CHANNEL_CH4);
 	LL_TIM_CC_EnableChannel(TIM2, LL_TIM_CHANNEL_CH4);
 
-  	motor_right_set_dir(MOTOR_DIR_DISABLE);
-  	motor_right_set_speed(0);
-  	motor_left_set_dir(MOTOR_DIR_DISABLE);
-  	motor_left_set_speed(0);
+  	motor_set_dir(RIGHT_SIDE, MOTOR_DIR_DISABLE);
+  	motor_set_speed(RIGHT_SIDE, 0);
+  	motor_set_dir(LEFT_SIDE, MOTOR_DIR_DISABLE);
+  	motor_set_speed(LEFT_SIDE, 0);
   	LL_TIM_EnableCounter(TIM2);			//! Enable counter
 
 	GPIO_InitStruct.Pin = MOTOR_ENABLE_Pin;
@@ -80,8 +80,8 @@ extern void motors_init(void) {
 }
 
 
-extern void motor_left_set_dir(uint8_t dir) {
-#ifdef INVERSE_MOTOR_G
+static void motor_left_set_dir(uint8_t dir) {
+#if INVERSE_MOTOR_G
 	dir = dir ^ 1;
 #endif
 	if(dir == MOTOR_DIR_FORWARD) {
@@ -109,8 +109,8 @@ extern void motor_left_set_dir(uint8_t dir) {
 }
 
 
-extern void motor_right_set_dir(uint8_t dir) {
-#ifdef INVERSE_MOTOR_R
+static void motor_right_set_dir(uint8_t dir) {
+#if INVERSE_MOTOR_R
 	dir = dir ^ 1;
 #endif
 	if(dir == MOTOR_DIR_FORWARD) {
@@ -138,7 +138,17 @@ extern void motor_right_set_dir(uint8_t dir) {
 }
 
 
-extern void motor_left_set_speed(uint32_t speed_percent) {
+extern void motor_set_dir(actuator_t side, uint8_t dir) {
+	if(side == LEFT_SIDE) {
+		motor_left_set_dir(dir);
+	}
+	else if(side == RIGHT_SIDE) {
+		motor_right_set_dir(dir);
+	}
+}
+
+
+static void motor_left_set_speed(uint32_t speed_percent) {
 	//! speed = MAX*percent/100
 	uint32_t period = (LL_TIM_GetAutoReload(TIM2) + 1);
 	uint32_t speed = (uint32_t)((uint64_t)period * (uint64_t)speed_percent) / 100;
@@ -148,11 +158,25 @@ extern void motor_left_set_speed(uint32_t speed_percent) {
 }
 
 
-extern void motor_right_set_speed(uint32_t speed_percent) {
+static void motor_right_set_speed(uint32_t speed_percent) {
 	//! speed = MAX*percent/100
 	uint32_t period = (LL_TIM_GetAutoReload(TIM2) + 1);
 	uint32_t speed = (uint32_t)((uint64_t)period * (uint64_t)speed_percent) / 100;
 	LL_TIM_OC_SetCompareCH3(TIM2, speed);
 	LL_TIM_OC_SetCompareCH4(TIM2, speed);
 	debugf("Set speed %lu/%lu\r\n", speed, period);
+}
+
+
+extern void motor_set_speed(actuator_t side, uint32_t speed_percent) {
+	if(speed_percent > 100) {
+		speed_percent = 100;
+	}
+
+	if(side == LEFT_SIDE) {
+		motor_left_set_speed(speed_percent);
+	}
+	else if(side == RIGHT_SIDE) {
+		motor_right_set_speed(speed_percent);
+	}
 }
