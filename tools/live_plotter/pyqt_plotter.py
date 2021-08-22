@@ -14,43 +14,41 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 from pyqt_serial import SerialWidget
 from pyqt_mqtt import MQTTWidget
+from promo_widgets import PIDWidget, TargetSpeedWidget
 
 
 progname = "Live Plotter"
 progversion = "0.3"
 
 
+class GraphControl(QtWidgets.QWidget):
+    def __init__(self, reset_cb = None, pause_cb = None, *args, **kwargs):
+        super(GraphControl, self).__init__(*args, **kwargs)
 
-class PIDWidget(QtWidgets.QWidget):
-    def __init__(self, title = 'PID', get_values_cb = None, *args, **kwargs):
-        super(PIDWidget, self).__init__(*args, **kwargs)
-
-        self.callback = get_values_cb
+        self.reset_cb = reset_cb
+        self.pause_cb = pause_cb
 
         pid_group = QtWidgets.QHBoxLayout()
 
-        pid_group.addWidget(QtWidgets.QLabel(title + ':'))
-
-        pid_group.addWidget(QtWidgets.QLabel("p"))
-        self.p = QtWidgets.QLineEdit("100")
-        pid_group.addWidget(self.p)
-        pid_group.addWidget(QtWidgets.QLabel("i"))
-        self.i = QtWidgets.QLineEdit("0")
-        pid_group.addWidget(self.i)
-        pid_group.addWidget(QtWidgets.QLabel("d"))
-        self.d = QtWidgets.QLineEdit("0")
-        pid_group.addWidget(self.d)
-        pid_group.addWidget(QtWidgets.QPushButton(text='upload', clicked = self.get_values))
+        self.pause_button = QtWidgets.QPushButton(text='Pause', checkable = True, toggled = self.pause_toggled)
+        pid_group.addWidget(self.pause_button)
+        pid_group.addWidget(QtWidgets.QPushButton(text='Reset', clicked = self.reset))
 
         self.setLayout(pid_group)
 
 
-    def get_values(self):
-        p = int(self.p.text())
-        i = int(self.i.text())
-        d = int(self.d.text())
-        if self.callback:
-            self.callback(p, i, d)
+    @QtCore.pyqtSlot()
+    def reset(self):
+        if self.reset_cb:
+            self.reset_cb()
+
+
+    @QtCore.pyqtSlot(bool)
+    def pause_toggled(self, checked):
+        self.pause_button.setText("Play" if checked else "Pause")
+        print(checked)
+        if self.pause_cb:
+            self.pause_cb(checked)
 
 
 
@@ -58,17 +56,47 @@ class GraphWidget(QtWidgets.QWidget):
     def __init__(self, name = 'plot', *args, **kwargs):
         super(GraphWidget, self).__init__(*args, **kwargs)
 
-        layout = QtWidgets.QVBoxLayout()
+        vlayout = QtWidgets.QVBoxLayout()
+        hlayout = QtWidgets.QHBoxLayout()
+        vlayout.addLayout(hlayout)
 
-        layout.addWidget(QtWidgets.QLabel(name))
+        hlayout.addWidget(QtWidgets.QLabel(name))
+        # reset_button = QtWidgets.QPushButton(text = 'Reset', clicked = self.on_click)
+        # hlayout.addWidget(reset_button)
+        hlayout.addWidget(QtWidgets.QLabel("y limit"))
+        self.y_limit_minus = QtWidgets.QLineEdit("-200")
+        self.y_limit_minus.textChanged.connect(lambda x: self.update_y_limits('minus', x))
+        hlayout.addWidget(self.y_limit_minus)
+        self.y_limit_plus = QtWidgets.QLineEdit("200")
+        self.y_limit_plus.textChanged.connect(lambda x: self.update_y_limits('plus', x))
+        hlayout.addWidget(self.y_limit_plus)
+
         self.canvas = MyDynamicMplCanvas(parent = self)
-        layout.addWidget(self.canvas)
+        vlayout.addWidget(self.canvas)
 
-        self.setLayout(layout)
+        self.setLayout(vlayout)
 
 
     def get_canvas(self):
         return self.canvas
+
+
+    @QtCore.pyqtSlot(str, str)
+    def update_y_limits(self, side, text):
+        print(text)
+        try:
+            if side == 'plus':
+                self.canvas.y_limit[1] = int(text)
+            elif side == 'minus':
+                self.canvas.y_limit[0] = int(text)
+        except ValueError:
+            pass
+
+
+    @QtCore.pyqtSlot()
+    def on_click(self):
+        self.canvas.reset()
+
 
 
 
@@ -105,9 +133,13 @@ class MyDynamicMplCanvas(MyMplCanvas):
     MAXLEN = 100
 
     def __init__(self, *args, **kwargs):
+        super(MyDynamicMplCanvas, self).__init__(*args, **kwargs)
+
         self.x = deque(maxlen=self.MAXLEN)
         self.data = []
-        super(MyDynamicMplCanvas, self).__init__(*args, **kwargs)
+        self.is_paused = False
+        self.y_limit = [-200, 200]
+
         timer = QtCore.QTimer(self)
         timer.timeout.connect(self.update_figure)
         timer.start(50)
@@ -123,7 +155,20 @@ class MyDynamicMplCanvas(MyMplCanvas):
         self.axes.plot([], [])
 
 
+    def reset(self):
+        self.x.clear()
+        self.data = []
+        self.update_figure(forced = True)
+
+
+    def pause(self, is_paused):
+        self.is_paused = is_paused
+
+
     def add_data(self, x, data):
+        if self.is_paused:
+            return
+
         while len(data) > len(self.data):
             self.data.append(deque([0] * len(self.x), maxlen=self.MAXLEN))
         self.x.append(x - self.start_time)
@@ -131,18 +176,22 @@ class MyDynamicMplCanvas(MyMplCanvas):
             y.append(d)
 
 
-    def update_figure(self):
+    @QtCore.pyqtSlot()
+    def update_figure(self, forced = False):
+        if self.is_paused and not forced:
+            return
+
         self.axes.cla()
         for i, y in enumerate(self.data):
             self.axes.plot(list(self.x), list(y), label = f'{i}')
             self.axes.legend()
-            self.axes.set_ylim([-400, 400])
+        self.axes.set_ylim(self.y_limit)
         self.draw()
 
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
-    def __init__(self, plot_names, use_serial = False, show_data_draw = True):
+    def __init__(self, plot_names, use_serial = False, show_data_draw = True, auto_connect = False):
         QtWidgets.QMainWindow.__init__(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setWindowTitle("Serial Plotter")
@@ -164,6 +213,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         l = QtWidgets.QVBoxLayout()
 
+        target_speed = TargetSpeedWidget(get_values_cb = self.send_target_speed)
+        l.addWidget(target_speed)
+
         # Single PID Widget for both side
         pid_both = PIDWidget(get_values_cb = lambda x, y, z:self.upload_pid(x, y, z))
         l.addWidget(pid_both)
@@ -174,6 +226,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         # l.addWidget(pid_left)
         # l.addWidget(pid_right)
 
+        graph_control = GraphControl(reset_cb = self.reset_all, pause_cb = self.pause_all)
+        l.addWidget(graph_control)
 
 
         # TODO: Change to a collection that preserve order
@@ -197,7 +251,18 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.main_widget.setFocus()
         self.setCentralWidget(self.main_widget)
 
-        # self.statusBar().showMessage("All hail matplotlib!", 2000)
+        if auto_connect:
+            self.ser.on_toggled(True)
+
+
+    def pause_all(self, is_paused):
+        for p in self.plots.values():
+            p.pause(is_paused)
+
+
+    def reset_all(self):
+        for p in self.plots.values():
+            p.reset()
 
 
     def get_data(self, timestamp, text):
@@ -225,7 +290,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         return True
 
 
-    # @QtCore.pyqtSlot()
+    @QtCore.pyqtSlot()
     def upload_pid(self, p, i, d, side = None):
         if side == 'left':
             command = f"pid.set left {p} {i} {d}\n"
@@ -237,6 +302,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ser.write(command)
 
 
+    @QtCore.pyqtSlot()
+    def send_target_speed(self, left, right):
+        command = f"target.speed {left} {right}\n"
+        print(command)
+        self.ser.write(command)
+
+
 
 def main():
 
@@ -244,11 +316,12 @@ def main():
     parser.add_argument('--names', '-n', nargs='*', default=['Left', 'Right'], help='List of names for the graph')
     parser.add_argument('--show-data-draw', action='store_false', help='Will prevent graph data to appear in serial console')
     parser.add_argument('--use-serial', action='store_true', help='By default, will use mqtt, set this to use serial')
+    parser.add_argument('--auto-connect', action='store_true', help='Use this flag to connect on open')
     args = parser.parse_args()
 
     qApp = QtWidgets.QApplication(sys.argv)
 
-    aw = ApplicationWindow(args.names, use_serial=args.use_serial, show_data_draw = args.show_data_draw)
+    aw = ApplicationWindow(args.names, use_serial=args.use_serial, show_data_draw = args.show_data_draw, auto_connect = args.auto_connect)
     # aw.setWindowTitle("%s" % progname)
     aw.show()
     sys.exit(qApp.exec_())

@@ -51,7 +51,10 @@ class SerialWidget(QtWidgets.QWidget):
 
         self.text_received = deque(maxlen=100)
 
-        self.data_to_send = []
+
+    def message(self, message_str, message_time = 1000):
+        if self.window:
+            self.window.statusBar().showMessage(message_str, message_time)
 
 
     @QtCore.pyqtSlot()
@@ -63,9 +66,6 @@ class SerialWidget(QtWidgets.QWidget):
                 continue
             text = text.rstrip('\r\n')
             # print(text)
-
-            if self.data_to_send:
-                self.serial.write(self.data_to_send.pop().encode())
 
             used = False
             if self.callback:
@@ -82,12 +82,12 @@ class SerialWidget(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot()
     def write(self, data):
-        self.data_to_send.append(data)
-        # self.serial.write(data.encode())
+        self.serial.write(data.encode())
 
 
     @QtCore.pyqtSlot(bool)
     def on_toggled(self, checked):
+        print(f'On toggle: {checked}')
         self.connect_button.setText("Disconnect" if checked else "Connect")
         if checked:
             if not self.serial.isOpen():
@@ -98,16 +98,16 @@ class SerialWidget(QtWidgets.QWidget):
                 self.baudrate_input.setReadOnly(True)
                 if not self.serial.open(QtCore.QIODevice.ReadWrite):
                     self.connect_button.setChecked(False)
+                    self.message(f'Error connecting to {self.port_input.text()}', 2000)
+                    return
 
-            if self.window:
-                self.window.statusBar().showMessage(f'{self.port_input.text()}@{self.baudrate_input.text()} connected', 2000)
+            self.message(f'{self.port_input.text()}@{self.baudrate_input.text()} connected', 2000)
         else:
             self.serial.close()
             self.port_input.setReadOnly(False)
             self.baudrate_input.setReadOnly(False)
 
-            if self.window:
-                self.window.statusBar().showMessage(f'{self.port_input.text()} disconnected', 2000)
+            self.message(f'{self.port_input.text()} disconnected', 2000)
 
 
 

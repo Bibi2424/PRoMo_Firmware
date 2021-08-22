@@ -13,7 +13,7 @@ class ReceiveSignal(QtCore.QObject):
     sig_mqtt_message = QtCore.pyqtSignal(mqtt.MQTTMessage)
 
 
-class MQTTWidget(QtWidgets.QWidget):
+class MQTTWidget(QtWidgets.QWidget, QtCore.QObject):
     def __init__(self, window=None, callback=None, show_data_draw = True):
         super(MQTTWidget, self).__init__(window)
         self.window = window
@@ -24,14 +24,14 @@ class MQTTWidget(QtWidgets.QWidget):
         self.port_input = QtWidgets.QLineEdit()
         self.message_le = QtWidgets.QLineEdit()
         self.send_btn = QtWidgets.QPushButton(
-            text="Send",
-            clicked=lambda: self.write(self.message_le.text())
+            text = "Send",
+            clicked = lambda: self.write(self.message_le.text())
         )
         self.output_text = QtWidgets.QTextEdit(readOnly=True)
         self.connect_button = QtWidgets.QPushButton(
-            text="Connect", 
-            checkable=True,
-            toggled=self.on_toggled
+            text = "Connect", 
+            checkable = True,
+            toggled = self.on_toggled
         )
 
         lay = QtWidgets.QVBoxLayout(self)
@@ -61,22 +61,30 @@ class MQTTWidget(QtWidgets.QWidget):
         self.text_received = deque(maxlen=100)
 
 
+    def message(self, message_str, message_time = 1000):
+        if self.window:
+            self.window.statusBar().showMessage(message_str, message_time)
+
+
+    # @QtCore.pyqtSlot()
     def on_connect(self, client, userdata, flags, rc):
         self.client.subscribe("PRoMo/#")
 
 
+    # @QtCore.pyqtSlot()
     def on_disconnect(self, client, userdata, rc):
         pass
 
 
+    # @QtCore.pyqtSlot()
     def on_message(self, client, userdata, msg):
         # Needed to process the message in the thread where I can modify widgets
         self.message_signal.sig_mqtt_message.emit(msg)
 
 
+    # @QtCore.pyqtSlot()
     def process_message(self, msg):
         if msg.topic == 'PRoMo/log':
-            # print(type(msg))
             # print(f'{msg.topic}: {msg.payload}')
             try:
                 text = msg.payload.decode().rstrip('\r\n')
@@ -96,19 +104,22 @@ class MQTTWidget(QtWidgets.QWidget):
             self.output_text.setPlainText('\r\n'.join(reversed(self.text_received)))
 
 
+    # @QtCore.pyqtSlot()
     def write(self, data, topic = 'PRoMo/command'):
         self.client.publish(topic, data)
 
 
+    @QtCore.pyqtSlot(bool)
     def on_toggled(self, checked):
         self.connect_button.setText("Disconnect" if checked else "Connect")
         if checked:
-            self.conect_to_broker()
+            self.connect_to_broker()
         else:
             self.disconnect_from_broker()
 
 
-    def conect_to_broker(self):
+    @QtCore.pyqtSlot()
+    def connect_to_broker(self):
         if not self.client.is_connected():
             self.output_text.clear()
 
@@ -120,21 +131,19 @@ class MQTTWidget(QtWidgets.QWidget):
             self.client.connect_async(url, port)
             self.client.loop_start()
 
-            if self.window:
-                self.window.statusBar().showMessage(f'{self.url_input.text()}@{self.url_input.text()} connected', 2000)
+            self.message(f'{self.url_input.text()}@{self.port_input.text()} connected', 2000)
 
 
+    @QtCore.pyqtSlot()
     def disconnect_from_broker(self):
         self.url_input.setReadOnly(False)
         self.port_input.setReadOnly(False)
 
         if self.client.is_connected():
             self.client.disconnect()
-            if self.window:
-                self.window.statusBar().showMessage("Disconnected", 1000)
+            self.message("Disconnected", 1000)
         else:
-            if self.window:
-                self.window.statusBar().showMessage("Not connected.", 1000)
+            self.message("Not connected.", 1000)
         self.client.loop_stop()
 
 
