@@ -1,4 +1,4 @@
-# From https://matplotlib.org/2.0.2/examples/user_interfaces/embedding_in_qt5.html
+# Inspiration from https://matplotlib.org/2.0.2/examples/user_interfaces/embedding_in_qt5.html
 
 import os, sys, time
 import argparse
@@ -16,8 +16,60 @@ from pyqt_serial import SerialWidget
 from pyqt_mqtt import MQTTWidget
 
 
-progname = "Serial Plotter"
-progversion = "0.2"
+progname = "Live Plotter"
+progversion = "0.3"
+
+
+
+class PIDWidget(QtWidgets.QWidget):
+    def __init__(self, title = 'PID', get_values_cb = None, *args, **kwargs):
+        super(PIDWidget, self).__init__(*args, **kwargs)
+
+        self.callback = get_values_cb
+
+        pid_group = QtWidgets.QHBoxLayout()
+
+        pid_group.addWidget(QtWidgets.QLabel(title + ':'))
+
+        pid_group.addWidget(QtWidgets.QLabel("p"))
+        self.p = QtWidgets.QLineEdit("100")
+        pid_group.addWidget(self.p)
+        pid_group.addWidget(QtWidgets.QLabel("i"))
+        self.i = QtWidgets.QLineEdit("0")
+        pid_group.addWidget(self.i)
+        pid_group.addWidget(QtWidgets.QLabel("d"))
+        self.d = QtWidgets.QLineEdit("0")
+        pid_group.addWidget(self.d)
+        pid_group.addWidget(QtWidgets.QPushButton(text='upload', clicked = self.get_values))
+
+        self.setLayout(pid_group)
+
+
+    def get_values(self):
+        p = int(self.p.text())
+        i = int(self.i.text())
+        d = int(self.d.text())
+        if self.callback:
+            self.callback(p, i, d)
+
+
+
+class GraphWidget(QtWidgets.QWidget):
+    def __init__(self, name = 'plot', *args, **kwargs):
+        super(GraphWidget, self).__init__(*args, **kwargs)
+
+        layout = QtWidgets.QVBoxLayout()
+
+        layout.addWidget(QtWidgets.QLabel(name))
+        self.canvas = MyDynamicMplCanvas(parent = self)
+        layout.addWidget(self.canvas)
+
+        self.setLayout(layout)
+
+
+    def get_canvas(self):
+        return self.canvas
+
 
 
 # Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.).
@@ -27,9 +79,7 @@ class MyMplCanvas(FigureCanvas):
         fig = mpl.figure.Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
 
-        self.compute_initial_figure()
-
-        FigureCanvas.__init__(self, fig)
+        super(MyMplCanvas, self).__init__(fig)
         self.setParent(parent)
 
         FigureCanvas.setSizePolicy(self,
@@ -42,14 +92,11 @@ class MyMplCanvas(FigureCanvas):
         pass
 
 
+
 class MyStaticMplCanvas(MyMplCanvas):
-    """Simple canvas with a sine plot."""
 
     def compute_initial_figure(self):
         pass
-        # t = np.arange(0.0, 3.0, 0.01)
-        # s = np.sin(2*np.pi*t)
-        # self.axes.plot(t, s)
 
 
 
@@ -60,7 +107,7 @@ class MyDynamicMplCanvas(MyMplCanvas):
     def __init__(self, *args, **kwargs):
         self.x = deque(maxlen=self.MAXLEN)
         self.data = []
-        MyMplCanvas.__init__(self, *args, **kwargs)
+        super(MyDynamicMplCanvas, self).__init__(*args, **kwargs)
         timer = QtCore.QTimer(self)
         timer.timeout.connect(self.update_figure)
         timer.start(50)
@@ -117,28 +164,26 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         l = QtWidgets.QVBoxLayout()
 
-        pid_group = QtWidgets.QHBoxLayout()
-        l.addLayout(pid_group)
+        # Single PID Widget for both side
+        pid_both = PIDWidget(get_values_cb = lambda x, y, z:self.upload_pid(x, y, z))
+        l.addWidget(pid_both)
 
-        pid_group.addWidget(QtWidgets.QLabel("p"))
-        self.p = QtWidgets.QLineEdit("100")
-        pid_group.addWidget(self.p)
-        pid_group.addWidget(QtWidgets.QLabel("i"))
-        self.i = QtWidgets.QLineEdit("0")
-        pid_group.addWidget(self.i)
-        pid_group.addWidget(QtWidgets.QLabel("d"))
-        self.d = QtWidgets.QLineEdit("0")
-        pid_group.addWidget(self.d)
-        pid_group.addWidget(QtWidgets.QPushButton(text='upload', clicked = self.upload_pid))
+        # One PID Widget per side
+        # pid_left = PIDWidget('Left', get_values_cb = lambda x, y, z:self.upload_pid(x, y, z, side = 'left'))
+        # pid_right = PIDWidget('Right', get_values_cb = lambda x, y, z:self.upload_pid(x, y, z, side = 'right'))
+        # l.addWidget(pid_left)
+        # l.addWidget(pid_right)
+
 
 
         # TODO: Change to a collection that preserve order
         self.plots = {}
 
         for name in plot_names:
-            dc = MyDynamicMplCanvas(self.main_widget, width=5, height=4, dpi=100)
+            dc = GraphWidget(name)
+            # dc = MyDynamicMplCanvas(parent = self.main_widget)
             l.addWidget(dc)
-            self.plots[name] = dc
+            self.plots[name] = dc.get_canvas()
             print(f'Creating plot: \"{name}\"')
 
         h.addLayout(l)
@@ -181,11 +226,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
 
     # @QtCore.pyqtSlot()
-    def upload_pid(self):
-        p = int(self.p.text())
-        i = int(self.i.text())
-        d = int(self.d.text())
-        command = f"pid.set both {p} {i} {d}\n"
+    def upload_pid(self, p, i, d, side = None):
+        if side == 'left':
+            command = f"pid.set left {p} {i} {d}\n"
+        elif side == 'right':
+            command = f"pid.set right {p} {i} {d}\n"
+        else:
+            command = f"pid.set both {p} {i} {d}\n"
         print(command)
         self.ser.write(command)
 
