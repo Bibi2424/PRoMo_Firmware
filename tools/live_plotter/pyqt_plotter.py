@@ -159,6 +159,7 @@ class MyDynamicMplCanvas(MyMplCanvas):
         self.x.clear()
         self.data = []
         self.update_figure(forced = True)
+        self.start_time = time.time()
 
 
     def pause(self, is_paused):
@@ -179,6 +180,8 @@ class MyDynamicMplCanvas(MyMplCanvas):
     @QtCore.pyqtSlot()
     def update_figure(self, forced = False):
         if self.is_paused and not forced:
+            self.axes.set_ylim(self.y_limit)
+            self.draw()
             return
 
         self.axes.cla()

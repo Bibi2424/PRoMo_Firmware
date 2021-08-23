@@ -80,9 +80,10 @@ extern uint32_t encoder_get_value(actuator_t side) {
 
 
 static /*inline*/ int32_t calibrate_speed(int32_t tick_speed, uint32_t elapse_time_ms) {
-	//! TODO: Change MOTOR_CONTROL_INTERVAL for an actual time difference since last measure
 	//! NOTE: 1/T * speed_ticks * wheel_radius * (PI / TICKS_PER_TURN)
-	return ((1000 / (int32_t)elapse_time_ms) * tick_speed * WHEEL_RADIUS_MM / TICKS_PER_WHEEL_TURN_DIV_PI);
+	int32_t speed_mms = ((1000 / (int32_t)elapse_time_ms) * tick_speed * WHEEL_RADIUS_MM / TICKS_PER_WHEEL_TURN_DIV_PI);
+	//! NOTE: speed_mms = [-MAX_SPEED/s..MAX_SPEED/s]
+	return speed_mms;
 }
 
 
