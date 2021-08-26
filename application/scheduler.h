@@ -20,7 +20,7 @@
 #define SCHEDULER_ALWAYS	-1
 
 #define NOW		0
-#define MS		100
+#define MS		10
 #define SECOND  1000*MS
 #define MINUTE	60*SECOND
 
