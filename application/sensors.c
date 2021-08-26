@@ -91,7 +91,6 @@ extern void sensors_vl53l0x_init(void) {
 	setMeasurementTimingBudget( 50 * MILLIS );
 	setTimeout( 50 );
 	
-	startContinuous(100);
     scheduler_add_event(SCHEDULER_TASK_VL53_GET, 250*MS, SCHEDULER_ALWAYS, sensors_get_event);
 
 }

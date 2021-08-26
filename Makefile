@@ -52,7 +52,7 @@ STM32_LIBRAIRIES_INC = $(STM32_LIBRAIRIES_PATH)/STM32F4xx_HAL_Driver/Inc
 STM32_FLASHER_EXEC := "C:/Program Files (x86)/STMicroelectronics/STM32 ST-LINK Utility/ST-LINK Utility/"
 
 # If you need to select some libaries....
-USED_LIBS += VL53L0X
+USED_LIBS += VL53L0X ws2812b
 # USED_LIBS += test
 APP_LIBS = $(foreach dir, $(USED_LIBS), $(LIB_DIR)/$(dir))
 # Or just use them all
