@@ -189,8 +189,8 @@ extern void ws2812b_send(rgb_t *strip, uint16_t size) {
 	do {
 		PIN_HIGH;
 		RESET_CPT;
-		if(buffer[i>>3] & 0x01) { high_time = LONG_TIME; low_time = SHORT_TIME; }
-		else { high_time = SHORT_TIME - 2; low_time = LONG_TIME + 4; }
+		if(buffer[i>>3] & 0x01) { high_time = LONG_TIME - 2; low_time = SHORT_TIME; }
+		else { high_time = SHORT_TIME - 6; low_time = LONG_TIME + 4; }
 		WAIT(high_time);
 
 		PIN_LOW;
