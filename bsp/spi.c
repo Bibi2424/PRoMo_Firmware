@@ -29,9 +29,6 @@ extern void spi_init(SPI_TypeDef *SPIx) {
 
 	LL_APB1_GRP1_EnableClock(clock_periph);
 
-	NVIC_SetPriority(spi_irq_type, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 4, 4));
-	NVIC_EnableIRQ(spi_irq_type);
-
 	LL_SPI_InitTypeDef SPI_InitStruct = {0};
 	SPI_InitStruct.TransferDirection = LL_SPI_FULL_DUPLEX;
 	SPI_InitStruct.Mode = LL_SPI_MODE_MASTER;
@@ -39,8 +36,9 @@ extern void spi_init(SPI_TypeDef *SPIx) {
 	SPI_InitStruct.ClockPolarity = LL_SPI_POLARITY_LOW;
 	SPI_InitStruct.ClockPhase = LL_SPI_PHASE_1EDGE;
 	SPI_InitStruct.NSS = LL_SPI_NSS_SOFT;
-	SPI_InitStruct.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV16;	//1MHz
-	// SPI_InitStruct.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV32;	//500kHz
+	//! NOTE: SPI1 - APB2, SPI2/SPI3 - APB1
+	// SPI_InitStruct.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV8;	//! SPI2: 3.75MHz for APB1=30MHz
+	SPI_InitStruct.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV16;	//! SPI2: 1.875MHz for APB1=30MHz
 	SPI_InitStruct.BitOrder = LL_SPI_MSB_FIRST;
 	SPI_InitStruct.CRCCalculation = LL_SPI_CRCCALCULATION_DISABLE;
 	SPI_InitStruct.CRCPoly = 10;
@@ -52,8 +50,8 @@ extern void spi_init(SPI_TypeDef *SPIx) {
 	// LL_SPI_EnableIT_ERR(SPIx);
 	
 	//! Interrupt
-	// NVIC_SetPriority(SPIx, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 4, 8));
-	// NVIC_EnableIRQ(SPIx);	
+	// NVIC_SetPriority(spi_irq_type, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 4, 4));
+	// NVIC_EnableIRQ(spi_irq_type);	
 
 	LL_SPI_Enable(SPIx);
 
