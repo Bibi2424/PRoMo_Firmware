@@ -57,7 +57,7 @@ void MX_GPIO_Init(void) {
 	//! Debug Pin
 	GPIO_InitStruct.Pin = DEBUG_Pin_1 | DEBUG_Pin_2;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
-	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
+	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
 	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(DEBUG_Pin_Port, &GPIO_InitStruct);
