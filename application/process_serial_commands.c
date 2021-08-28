@@ -116,7 +116,7 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 		}
 
 		//! CONTROL LOOP
-		else if(strcmp(word, "target-speed") == 0) {
+		else if(strcmp(word, "target.speed") == 0) {
 			word = get_next_word(commands, false);
 			int8_t speed_left = (int8_t)(strtol(word, NULL, 0) & 0xff);
 			word = get_next_word(commands, false);
@@ -143,8 +143,7 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 				update_speed_pid(RIGHT_SIDE, p, i, d);
 			}
 			else if(strcmp(side, "both") == 0) {
-				update_speed_pid(LEFT_SIDE, p, i, d);
-				update_speed_pid(RIGHT_SIDE, p, i, d);
+				update_speed_pid(BOTH_SIDE, p, i, d);
 			}
 		}
 

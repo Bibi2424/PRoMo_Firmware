@@ -15,12 +15,13 @@ static int16_t last_value_left = 0, last_value_right = 0;
 
 
 extern void encoders_init(void) {
+	LL_GPIO_InitTypeDef GPIO_InitStruct;
 
   	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM3);
   	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM4);
 
   	//! GPIO Init
-	LL_GPIO_InitTypeDef GPIO_InitStruct;
+  	LL_GPIO_StructInit(&GPIO_InitStruct);
 	GPIO_InitStruct.Pin = TIM3_CH1_Pin | TIM3_CH2_Pin;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
@@ -80,9 +81,10 @@ extern uint32_t encoder_get_value(actuator_t side) {
 
 
 static /*inline*/ int32_t calibrate_speed(int32_t tick_speed, uint32_t elapse_time_ms) {
-	//! TODO: Change MOTOR_CONTROL_INTERVAL for an actual time difference since last measure
 	//! NOTE: 1/T * speed_ticks * wheel_radius * (PI / TICKS_PER_TURN)
-	return ((1000 / (int32_t)elapse_time_ms) * tick_speed * WHEEL_RADIUS_MM / TICKS_PER_WHEEL_TURN_DIV_PI);
+	int32_t speed_mms = ((1000 / (int32_t)elapse_time_ms) * tick_speed * WHEEL_RADIUS_MM / TICKS_PER_WHEEL_TURN_DIV_PI);
+	//! NOTE: speed_mms = [-MAX_SPEED/s..MAX_SPEED/s]
+	return speed_mms;
 }
 
 

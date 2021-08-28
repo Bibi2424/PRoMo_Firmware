@@ -16,7 +16,7 @@ static void sensors_get_event(void);
 
 
 static void vl53l0x_gpio_init(void) {
-	LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
+	LL_GPIO_InitTypeDef GPIO_InitStruct;
 
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
 	/**VL53L0X XSHUT Pins
@@ -25,6 +25,7 @@ static void vl53l0x_gpio_init(void) {
 	PC2   ------> VL53L0X_SHUT_3
 	PC3   ------> VL53L0X_SHUT_4
 	*/
+	LL_GPIO_StructInit(&GPIO_InitStruct);
 	GPIO_InitStruct.Pin = VL53L0X_XSHUT1_Pin | VL53L0X_XSHUT2_Pin | VL53L0X_XSHUT3_Pin | VL53L0X_XSHUT4_Pin;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
@@ -36,11 +37,14 @@ static void vl53l0x_gpio_init(void) {
 	SET_PIN(VL53L0X_XSHUT_Port, VL53L0X_XSHUT3_Pin, 0);
 	SET_PIN(VL53L0X_XSHUT_Port, VL53L0X_XSHUT4_Pin, 0);
 
+	//! TODO: IRQ Pin
+
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
 	/**I2C1 GPIO Configuration
 	PB8   ------> I2C1_SCL
 	PB9   ------> I2C1_SDA
 	*/
+	LL_GPIO_StructInit(&GPIO_InitStruct);
 	GPIO_InitStruct.Pin = VL53L0X_I2C_SCL | VL53L0X_I2C_SDA;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
@@ -90,8 +94,9 @@ extern void sensors_vl53l0x_init(void) {
 
 	setMeasurementTimingBudget( 50 * MILLIS );
 	setTimeout( 50 );
+
+	debugf("\tVL53 Init OK\n");
 	
-	startContinuous(100);
     scheduler_add_event(SCHEDULER_TASK_VL53_GET, 250*MS, SCHEDULER_ALWAYS, sensors_get_event);
 
 }
@@ -101,6 +106,10 @@ static void sensors_get_event(void) {
 
 	// statInfo_t range;
 	// uint16_t result = sensors_vl53l0x_get_next(&range);
+	// debugf("VL53 - %u\n", result);
+
+	// statInfo_t range;
+	// uint16_t result = sensors_vl53l0x_range_one(VL53L0X_FRONT_ADDRESS, &range);
 	// debugf("VL53 - %u\n", result);
 
 	statInfo_t ranges[4];

@@ -34,20 +34,21 @@
 //! Debug
 #define DEBUG_UART			6
 // #define DEBUG_BAUDRATE		921600UL
-#define DEBUG_BAUDRATE		1000000UL
+#define DEBUG_BAUDRATE		230400UL
 
 
 //! For motor and encoder
 typedef enum {
 	LEFT_SIDE,
-	RIGHT_SIDE
+	RIGHT_SIDE,
+	BOTH_SIDE
 } actuator_t;
 
 
 //! TODO: Clean up and find a better place for those defines
 #define MAX_SPEED						180
 
-#define MOTOR_CONTROL_INTERVAL_MS      	20
+#define MOTOR_CONTROL_INTERVAL_MS      	10
 
 #define WHEEL_RADIUS_MM					32L
 #define TICKS_PER_WHEEL_TURN_DIV_PI		1138L	/* 3576 / PI */

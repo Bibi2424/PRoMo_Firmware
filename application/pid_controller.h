@@ -12,6 +12,8 @@ typedef struct {
 	uint32_t integral_gain;
 	uint32_t derivative_gain;
 	int32_t max_integral_error;
+	int32_t min_integral_error;
+	// uint32_t anti_windup_percent;
 	uint32_t max_output;
 	uint32_t min_output;
 	//! Internal stuff
@@ -22,6 +24,6 @@ typedef struct {
 
 
 extern int32_t pid_compute(pid_controller_t *pid, int32_t set_point, int32_t current_value);
-
+extern void pid_reset(pid_controller_t *pid);
 
 #endif

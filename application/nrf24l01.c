@@ -38,6 +38,7 @@ static void nrf24l01_gpio_init(void) {
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
 
 	//! CE - PB10, CSN - PB12
+	LL_GPIO_StructInit(&GPIO_InitStruct);
 	GPIO_InitStruct.Pin = NRF_CE_Pin | NRF_CSN_Pin;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
@@ -62,6 +63,7 @@ static void nrf24l01_gpio_init(void) {
 	NVIC_EnableIRQ(EXTI2_IRQn);
 
 	//! SCK - PB13, MISO - PB14, MOSI - PB15
+	LL_GPIO_StructInit(&GPIO_InitStruct);
 	GPIO_InitStruct.Pin = NRF_SCK_Pin | NRF_MOSI_Pin | NRF_MISO_Pin;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;

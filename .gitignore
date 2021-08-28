@@ -1,4 +1,7 @@
 *.pyc
+*.d
+*.lst
+*.map
 
 _build
 STM32_HAL_min/

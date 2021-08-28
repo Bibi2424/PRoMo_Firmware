@@ -18,6 +18,8 @@
 #include "sensors.h"
 #include "control_loop.h"
 #include "pid_controller.h"
+#include "ws2812b.h"
+#include "mpu_6050.h"
 
 
 
@@ -28,6 +30,7 @@ static void SystemClock_Config(void);
 
 
 volatile static bool gpio_pressed = false;
+
 
 
 extern int main(void) {
@@ -57,6 +60,12 @@ extern int main(void) {
     scheduler_init();
     scheduler_add_event(SCHEDULER_TASK_LED1, 1*SECOND, SCHEDULER_ALWAYS, blink_led1);
 
+    ws2812b_init();
+
+    bool err = mpu_6050_init(MPU_6050_DEFAULT_ADDRESS);
+    if(err) { debugf("\tMPU6050 init error\n"); }
+    else { debugf("\tMPU6050 init ok\n"); }
+
     encoders_init();
     motors_init();
 
@@ -72,7 +81,11 @@ extern int main(void) {
     debugf("Init Done\r\n");
 
 
+    uint32_t radio_last_execution = 0;
     uint32_t motor_control_last_execution = 0;
+    uint32_t aleds_last_execution = 0;
+    uint32_t mpu_last_execution = 0;
+    rgb_t strip[5] = {{25, 0, 0}, {0, 25, 0}, {0, 0, 25}, {0, 0, 0}};
     while (1) {
 
         uint32_t current_time = millis();
@@ -86,13 +99,37 @@ extern int main(void) {
             debugf("Sending... %u\n", res);
         }
 
-        radio_run();
+        if(current_time - radio_last_execution > 1) {
+            radio_last_execution = current_time;
+            
+            radio_run();
+        }
 
         if(current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL_MS) {
             motor_control_last_execution = current_time;
 
             do_control_loop();
         }
+
+        if(current_time - mpu_last_execution > 500) {
+            mpu_last_execution = current_time;
+
+            mpu_data_t mpu_data;
+            mpu_6050_read_all(&mpu_data);
+            printf("Accel: %d/%d/%d\n", mpu_data.accel.x, mpu_data.accel.y, mpu_data.accel.z);
+            printf("Gyro: %d/%d/%d\n", mpu_data.gyro.x, mpu_data.gyro.y, mpu_data.gyro.z);
+        }
+
+        if(current_time - aleds_last_execution > 500) {
+            aleds_last_execution = current_time;
+
+            for(int8_t i = 4; i >= 0; i--) {
+                strip[i+1] = strip[i];
+            }
+            strip[0] = strip[4];
+            ws2812b_send(strip, 4);
+        }
+
     }
     return 0;
 }
@@ -128,27 +165,28 @@ static void lost_connection(void) {
 
 
 static void SystemClock_Config(void) {
-    LL_FLASH_SetLatency(LL_FLASH_LATENCY_0);
-    while(LL_FLASH_GetLatency()!= LL_FLASH_LATENCY_0) { }
-    LL_PWR_SetRegulVoltageScaling(LL_PWR_REGU_VOLTAGE_SCALE2);
+    LL_FLASH_SetLatency(LL_FLASH_LATENCY_3);
+    while(LL_FLASH_GetLatency()!= LL_FLASH_LATENCY_3) { }
+    LL_PWR_SetRegulVoltageScaling(LL_PWR_REGU_VOLTAGE_SCALE1);
     LL_RCC_HSE_Enable();
 
     /* Wait till HSE is ready */
     while(LL_RCC_HSE_IsReady() != 1) { }
+    LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSE, LL_RCC_PLLM_DIV_15, 144, LL_RCC_PLLP_DIV_2);
     LL_RCC_PLL_ConfigDomain_48M(LL_RCC_PLLSOURCE_HSE, LL_RCC_PLLM_DIV_15, 144, LL_RCC_PLLQ_DIV_5);
     LL_RCC_PLL_Enable();
 
     /* Wait till PLL is ready */
     while(LL_RCC_PLL_IsReady() != 1) { }
     LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
-    LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
-    LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_1);
-    LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_HSE);
+    LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_4);
+    LL_RCC_SetAPB2Prescaler(LL_RCC_APB2_DIV_2);
+    LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
     /* Wait till System clock is ready */
-    while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_HSE) { }
-    LL_Init1msTick(25000000);
-    LL_SetSystemCoreClock(25000000);
-    SysTick_Config(SystemCoreClock / 1000); 
+    while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL) { }
+    LL_Init1msTick(120000000);
+    LL_SetSystemCoreClock(120000000);
+    SysTick_Config(SystemCoreClock / 1000);
 
     /* Update the time base */
     // if (HAL_InitTick (TICK_INT_PRIORITY) != HAL_OK) { Error_Handler(); }
