@@ -24,10 +24,12 @@
 #if WS2812B_DRIVE_METHOD == USE_SPI_IMPLEMENTATION
 
 extern void ws2812b_init(void) {
+	LL_GPIO_InitTypeDef GPIO_InitStruct;
+
 	LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOC);
 	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_SPI3);
 
-	LL_GPIO_InitTypeDef GPIO_InitStruct;
+	LL_GPIO_StructInit(&GPIO_InitStruct);
 	GPIO_InitStruct.Pin = DATA_PIN | LL_GPIO_PIN_10;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
@@ -132,9 +134,11 @@ extern void ws2812b_send(rgb_t *strip, uint16_t size) {
 #define PIN_TOGGLE	LL_GPIO_TogglePin(DATA_PORT, DATA_PIN)
 
 extern void ws2812b_init(void) {
+	LL_GPIO_InitTypeDef GPIO_InitStruct;
+
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM10);
 
-	LL_GPIO_InitTypeDef GPIO_InitStruct;
+	LL_GPIO_StructInit(&GPIO_InitStruct);
 	GPIO_InitStruct.Pin = DATA_PIN;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;

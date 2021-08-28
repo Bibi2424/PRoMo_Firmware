@@ -132,7 +132,7 @@ extern uint8_t i2c_full_read(I2C_TypeDef *I2Cx, uint8_t address, uint8_t mem, ui
     TM_I2C_Timeout = TM_I2C_TIMEOUT;
     while (!LL_I2C_IsActiveFlag_SB(I2Cx)) {
         if (!LL_SYSTICK_IsActiveCounterFlag()) { continue; }
-        if (--TM_I2C_Timeout == 0x00) { return 0x01; }
+        if (--TM_I2C_Timeout == 0x00) { return 1; }
     }
 
     //! Send slave address for TX
@@ -140,7 +140,7 @@ extern uint8_t i2c_full_read(I2C_TypeDef *I2Cx, uint8_t address, uint8_t mem, ui
     TM_I2C_Timeout = TM_I2C_TIMEOUT;
     while (!LL_I2C_IsActiveFlag_ADDR(I2Cx)) {
         if (!LL_SYSTICK_IsActiveCounterFlag()) { continue; }
-        if (--TM_I2C_Timeout == 0x00) { return 0x02; }
+        if (--TM_I2C_Timeout == 0x00) { return 2; }
     }
     LL_I2C_ClearFlag_ADDR(I2Cx);
 
@@ -168,7 +168,7 @@ extern uint8_t i2c_full_read(I2C_TypeDef *I2Cx, uint8_t address, uint8_t mem, ui
     TM_I2C_Timeout = TM_I2C_TIMEOUT;
     while (!LL_I2C_IsActiveFlag_SB(I2Cx)) {
         if (!LL_SYSTICK_IsActiveCounterFlag()) { continue; }
-        if (--TM_I2C_Timeout == 0x00) { return 0x05; }
+        if (--TM_I2C_Timeout == 0x00) { return 5; }
     }
 
     //! Send slave address for RX
@@ -176,7 +176,7 @@ extern uint8_t i2c_full_read(I2C_TypeDef *I2Cx, uint8_t address, uint8_t mem, ui
     TM_I2C_Timeout = TM_I2C_TIMEOUT;
     while (!LL_I2C_IsActiveFlag_ADDR(I2Cx)) {
         if (!LL_SYSTICK_IsActiveCounterFlag()) { continue; }
-        if (--TM_I2C_Timeout == 0x00) { return 0x6; }
+        if (--TM_I2C_Timeout == 0x00) { return 6; }
     }
 
     // CLEAR_BIT(I2Cx->CR1, I2C_CR1_POS);

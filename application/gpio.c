@@ -37,6 +37,7 @@ void MX_GPIO_Init(void) {
 	NVIC_EnableIRQ(EXTI0_IRQn); 
 
 	//! LD1
+	LL_GPIO_StructInit(&GPIO_InitStruct);
 	GPIO_InitStruct.Pin = LD1_Pin;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
@@ -46,6 +47,7 @@ void MX_GPIO_Init(void) {
 	LL_GPIO_SetOutputPin(LD1_GPIO_Port, LD1_Pin);
 
 	//! LD2
+	LL_GPIO_StructInit(&GPIO_InitStruct);
 	GPIO_InitStruct.Pin = LD2_Pin;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
@@ -55,6 +57,7 @@ void MX_GPIO_Init(void) {
 	LL_GPIO_SetOutputPin(LD2_GPIO_Port, LD2_Pin);
 
 	//! Debug Pin
+	LL_GPIO_StructInit(&GPIO_InitStruct);
 	GPIO_InitStruct.Pin = DEBUG_Pin_1 | DEBUG_Pin_2;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;

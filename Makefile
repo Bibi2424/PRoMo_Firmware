@@ -17,7 +17,7 @@ MCU_TYPE = STM32F405
 
 FW_VERSION_MAJOR = 0
 FW_VERSION_MINOR = 2
-FW_VERSION_REV 	 = 0
+FW_VERSION_REV 	 = 1
 
 HW_TYPE = HW_PROMO_V0_1
 
@@ -52,7 +52,7 @@ STM32_LIBRAIRIES_INC = $(STM32_LIBRAIRIES_PATH)/STM32F4xx_HAL_Driver/Inc
 STM32_FLASHER_EXEC := "C:/Program Files (x86)/STMicroelectronics/STM32 ST-LINK Utility/ST-LINK Utility/"
 
 # If you need to select some libaries....
-USED_LIBS += VL53L0X
+USED_LIBS += VL53L0X MPU6050
 # USED_LIBS += test
 APP_LIBS = $(foreach dir, $(USED_LIBS), $(LIB_DIR)/$(dir))
 # Or just use them all

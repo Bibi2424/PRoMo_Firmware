@@ -15,12 +15,13 @@ static int16_t last_value_left = 0, last_value_right = 0;
 
 
 extern void encoders_init(void) {
+	LL_GPIO_InitTypeDef GPIO_InitStruct;
 
   	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM3);
   	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM4);
 
   	//! GPIO Init
-	LL_GPIO_InitTypeDef GPIO_InitStruct;
+  	LL_GPIO_StructInit(&GPIO_InitStruct);
 	GPIO_InitStruct.Pin = TIM3_CH1_Pin | TIM3_CH2_Pin;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;

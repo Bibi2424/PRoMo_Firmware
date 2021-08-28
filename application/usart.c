@@ -19,8 +19,8 @@ static uint8_t echo = true;
 //! TODO: In the future, use USART with DMA and either circular buffer or double buffering
 extern void MX_USART1_UART_Init(uint32_t baudrate) {
 	LL_USART_InitTypeDef USART_InitStruct;
-
 	LL_GPIO_InitTypeDef GPIO_InitStruct;
+
 	/* Peripheral clock enable */
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_USART6);
 	
@@ -28,6 +28,7 @@ extern void MX_USART1_UART_Init(uint32_t baudrate) {
 	//! PA10  ------> USART1_RX
 	//! PA11  ------> USART1_CTS
 	//! PA12  ------> USART1_RTS
+	LL_GPIO_StructInit(&GPIO_InitStruct);
 	GPIO_InitStruct.Pin = USART1_TX_Pin | USART1_RX_Pin;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
