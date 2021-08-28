@@ -19,6 +19,7 @@
 #include "control_loop.h"
 #include "pid_controller.h"
 #include "ws2812b.h"
+#include "mpu_6050.h"
 
 
 
@@ -61,6 +62,10 @@ extern int main(void) {
 
     ws2812b_init();
 
+    bool err = mpu_6050_init(MPU_6050_DEFAULT_ADDRESS);
+    if(err) { debugf("\tMPU6050 init error\n"); }
+    else { debugf("\tMPU6050 init ok\n"); }
+
     encoders_init();
     motors_init();
 
@@ -79,7 +84,8 @@ extern int main(void) {
     uint32_t radio_last_execution = 0;
     uint32_t motor_control_last_execution = 0;
     uint32_t aleds_last_execution = 0;
-    rgb_t strip[5] = {{128, 0, 0}, {0, 128, 0}, {0, 0, 128}, {0, 0, 0}};
+    uint32_t mpu_last_execution = 0;
+    rgb_t strip[5] = {{25, 0, 0}, {0, 25, 0}, {0, 0, 25}, {0, 0, 0}};
     while (1) {
 
         uint32_t current_time = millis();
@@ -103,6 +109,15 @@ extern int main(void) {
             motor_control_last_execution = current_time;
 
             do_control_loop();
+        }
+
+        if(current_time - mpu_last_execution > 500) {
+            mpu_last_execution = current_time;
+
+            mpu_data_t mpu_data;
+            mpu_6050_read_all(&mpu_data);
+            printf("Accel: %d/%d/%d\n", mpu_data.accel.x, mpu_data.accel.y, mpu_data.accel.z);
+            printf("Gyro: %d/%d/%d\n", mpu_data.gyro.x, mpu_data.gyro.y, mpu_data.gyro.z);
         }
 
         if(current_time - aleds_last_execution > 500) {

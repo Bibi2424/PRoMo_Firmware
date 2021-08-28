@@ -14,10 +14,12 @@ static uint32_t max_autoreload = 0;
 
 
 extern void motors_init(void) {
+	LL_GPIO_InitTypeDef GPIO_InitStruct;
+
   	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
 
   	//! Init GPIOs associated with the generation of PWM
-	LL_GPIO_InitTypeDef GPIO_InitStruct;
+  	LL_GPIO_StructInit(&GPIO_InitStruct);
 	GPIO_InitStruct.Pin = TIM2_CH1_Pin /*| TIM2_CH2_Pin*/ | TIM2_CH3_Pin | TIM2_CH4_Pin;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
@@ -32,6 +34,16 @@ extern void motors_init(void) {
 	LL_GPIO_SetAFPin_0_7(TIM2_CH2_GPIO_Port, TIM2_CH2_Pin, LL_GPIO_AF_1);
 	LL_GPIO_SetAFPin_0_7(TIM2_CH3_GPIO_Port, TIM2_CH3_Pin, LL_GPIO_AF_1);
 	LL_GPIO_SetAFPin_0_7(TIM2_CH4_GPIO_Port, TIM2_CH4_Pin, LL_GPIO_AF_1);
+
+	//! Motor Driver Enable Pin
+  	LL_GPIO_StructInit(&GPIO_InitStruct);
+	GPIO_InitStruct.Pin = MOTOR_ENABLE_Pin;
+	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
+	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
+	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+	LL_GPIO_Init(MOTOR_ENABLE_Pin_Port, &GPIO_InitStruct);
+  	SET_PIN(MOTOR_ENABLE_Pin_Port, MOTOR_ENABLE_Pin, 1);
 
   	//! Init Timer2 for base generation of PWM
 	LL_TIM_InitTypeDef LL_TIM_InitStruct;
@@ -77,13 +89,6 @@ extern void motors_init(void) {
   	motor_set_speed(LEFT_SIDE, 0);
   	LL_TIM_EnableCounter(TIM2);			//! Enable counter
 
-	GPIO_InitStruct.Pin = MOTOR_ENABLE_Pin;
-	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
-	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
-	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-	LL_GPIO_Init(MOTOR_ENABLE_Pin_Port, &GPIO_InitStruct);
-  	SET_PIN(MOTOR_ENABLE_Pin_Port, MOTOR_ENABLE_Pin, 1);
 }
 
 
