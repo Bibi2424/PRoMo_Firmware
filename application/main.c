@@ -18,6 +18,7 @@
 #include "sensors.h"
 #include "control_loop.h"
 #include "pid_controller.h"
+#include "ws2812b.h"
 
 
 
@@ -28,6 +29,7 @@ static void SystemClock_Config(void);
 
 
 volatile static bool gpio_pressed = false;
+
 
 
 extern int main(void) {
@@ -57,6 +59,8 @@ extern int main(void) {
     scheduler_init();
     scheduler_add_event(SCHEDULER_TASK_LED1, 1*SECOND, SCHEDULER_ALWAYS, blink_led1);
 
+    ws2812b_init();
+
     encoders_init();
     motors_init();
 
@@ -72,7 +76,10 @@ extern int main(void) {
     debugf("Init Done\r\n");
 
 
+    uint32_t radio_last_execution = 0;
     uint32_t motor_control_last_execution = 0;
+    uint32_t aleds_last_execution = 0;
+    rgb_t strip[5] = {{128, 0, 0}, {0, 128, 0}, {0, 0, 128}, {0, 0, 0}};
     while (1) {
 
         uint32_t current_time = millis();
@@ -86,13 +93,28 @@ extern int main(void) {
             debugf("Sending... %u\n", res);
         }
 
-        radio_run();
+        if(current_time - radio_last_execution > 1) {
+            radio_last_execution = current_time;
+            
+            radio_run();
+        }
 
         if(current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL_MS) {
             motor_control_last_execution = current_time;
 
             do_control_loop();
         }
+
+        if(current_time - aleds_last_execution > 500) {
+            aleds_last_execution = current_time;
+
+            for(int8_t i = 4; i >= 0; i--) {
+                strip[i+1] = strip[i];
+            }
+            strip[0] = strip[4];
+            ws2812b_send(strip, 4);
+        }
+
     }
     return 0;
 }
