@@ -86,8 +86,8 @@ extern int main(void) {
     uint32_t aleds_last_execution = 0;
     uint32_t mpu_last_execution = 0;
     rgb_t strip[5] = {{25, 0, 0}, {0, 25, 0}, {0, 0, 25}, {0, 0, 0}};
-    while (1) {
 
+    while (1) {
         uint32_t current_time = millis();
 
         if(gpio_pressed) {
@@ -99,28 +99,28 @@ extern int main(void) {
             debugf("Sending... %u\n", res);
         }
 
-        if(current_time - radio_last_execution > 1) {
+        if(RADIO_INTERVAL_MS > 0 && current_time - radio_last_execution > RADIO_INTERVAL_MS) {
             radio_last_execution = current_time;
             
             radio_run();
         }
 
-        if(current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL_MS) {
+        if(MOTOR_CONTROL_INTERVAL_MS > 0 && current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL_MS) {
             motor_control_last_execution = current_time;
 
             do_control_loop();
         }
 
-        if(current_time - mpu_last_execution > 500) {
+        if(MPU_INTERVAL_MS > 0 && current_time - mpu_last_execution > MPU_INTERVAL_MS) {
             mpu_last_execution = current_time;
 
             mpu_data_t mpu_data;
             mpu_6050_read_all(&mpu_data);
-            printf("Accel: %d/%d/%d\n", mpu_data.accel.x, mpu_data.accel.y, mpu_data.accel.z);
-            printf("Gyro: %d/%d/%d\n", mpu_data.gyro.x, mpu_data.gyro.y, mpu_data.gyro.z);
+            debugf("Accel: %d/%d/%d\n", mpu_data.accel.x, mpu_data.accel.y, mpu_data.accel.z);
+            debugf("Gyro: %d/%d/%d\n", mpu_data.gyro.x, mpu_data.gyro.y, mpu_data.gyro.z);
         }
 
-        if(current_time - aleds_last_execution > 500) {
+        if(ALEDS_INTERVAL_MS > 0 && current_time - aleds_last_execution > ALEDS_INTERVAL_MS) {
             aleds_last_execution = current_time;
 
             for(int8_t i = 4; i >= 0; i--) {

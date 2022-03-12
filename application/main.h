@@ -45,11 +45,17 @@ typedef enum {
 } actuator_t;
 
 
+
+#define RADIO_INTERVAL_MS      			1
+#define MOTOR_CONTROL_INTERVAL_MS      	10
+// #define MPU_INTERVAL_MS      			500
+#define MPU_INTERVAL_MS      			0
+// #define ALEDS_INTERVAL_MS      			500
+#define ALEDS_INTERVAL_MS      			0
+
+
 //! TODO: Clean up and find a better place for those defines
 #define MAX_SPEED						180
-
-#define MOTOR_CONTROL_INTERVAL_MS      	10
-
 #define WHEEL_RADIUS_MM					32L
 #define TICKS_PER_WHEEL_TURN_DIV_PI		1138L	/* 3576 / PI */
 
