@@ -22,7 +22,7 @@
 #include "mpu_6050.h"
 
 
-
+static void sensors_get_event(void);
 static void get_data_from_radio(uint8_t *data, uint8_t size);
 static void lost_connection(void);
 static void SystemClock_Config(void);
@@ -70,6 +70,7 @@ extern int main(void) {
     motors_init();
 
     sensors_vl53l0x_init();
+    // scheduler_add_event(SCHEDULER_TASK_VL53_GET, 250*MS, SCHEDULER_ALWAYS, sensors_get_event);
 
     radio_settings_t radio_settings = {
         .radio_rx_id = 2,
@@ -142,6 +143,22 @@ extern void blink_led1(void) {
 
 extern void blink_led2(void) {
     TOGGLE_PIN(LD2_GPIO_Port, LD2_Pin);
+}
+
+
+static void sensors_get_event(void) {
+
+    // statInfo_t range;
+    // uint16_t result = sensors_vl53l0x_get_next(&range);
+    // debugf("VL53 - %u\n", result);
+
+    // statInfo_t range;
+    // uint16_t result = sensors_vl53l0x_range_one(VL53L0X_FRONT_ADDRESS, &range);
+    // debugf("VL53 - %u\n", result);
+
+    statInfo_t ranges[4];
+    sensors_vl53l0x_get_all(ranges);
+    debugf("VL53 - L: %u, F: %u, R: %u, B: %u\n", ranges[1].rawDistance, ranges[0].rawDistance, ranges[2].rawDistance, ranges[3].rawDistance);
 }
 
 

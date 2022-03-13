@@ -54,6 +54,15 @@ extern void scheduler_init(void) {
 }
 
 
+extern void scheduler_print(void) {
+    printf("Scheduler:\n");
+    uint32_t elapse = LL_TIM_GetCounter(SCHEDULER_TIM);
+    for(uint8_t i = 0; i < SCHEDULER_MAX_EVENT; i++) {
+        printf("\t[%u] - %u - %lu/%lu\n", i, scheduler[i].status, scheduler[i].time_left > 0 ? scheduler[i].time_left - elapse: 0, scheduler[i].period);
+    }
+}
+
+
 extern void scheduler_add_event(uint8_t id, uint32_t period, int16_t number_of_trigger, void (*callback)(void)) {
     debugf("Add event [%u] in %lums for %d times\r\n", id, period / MS, number_of_trigger);
     if(id >= SCHEDULER_MAX_EVENT) {return;}
@@ -69,7 +78,7 @@ extern void scheduler_add_event(uint8_t id, uint32_t period, int16_t number_of_t
     scheduler[id].period = period;
     scheduler[id].callback = callback;
     
-    // if
+    //! Scheduler didn't had time to trigger interrupt, elapse time = timer value
     scheduler_handler(LL_TIM_GetCounter(SCHEDULER_TIM));
 }
 
@@ -91,6 +100,7 @@ void TIM1_BRK_TIM9_IRQHandler(void) {
   /* Check whether update interrupt is pending */
     if(LL_TIM_IsActiveFlag_UPDATE(SCHEDULER_TIM) == 1) {
         LL_TIM_ClearFlag_UPDATE(SCHEDULER_TIM);             // Clear the update interrupt flag
+        //! Scheduler had time to trigger interrupt, elapse time = timer period
         scheduler_handler(LL_TIM_GetAutoReload(SCHEDULER_TIM));
     }
 }

@@ -33,8 +33,8 @@
 
 //! Debug
 #define DEBUG_UART			6
-// #define DEBUG_BAUDRATE		921600UL
-#define DEBUG_BAUDRATE		230400UL
+#define DEBUG_BAUDRATE		921600UL
+// #define DEBUG_BAUDRATE		230400UL
 
 
 //! For motor and encoder

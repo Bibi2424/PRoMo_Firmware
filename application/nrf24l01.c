@@ -49,15 +49,20 @@ static void nrf24l01_gpio_init(void) {
 	CSN_HIGH;
 
 	//! IRQ - PB2
+	LL_GPIO_StructInit(&GPIO_InitStruct);
+	GPIO_InitStruct.Pin = NRF_IRQ_Pin;
+	GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
+	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
+	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+	LL_GPIO_Init(NRF_IRQ_GPIO_Port, &GPIO_InitStruct);
+
 	LL_SYSCFG_SetEXTISource(LL_SYSCFG_EXTI_PORTB, LL_SYSCFG_EXTI_LINE2);
 	EXTI_InitStruct.Line_0_31 = LL_EXTI_LINE_2;
 	EXTI_InitStruct.LineCommand = ENABLE;
 	EXTI_InitStruct.Mode = LL_EXTI_MODE_IT;
 	EXTI_InitStruct.Trigger = LL_EXTI_TRIGGER_FALLING;
 	LL_EXTI_Init(&EXTI_InitStruct);
-
-  	LL_GPIO_SetPinPull(NRF_IRQ_GPIO_Port, NRF_IRQ_Pin, LL_GPIO_PULL_NO);
-  	LL_GPIO_SetPinMode(NRF_IRQ_GPIO_Port, NRF_IRQ_Pin, LL_GPIO_MODE_INPUT);
 
 	NVIC_SetPriority(EXTI2_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 4, 0));
 	NVIC_EnableIRQ(EXTI2_IRQn);
@@ -79,7 +84,7 @@ extern bool nrf_init(uint8_t radio_rx_id) {
 
 	nrf24l01_gpio_init();
 	spi2_init();
-	LL_mDelay(100);
+	LL_mDelay(10);
 
 	//! NOTE: Need reset of all register
 	// Set chanel
@@ -144,8 +149,9 @@ void EXTI2_IRQHandler(void) {
 extern uint8_t nrf_read_register(uint8_t reg) {
 	reg &= 0x1f;
 	CSN_LOW;
-	spi2_send_byte_waiting(NRF24L01_COMMAND_READ_REGISTER | reg);
-	uint8_t value = spi2_send_byte_waiting(0xff);
+	spi2_send_byte_waiting(NRF24L01_COMMAND_READ_REGISTER | reg, NULL);
+	uint8_t value;
+	spi2_send_byte_waiting(0xff, &value);
 	CSN_HIGH;
 	return value;
 }
@@ -154,8 +160,8 @@ extern uint8_t nrf_read_register(uint8_t reg) {
 extern void nrf_write_register(uint8_t reg, uint8_t value) {
 	reg &= 0x1f;
 	CSN_LOW;
-	spi2_send_byte_waiting(NRF24L01_COMMAND_WRITE_REGISTER | reg);
-	spi2_send_byte_waiting(value);
+	spi2_send_byte_waiting(NRF24L01_COMMAND_WRITE_REGISTER | reg, NULL);
+	spi2_send_byte_waiting(value, NULL);
 	CSN_HIGH;
 }
 
@@ -163,7 +169,7 @@ extern void nrf_write_register(uint8_t reg, uint8_t value) {
 extern void nrf_read_multiple_bytes_register(uint8_t reg, uint8_t *data, uint8_t size) {
 	reg &= 0x1f;
 	CSN_LOW;
-	spi2_send_byte_waiting(NRF24L01_COMMAND_READ_REGISTER | reg);
+	spi2_send_byte_waiting(NRF24L01_COMMAND_READ_REGISTER | reg, NULL);
 	spi2_send_multiple_bytes_waiting(NULL, data, size);
 	CSN_HIGH;
 }
@@ -172,7 +178,7 @@ extern void nrf_read_multiple_bytes_register(uint8_t reg, uint8_t *data, uint8_t
 extern void nrf_write_multiple_bytes_register(uint8_t reg, uint8_t *data, uint8_t size) {
 	reg &= 0x1f;
 	CSN_LOW;
-	spi2_send_byte_waiting(NRF24L01_COMMAND_WRITE_REGISTER | reg);
+	spi2_send_byte_waiting(NRF24L01_COMMAND_WRITE_REGISTER | reg, NULL);
 	spi2_send_multiple_bytes_waiting(data, NULL, size);
 	CSN_HIGH;
 }
@@ -180,8 +186,10 @@ extern void nrf_write_multiple_bytes_register(uint8_t reg, uint8_t *data, uint8_
 //* NRF High Level *******************************************************************
 extern uint8_t nrf_get_status(void) {
 	CSN_LOW;
-	return spi2_send_byte_waiting(NRF24L01_COMMAND_NOP);
+	uint8_t status;
+	spi2_send_byte_waiting(NRF24L01_COMMAND_NOP, &status);
 	CSN_HIGH;
+	return status;
 }
 
 
@@ -193,14 +201,14 @@ extern void nrf_set_my_address(uint8_t *address, uint8_t size) {
 
 extern void nrf_flush_rx_buffer(void) {
 	CSN_LOW;
-	spi2_send_byte_waiting(NRF24L01_COMMAND_FLUSH_RX);
+	spi2_send_byte_waiting(NRF24L01_COMMAND_FLUSH_RX, NULL);
 	CSN_HIGH;
 }
 
 
 extern void nrf_flush_tx_buffer(void) {
 	CSN_LOW;
-	spi2_send_byte_waiting(NRF24L01_COMMAND_FLUSH_TX);
+	spi2_send_byte_waiting(NRF24L01_COMMAND_FLUSH_TX, NULL);
 	CSN_HIGH;
 }
 
@@ -250,8 +258,9 @@ extern uint8_t nrf_has_data(void) {
 	if(((nrf_read_register(NRF24L01_REGISTER_STATUS) >> 1) & 0x07) == 1) { //! Data in pipe 1
 
 		CSN_LOW;
-		spi2_send_byte_waiting(NRF24L01_COMMAND_R_RX_PL_WID);
-		uint8_t rx_size = spi2_send_byte_waiting(0xff);
+		spi2_send_byte_waiting(NRF24L01_COMMAND_R_RX_PL_WID, NULL);
+		uint8_t rx_size;
+		spi2_send_byte_waiting(0xff, &rx_size);
 		CSN_HIGH;
 		if(rx_size <= 32) { return rx_size; }
 	}
@@ -262,14 +271,15 @@ extern uint8_t nrf_has_data(void) {
 extern uint8_t nrf_read_data(uint8_t *data) {
 
 	CSN_LOW;
-	spi2_send_byte_waiting(NRF24L01_COMMAND_R_RX_PL_WID);
-	uint8_t rx_size = spi2_send_byte_waiting(0xff);
+	spi2_send_byte_waiting(NRF24L01_COMMAND_R_RX_PL_WID, NULL);
+	uint8_t rx_size;
+	spi2_send_byte_waiting(0xff, &rx_size);
 	CSN_HIGH;
 
 	LL_mDelay(1);
 
 	CSN_LOW;
-	spi2_send_byte_waiting(NRF24L01_COMMAND_READ_RX_PAYLOAD);
+	spi2_send_byte_waiting(NRF24L01_COMMAND_READ_RX_PAYLOAD, NULL);
 	spi2_send_multiple_bytes_waiting(NULL, data, rx_size);
 	CSN_HIGH;
 
@@ -282,9 +292,10 @@ extern uint8_t nrf_read_data(uint8_t *data) {
 
 	// uint8_t status;
 	// CSN_LOW;
-	// status = spi2_send_byte_waiting(NRF24L01_COMMAND_R_RX_PL_WID);
+	// spi2_send_byte_waiting(NRF24L01_COMMAND_R_RX_PL_WID, &status);
 	// // debugf("NRF status: %02X\n", status);
-	// uint8_t rx_size = spi2_send_byte_waiting(0xff);
+	// uint8_t rx_size;
+	// spi2_send_byte_waiting(0xff, &rx_size);
 	// CSN_HIGH;
 	
 	// if(rx_size == 0 || !(status & NRF24L01_STATUS_DATA_READY_INT)) { return 0; }
@@ -293,7 +304,7 @@ extern uint8_t nrf_read_data(uint8_t *data) {
 	// LL_mDelay(1);
 
 	// CSN_LOW;
-	// status = spi2_send_byte_waiting(NRF24L01_COMMAND_READ_RX_PAYLOAD);
+	// spi2_send_byte_waiting(NRF24L01_COMMAND_READ_RX_PAYLOAD, &status);
 	// spi2_send_multiple_bytes_waiting(NULL, data, rx_size);
 	// CSN_HIGH;
 
@@ -320,8 +331,8 @@ extern bool nrf_write_data(uint8_t radio_tx_id, uint8_t *data, uint8_t data_size
 	nrf_write_register(NRF24L01_REGISTER_STATUS, NRF24L01_STATUS_DATA_SENT_INT | NRF24L01_STATUS_MAX_RT_INT);
 
 	CSN_LOW;
-	if(ack == false) { spi2_send_byte_waiting(NRF24L01_COMMAND_W_TX_PAYLOAD_NO_ACK); }
-	else { spi2_send_byte_waiting(NRF24L01_COMMAND_WRITE_TX_PAYLOAD); }
+	if(ack == false) { spi2_send_byte_waiting(NRF24L01_COMMAND_W_TX_PAYLOAD_NO_ACK, NULL); }
+	else { spi2_send_byte_waiting(NRF24L01_COMMAND_WRITE_TX_PAYLOAD, NULL); }
 	spi2_send_multiple_bytes_waiting(data, NULL, data_size);
 	CSN_HIGH;
 
@@ -395,10 +406,9 @@ static bool wait_for_tx_end(void) {
 		reg = nrf_read_register(NRF24L01_REGISTER_STATUS);
 		if(reg & NRF24L01_STATUS_DATA_SENT_INT) {
 			nrf_write_register(NRF24L01_REGISTER_STATUS, NRF24L01_STATUS_DATA_SENT_INT);
-
 		}
 		else if(reg & NRF24L01_STATUS_MAX_RT_INT) {
-			spi2_send_byte_waiting(NRF24L01_COMMAND_FLUSH_TX);
+			spi2_send_byte_waiting(NRF24L01_COMMAND_FLUSH_TX, NULL);
 			nrf_write_register(NRF24L01_REGISTER_STATUS, NRF24L01_STATUS_MAX_RT_INT);
 			break;
 		}

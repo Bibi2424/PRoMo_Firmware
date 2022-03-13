@@ -4,7 +4,7 @@
 #include "main.h"
 
 
-#define SCHEDULER_MAX_EVENT	20
+#define SCHEDULER_MAX_EVENT	10
 
 #define SCHEDULER_TASK_LED1				0
 #define SCHEDULER_TASK_LED2				1
@@ -35,8 +35,11 @@ typedef struct {
 
 
 extern void 	scheduler_init(void);
+extern void 	scheduler_print(void);
 extern void 	scheduler_add_event(uint8_t id, uint32_t period, int16_t number_of_trigger, void (*callback)(void));
 extern void 	scheduler_remove_event(uint8_t id);
 extern uint8_t 	scheduler_get_state(uint8_t id);
+
+#define debug_scheduler() 	do { if (DEBUG_THIS_FILE && DEBUG_ENABLE) scheduler_print(); } while (0)
 
 #endif

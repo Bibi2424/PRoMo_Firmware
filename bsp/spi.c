@@ -11,19 +11,19 @@
 
 extern void spi_init(SPI_TypeDef *SPIx) {
 	uint32_t clock_periph;
-	IRQn_Type spi_irq_type;
+	// IRQn_Type spi_irq_type;
 
 	if(SPIx == SPI1) {
 		clock_periph = LL_APB2_GRP1_PERIPH_SPI1;
-		spi_irq_type = SPI1_IRQn;
+		// spi_irq_type = SPI1_IRQn;
 	}
 	else if(SPIx == SPI2) {
 		clock_periph = LL_APB1_GRP1_PERIPH_SPI2;
-		spi_irq_type = SPI2_IRQn;
+		// spi_irq_type = SPI2_IRQn;
 	}
 	else if(SPIx == SPI3) {
 		clock_periph = LL_APB1_GRP1_PERIPH_SPI3;
-		spi_irq_type = SPI3_IRQn;
+		// spi_irq_type = SPI3_IRQn;
 	}
 	else { return; }
 
@@ -60,26 +60,40 @@ extern void spi_init(SPI_TypeDef *SPIx) {
 
 
 //* SPI *******************************************************************
-extern uint8_t spi_send_byte_waiting(SPI_TypeDef *SPIx, uint8_t data) {
-	uint8_t reg = 0;
-	LL_SPI_TransmitData8(SPIx, data);
-	// printf("SPI Send: %u\r\n", data);
-	while(LL_SPI_IsActiveFlag_RXNE(SPIx) == 0 || LL_SPI_IsActiveFlag_BSY(SPIx));
-	reg = LL_SPI_ReceiveData8(SPIx);
-	// printf("SPI: 0x%02X\r\n", reg);
-	return reg;
+#define SPI_DEFAULT_TIMEOUT		5
+
+static bool spi_wait_received(SPI_TypeDef *SPIx, uint32_t timeout) {
+	while(LL_SPI_IsActiveFlag_RXNE(SPIx) == 0 || LL_SPI_IsActiveFlag_BSY(SPIx)) {
+        if (!LL_SYSTICK_IsActiveCounterFlag()) { continue; }
+        if(--timeout == 0) {
+        	printf("SPI timeout\n");
+            return false;
+        }
+    }
+    return true;
 }
 
 
-extern void spi_send_multiple_bytes_waiting(SPI_TypeDef *SPIx, uint8_t* write_data, uint8_t* read_data, uint8_t size) {
+extern bool spi_send_byte_waiting(SPI_TypeDef *SPIx, uint8_t write_data, uint8_t *read_data) {
+	LL_SPI_TransmitData8(SPIx, write_data);
+	if(spi_wait_received(SPIx, SPI_DEFAULT_TIMEOUT) == false) { return false; }
+
+	if(read_data != NULL) 	{ *read_data = LL_SPI_ReceiveData8(SPIx); }
+	else 					{ LL_SPI_ReceiveData8(SPIx); }
+	return true;
+}
+
+
+extern bool spi_send_multiple_bytes_waiting(SPI_TypeDef *SPIx, uint8_t* write_data, uint8_t* read_data, uint8_t size) {
 	for(uint8_t i = 0; i < size; i++) {
 		if(write_data != NULL) 	{ LL_SPI_TransmitData8(SPIx, write_data[i]); }
 		else 					{ LL_SPI_TransmitData8(SPIx, SPI_NOP); }
-		while(LL_SPI_IsActiveFlag_RXNE(SPIx) == 0 || LL_SPI_IsActiveFlag_BSY(SPIx));
+		if(spi_wait_received(SPIx, SPI_DEFAULT_TIMEOUT) == false) { return false; }
 
 		if(read_data != NULL) 	{ read_data[i] = LL_SPI_ReceiveData8(SPIx); }
 		else 					{ LL_SPI_ReceiveData8(SPIx); }
 	}
+	return true;
 }
 
 

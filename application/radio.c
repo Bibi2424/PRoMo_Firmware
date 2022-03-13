@@ -25,7 +25,6 @@ extern void radio_init(radio_settings_t *settings) {
     current_settings = *settings;
 
     nrf_init(current_settings.radio_rx_id);
-    nrf_set_rx_mode();
 }
 
 
