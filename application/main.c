@@ -51,35 +51,37 @@ extern int main(void) {
         MX_USART6_UART_Init(DEBUG_BAUDRATE);
     #endif
     setbuf(stdout, NULL);       //! For unbuffered ouput
-    debugf("\r\n**************************************\r\n");
-    debugf(    "* " xstr(TARGET) " v" xstr(FW_VERSION_MAJOR) "." xstr(FW_VERSION_MINOR) "." xstr(FW_VERSION_REV) " - " xstr(HW_TYPE)  "\r\n");
-    debugf(    "* System_Frequency: %lu MHz\n", SystemCoreClock);
-    debugf(    "* Booting...\r\n");
-    debugf(    "**************************************\r\n");
+    debugf("\n**************************************\n");
+    debugf(  "* " xstr(TARGET) "fw v" xstr(FW_VERSION_MAJOR) "." xstr(FW_VERSION_MINOR) "." xstr(FW_VERSION_REV) "\n");
+    debugf(  "* " xstr(HW_TYPE) "\n" );
+    debugf(  "* System_Frequency: %lu MHz\n", SystemCoreClock);
+    debugf(  "**************************************\n");
+    debugf("Booting...\n");
 
     scheduler_init();
     scheduler_add_event(SCHEDULER_TASK_LED1, 1*SECOND, SCHEDULER_ALWAYS, blink_led1);
 
     ws2812b_init();
 
-    bool err = mpu_6050_init(MPU_6050_DEFAULT_ADDRESS);
-    if(err) { debugf("\tMPU6050 init error\n"); }
-    else { debugf("\tMPU6050 init ok\n"); }
+    if(mpu_6050_init(MPU_6050_DEFAULT_ADDRESS)) { debugf("\t- MPU6050 Init OK\n"); }
+    else { debugf("\t- MPU6050 Init Error\n"); }
 
     encoders_init();
     motors_init();
 
-    sensors_vl53l0x_init();
+    if(sensors_vl53l0x_init()) { debugf("\t- VL53 Init OK\n"); }
+    else { debugf("\t- VL53 Init error\n"); }
     // scheduler_add_event(SCHEDULER_TASK_VL53_GET, 250*MS, SCHEDULER_ALWAYS, sensors_get_event);
 
-    radio_settings_t radio_settings = {
+    static radio_settings_t radio_settings = {
         .radio_rx_id = 2,
         .get_data = get_data_from_radio,
         .on_connection_lost = lost_connection,
     };
-    radio_init(&radio_settings);
+    if(radio_init(&radio_settings)) { debugf("\t- NRF Init OK\n"); }
+    else { debugf("\t- NRF Init Error\n"); }
 
-    debugf("Init Done\r\n");
+    debugf("Init Done\n");
 
 
     uint32_t radio_last_execution = 0;
@@ -93,17 +95,15 @@ extern int main(void) {
 
         if(gpio_pressed) {
             gpio_pressed = false;
-            // debugf("Press\n");
+            debugf("Press\n");
 
-            uint8_t tx_data[5] = { 0xAA, 0x55, 0xff };
-            bool res = nrf_write_data(1, tx_data, 3, true);
-            debugf("Sending... %u\n", res);
+            // uint8_t tx_data[5] = { 0xAA, 0x55, 0xff };
+            // bool res = nrf_write_data(1, tx_data, 3, true);
+            // debugf("Sending... %u\n", res);
         }
 
-        if(RADIO_INTERVAL_MS > 0 && current_time - radio_last_execution > RADIO_INTERVAL_MS) {
-            radio_last_execution = current_time;
-            
-            radio_run();
+        if(radio_is_rx_ready()) {
+            radio_process_rx();
         }
 
         if(MOTOR_CONTROL_INTERVAL_MS > 0 && current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL_MS) {
@@ -177,7 +177,7 @@ static void get_data_from_radio(uint8_t *data, uint8_t size) {
 
 static void lost_connection(void) {
     set_target_speed(0, 0);
-    debugf("Lost Connection with Remote\r\n");
+    debugf("Lost Connection with Remote\n");
 }
 
 
@@ -236,6 +236,6 @@ void SysTick_Handler(void) {
 
 #ifdef  USE_FULL_ASSERT
 void assert_failed(uint8_t* file, uint32_t line) { 
-    printf("Wrong parameters value: file %s on line %lu\r\n", file, line);
+    printf("Wrong parameters value: file %s on line %lu\n", file, line);
 }
 #endif

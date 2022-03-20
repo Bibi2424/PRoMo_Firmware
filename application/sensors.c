@@ -52,48 +52,55 @@ static void vl53l0x_gpio_init(void) {
 }
 
 
-extern void sensors_vl53l0x_init(void) {
-	bool res;
+extern bool sensors_vl53l0x_init(void) {
+	uint8_t fault = 0;
 
 	vl53l0x_gpio_init();
 	i2c1_init();
 
 	setAddress(ADDRESS_DEFAULT);
 	SET_PIN(VL53L0X_XSHUT_Port, VL53L0X_FRONT_PIN, 1);
-	res = initVL53L0X(1);
-	if(res == false) { debugf("Error Init VL53L0X FRONT\n"); }
+	if(initVL53L0X(true) == false) {
+		fault++;
+		debugf("Error Init VL53L0X FRONT\n");
+	}
 	startContinuous(100);
 	writeAddress(VL53L0X_FRONT_ADDRESS);
 	// LL_mDelay(1);
 
 	setAddress(ADDRESS_DEFAULT);
 	SET_PIN(VL53L0X_XSHUT_Port, VL53L0X_LEFT_PIN, 1);
-	res = initVL53L0X(1);
-	if(res == false) { debugf("Error Init VL53L0X LEFT\n"); }
+	if(initVL53L0X(true) == false) {
+		fault++;
+		debugf("Error Init VL53L0X LEFT\n");
+	}
 	startContinuous(100);
 	writeAddress(VL53L0X_LEFT_ADDRESS);
 	// LL_mDelay(1);
 
 	setAddress(ADDRESS_DEFAULT);
 	SET_PIN(VL53L0X_XSHUT_Port, VL53L0X_RIGHT_PIN, 1);
-	res = initVL53L0X(1);
-	if(res == false) { debugf("Error Init VL53L0X RIGHT\n"); }
+	if(initVL53L0X(true) == false) {
+		fault++;
+		debugf("Error Init VL53L0X RIGHT\n");
+	}
 	startContinuous(100);
 	writeAddress(VL53L0X_RIGHT_ADDRESS);
 	// LL_mDelay(1);
 
 	setAddress(ADDRESS_DEFAULT);
 	SET_PIN(VL53L0X_XSHUT_Port, VL53L0X_BACK_PIN, 1);
-	res = initVL53L0X(1);
-	if(res == false) { debugf("Error Init VL53L0X BACK\n"); }
+	if(initVL53L0X(true) == false) {
+		fault++;
+		debugf("Error Init VL53L0X BACK\n");
+	}
 	startContinuous(100);
 	writeAddress(VL53L0X_BACK_ADDRESS);
 
 	setMeasurementTimingBudget( 50 * MILLIS );
 	setTimeout( 50 );
 
-	debugf("\tVL53 Init OK\n");
-
+	return fault ? false : true;
 }
 
 

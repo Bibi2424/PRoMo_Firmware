@@ -46,7 +46,6 @@ typedef enum {
 
 
 
-#define RADIO_INTERVAL_MS      			1
 #define MOTOR_CONTROL_INTERVAL_MS      	10
 // #define MPU_INTERVAL_MS      			500
 #define MPU_INTERVAL_MS      			0

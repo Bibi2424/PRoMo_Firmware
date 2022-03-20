@@ -13,7 +13,8 @@ typedef struct {
 } radio_settings_t;
 
 
-extern void radio_init(radio_settings_t *settings);
-extern void radio_run(void);
+extern bool radio_init(radio_settings_t *settings);
+extern bool radio_is_rx_ready(void);
+extern void radio_process_rx(void);
 
 #endif
