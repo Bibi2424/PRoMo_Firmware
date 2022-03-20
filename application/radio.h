@@ -8,6 +8,7 @@ typedef void (*on_connection_lost_ptr)(void);
 
 typedef struct {
 	uint8_t radio_rx_id;
+	uint8_t radio_tx_id;
 	get_data_ptr get_data;
 	on_connection_lost_ptr on_connection_lost;
 } radio_settings_t;

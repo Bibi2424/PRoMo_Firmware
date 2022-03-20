@@ -22,10 +22,11 @@ extern bool radio_init(radio_settings_t *settings) {
     current_settings = settings;
 
     bool res;
-    res = nrf_init(current_settings->radio_rx_id);
+    res = nrf_init(current_settings->radio_rx_id, current_settings->radio_tx_id);
     if(res == false) { return false; }
 
     nrf_start_rx();
+    // nrf_stop_rx();
     return true;
 }
 

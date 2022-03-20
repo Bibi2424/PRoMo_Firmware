@@ -62,6 +62,7 @@ extern int main(void) {
     scheduler_add_event(SCHEDULER_TASK_LED1, 1*SECOND, SCHEDULER_ALWAYS, blink_led1);
 
     ws2812b_init();
+    rgb_t strip[5] = {{25, 0, 0}, {0, 25, 0}, {0, 0, 25}, {0, 0, 0}};
 
     if(mpu_6050_init(MPU_6050_DEFAULT_ADDRESS)) { debugf("\t- MPU6050 Init OK\n"); }
     else { debugf("\t- MPU6050 Init Error\n"); }
@@ -75,6 +76,7 @@ extern int main(void) {
 
     static radio_settings_t radio_settings = {
         .radio_rx_id = 2,
+        .radio_tx_id = 1,
         .get_data = get_data_from_radio,
         .on_connection_lost = lost_connection,
     };
@@ -83,12 +85,9 @@ extern int main(void) {
 
     debugf("Init Done\n");
 
-
-    uint32_t radio_last_execution = 0;
     uint32_t motor_control_last_execution = 0;
     uint32_t aleds_last_execution = 0;
     uint32_t mpu_last_execution = 0;
-    rgb_t strip[5] = {{25, 0, 0}, {0, 25, 0}, {0, 0, 25}, {0, 0, 0}};
 
     while (1) {
         uint32_t current_time = millis();
@@ -98,8 +97,8 @@ extern int main(void) {
             debugf("Press\n");
 
             // uint8_t tx_data[5] = { 0xAA, 0x55, 0xff };
-            // bool res = nrf_write_data(1, tx_data, 3, true);
-            // debugf("Sending... %u\n", res);
+            // bool res = nrf_write_data(tx_data, 3, true);
+            // debugf("Sending... %s\n", res?"ok":"fail");
         }
 
         if(radio_is_rx_ready()) {
