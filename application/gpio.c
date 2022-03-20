@@ -70,17 +70,18 @@ void MX_GPIO_Init(void) {
 
 }
 
+
 void EXTI0_IRQHandler(void)
 {
 	// debugf("Push\r\n");
 	/* Manage Flags */
 	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_0) != RESET)
 	{
-
-		/* User button interrupt processing(function defined in main.c) */
-		UserButton_Callback();
-		//! Debounce
-		LL_mDelay(1);
+		static uint32_t last_irq_time = 0;
+		if(millis() - last_irq_time > 10) {
+			UserButton_Callback();
+			last_irq_time = millis();
+		}
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_0);
 	}
 }
