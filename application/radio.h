@@ -16,7 +16,7 @@ typedef struct {
 
 extern bool radio_init(radio_settings_t *settings);
 extern bool radio_is_rx_ready(void);
-extern void radio_process_rx(void);
+extern bool radio_process_rx(void);
 extern void radio_set_ack_payload(uint8_t *data, uint8_t size);
 
 #endif
