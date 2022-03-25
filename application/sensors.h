@@ -15,7 +15,7 @@
 #define VL53L0X_BACK_PIN 	VL53L0X_XSHUT4_Pin
 
 
-extern void sensors_vl53l0x_init(void);
+extern bool sensors_vl53l0x_init(void);
 
 extern uint16_t sensors_vl53l0x_range_one(uint8_t sensor_id, statInfo_t *range);
 extern uint16_t sensors_vl53l0x_range_all(statInfo_t *ranges);

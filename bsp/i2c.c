@@ -16,22 +16,22 @@ static uint32_t TM_I2C_Timeout;
 
 extern void i2c_init(I2C_TypeDef *I2Cx) {
     uint32_t clock_periph;
-    IRQn_Type i2c_event_irq, i2c_error_irq;
+    // IRQn_Type i2c_event_irq, i2c_error_irq;
 
     if(I2Cx == I2C1) {
         clock_periph = LL_APB1_GRP1_PERIPH_I2C1;
-        i2c_event_irq = I2C1_EV_IRQn;
-        i2c_error_irq = I2C1_ER_IRQn;
+        // i2c_event_irq = I2C1_EV_IRQn;
+        // i2c_error_irq = I2C1_ER_IRQn;
     }
     else if(I2Cx == I2C2) {
         clock_periph = LL_APB1_GRP1_PERIPH_I2C2;
-        i2c_event_irq = I2C2_EV_IRQn;
-        i2c_error_irq = I2C2_ER_IRQn;
+        // i2c_event_irq = I2C2_EV_IRQn;
+        // i2c_error_irq = I2C2_ER_IRQn;
     }
     else if(I2Cx == I2C3) {
         clock_periph = LL_APB1_GRP1_PERIPH_I2C3;
-        i2c_event_irq = I2C3_EV_IRQn;
-        i2c_error_irq = I2C3_ER_IRQn;
+        // i2c_event_irq = I2C3_EV_IRQn;
+        // i2c_error_irq = I2C3_ER_IRQn;
     }
     else { return; }
 

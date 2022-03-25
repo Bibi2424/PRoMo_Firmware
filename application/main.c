@@ -22,7 +22,7 @@
 #include "mpu_6050.h"
 
 
-
+static void sensors_get_event(void);
 static void get_data_from_radio(uint8_t *data, uint8_t size);
 static void lost_connection(void);
 static void SystemClock_Config(void);
@@ -51,76 +51,76 @@ extern int main(void) {
         MX_USART6_UART_Init(DEBUG_BAUDRATE);
     #endif
     setbuf(stdout, NULL);       //! For unbuffered ouput
-    debugf("\r\n**************************************\r\n");
-    debugf(    "* " xstr(TARGET) " v" xstr(FW_VERSION_MAJOR) "." xstr(FW_VERSION_MINOR) "." xstr(FW_VERSION_REV) " - " xstr(HW_TYPE)  "\r\n");
-    debugf(    "* System_Frequency: %lu MHz\n", SystemCoreClock);
-    debugf(    "* Booting...\r\n");
-    debugf(    "**************************************\r\n");
+    debugf("\n**************************************\n");
+    debugf(  "* " xstr(TARGET) "fw v" xstr(FW_VERSION_MAJOR) "." xstr(FW_VERSION_MINOR) "." xstr(FW_VERSION_REV) "\n");
+    debugf(  "* " xstr(HW_TYPE) "\n" );
+    debugf(  "* System_Frequency: %lu MHz\n", SystemCoreClock);
+    debugf(  "**************************************\n");
+    debugf("Booting...\n");
 
     scheduler_init();
     scheduler_add_event(SCHEDULER_TASK_LED1, 1*SECOND, SCHEDULER_ALWAYS, blink_led1);
 
     ws2812b_init();
+    rgb_t strip[5] = {{25, 0, 0}, {0, 25, 0}, {0, 0, 25}, {0, 0, 0}};
 
-    bool err = mpu_6050_init(MPU_6050_DEFAULT_ADDRESS);
-    if(err) { debugf("\tMPU6050 init error\n"); }
-    else { debugf("\tMPU6050 init ok\n"); }
+    if(mpu_6050_init(MPU_6050_DEFAULT_ADDRESS)) { debugf("\t- MPU6050 Init OK\n"); }
+    else { debugf("\t- MPU6050 Init Error\n"); }
 
     encoders_init();
     motors_init();
 
-    sensors_vl53l0x_init();
+    if(sensors_vl53l0x_init()) { debugf("\t- VL53 Init OK\n"); }
+    else { debugf("\t- VL53 Init error\n"); }
+    scheduler_add_event(SCHEDULER_TASK_VL53_GET, 250*MS, SCHEDULER_ALWAYS, sensors_get_event);
 
-    radio_settings_t radio_settings = {
+    static radio_settings_t radio_settings = {
         .radio_rx_id = 2,
+        .radio_tx_id = 1,
         .get_data = get_data_from_radio,
         .on_connection_lost = lost_connection,
     };
-    radio_init(&radio_settings);
+    if(radio_init(&radio_settings)) { debugf("\t- NRF Init OK\n"); }
+    else { debugf("\t- NRF Init Error\n"); }
 
-    debugf("Init Done\r\n");
+    debugf("Init Done\n");
 
-
-    uint32_t radio_last_execution = 0;
     uint32_t motor_control_last_execution = 0;
     uint32_t aleds_last_execution = 0;
     uint32_t mpu_last_execution = 0;
-    rgb_t strip[5] = {{25, 0, 0}, {0, 25, 0}, {0, 0, 25}, {0, 0, 0}};
-    while (1) {
 
+    while (1) {
         uint32_t current_time = millis();
 
         if(gpio_pressed) {
             gpio_pressed = false;
-            // debugf("Press\n");
+            debugf("Press\n");
 
-            uint8_t tx_data[5] = { 0xAA, 0x55, 0xff };
-            bool res = nrf_write_data(1, tx_data, 3, true);
-            debugf("Sending... %u\n", res);
+            // uint8_t tx_data[5] = { 0xAA, 0x55, 0xff };
+            // bool res = nrf_write_data(tx_data, 3, true);
+            // debugf("Sending... %s\n", res?"ok":"fail");
         }
 
-        if(current_time - radio_last_execution > 1) {
-            radio_last_execution = current_time;
-            
-            radio_run();
+        if(radio_is_rx_ready()) {
+            radio_process_rx();
         }
 
-        if(current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL_MS) {
+        if(MOTOR_CONTROL_INTERVAL_MS > 0 && current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL_MS) {
             motor_control_last_execution = current_time;
 
             do_control_loop();
         }
 
-        if(current_time - mpu_last_execution > 500) {
+        if(MPU_INTERVAL_MS > 0 && current_time - mpu_last_execution > MPU_INTERVAL_MS) {
             mpu_last_execution = current_time;
 
             mpu_data_t mpu_data;
             mpu_6050_read_all(&mpu_data);
-            printf("Accel: %d/%d/%d\n", mpu_data.accel.x, mpu_data.accel.y, mpu_data.accel.z);
-            printf("Gyro: %d/%d/%d\n", mpu_data.gyro.x, mpu_data.gyro.y, mpu_data.gyro.z);
+            debugf("Accel: %d/%d/%d\n", mpu_data.accel.x, mpu_data.accel.y, mpu_data.accel.z);
+            debugf("Gyro: %d/%d/%d\n", mpu_data.gyro.x, mpu_data.gyro.y, mpu_data.gyro.z);
         }
 
-        if(current_time - aleds_last_execution > 500) {
+        if(ALEDS_INTERVAL_MS > 0 && current_time - aleds_last_execution > ALEDS_INTERVAL_MS) {
             aleds_last_execution = current_time;
 
             for(int8_t i = 4; i >= 0; i--) {
@@ -145,6 +145,26 @@ extern void blink_led2(void) {
 }
 
 
+static void sensors_get_event(void) {
+    // statInfo_t range;
+    // uint16_t result = sensors_vl53l0x_get_next(&range);
+    // debugf("VL53 - %u\n", result);
+
+    // statInfo_t range;
+    // uint16_t result = sensors_vl53l0x_range_one(VL53L0X_FRONT_ADDRESS, &range);
+    // debugf("VL53 - %u\n", result);
+
+    statInfo_t ranges[4];
+    sensors_vl53l0x_get_all(ranges);
+    // debugf("VL53 - L: %u, F: %u, R: %u, B: %u\n", ranges[1].rawDistance, ranges[0].rawDistance, ranges[2].rawDistance, ranges[3].rawDistance);
+    uint8_t sensors_buffer[4*2];
+    for(uint8_t i = 0; i < 4; i++) {
+        memcpy(&sensors_buffer[2*i], &ranges[i].rawDistance, sizeof(uint16_t));
+    }
+    radio_set_ack_payload(sensors_buffer, 4*sizeof(uint16_t));
+}
+
+
 static void get_data_from_radio(uint8_t *data, uint8_t size) {
 
     int8_t forward_speed = (int8_t)data[0];
@@ -160,7 +180,7 @@ static void get_data_from_radio(uint8_t *data, uint8_t size) {
 
 static void lost_connection(void) {
     set_target_speed(0, 0);
-    debugf("Lost Connection with Remote\r\n");
+    debugf("Lost Connection with Remote\n");
 }
 
 
@@ -219,6 +239,6 @@ void SysTick_Handler(void) {
 
 #ifdef  USE_FULL_ASSERT
 void assert_failed(uint8_t* file, uint32_t line) { 
-    printf("Wrong parameters value: file %s on line %lu\r\n", file, line);
+    printf("Wrong parameters value: file %s on line %lu\n", file, line);
 }
 #endif

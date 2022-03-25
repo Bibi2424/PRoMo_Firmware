@@ -15,36 +15,52 @@
 
 uint8_t nrf_rx_size = 0;
 uint8_t nrf_data[32] = {0};
-static radio_settings_t current_settings;
+static radio_settings_t *current_settings;
 
 
-// static void lost_connection(void);
+extern bool radio_init(radio_settings_t *settings) {
+    current_settings = settings;
 
+    bool res;
+    res = nrf_init(current_settings->radio_rx_id, current_settings->radio_tx_id);
+    if(res == false) { return false; }
 
-extern void radio_init(radio_settings_t *settings) {
-    current_settings = *settings;
-
-    nrf_init(current_settings.radio_rx_id);
-    nrf_set_rx_mode();
+    nrf_start_rx();
+    return true;
 }
 
 
-extern void radio_run(void) {
-    //! Remote 
-    // debugf("NRF status: [%02X]\n", nrf_get_status());
+extern bool radio_is_rx_ready(void) {
+    return nrf_has_data_isr()->rx_ready ? true: false;
+}
 
-    nrf24l01_status_t * nrf_status = nrf_has_data_isr(); 
+
+extern void radio_process_rx(void) {
+    nrf24l01_status_t * nrf_status = nrf_has_data_isr();
+
     if(nrf_status->rx_ready) {
+        debugf("#");
         nrf_status->rx_ready = 0;
         nrf_rx_size = nrf_read_data(nrf_data);
+        nrf_flush_rx_buffer();
 
-        current_settings.get_data(nrf_data, nrf_rx_size);
-
+        current_settings->get_data(nrf_data, nrf_rx_size);
 
         SET_PIN(LD2_GPIO_Port, LD2_Pin, 1);
         scheduler_add_event(SCHEDULER_TASK_LED2, 50*MS, SCHEDULER_ONE_SHOT, blink_led2);
 
         scheduler_remove_event(SCHEDULER_TASK_LOST_CONNECTION);
-        scheduler_add_event(SCHEDULER_TASK_LOST_CONNECTION, 200*MS, SCHEDULER_ONE_SHOT, current_settings.on_connection_lost);
+        scheduler_add_event(SCHEDULER_TASK_LOST_CONNECTION, 500*MS, SCHEDULER_ONE_SHOT, current_settings->on_connection_lost);
+    }
+}
+
+
+extern void radio_set_ack_payload(uint8_t *data, uint8_t size) {
+    if(data == NULL || size == 0) { return; }
+
+    bool res = nrf_write_ack_data(data, size);
+    if(!res) {
+        nrf_flush_tx_buffer();
+        debugf("TXFULL\n");
     }
 }

@@ -12,6 +12,7 @@
 #include "main.h"
 #include "gpio.h"
 #include "usart.h"
+#include "scheduler.h"
 #include "control_loop.h"
 #include "motor.h"
 #include "encoder.h"
@@ -56,6 +57,11 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 		else if(strcmp(word, "say") == 0) {
 			word = get_next_word(commands, false);
 			printf("Say: %s\n", word);
+		}
+
+		//! Scheduler
+		else if(strcmp(word, "scheduler") == 0) {
+			debug_scheduler();
 		}
 
 		//! VL53L0X

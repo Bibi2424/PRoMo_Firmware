@@ -152,8 +152,6 @@ static void mpu_6050_gpio_init(void) {
 void EXTI15_10_IRQHandler(void) {
 	if (LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_14) != RESET) {
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_14);
-		// debugf("NRF INT\n");
-		// nrf_check_on_isr();
 		// printf("MPU INT\n");
 	}
 }
@@ -172,7 +170,6 @@ extern bool mpu_6050_init(uint8_t address) {
     //! Verify communication
     err = i2c3_full_read(mpu_address, MPU_REG_WHO_AM_I, &value, 1);
     if(err != 0 || value != 0x68) {
-    	printf("ERROR\n");
     	return false;
     }
 
@@ -197,7 +194,7 @@ extern bool mpu_6050_init(uint8_t address) {
     value = 1;
     err |= i2c3_full_write(mpu_address, MPU_REG_INT_ENABLE, &value, 1);
 
-    return err != 0 ? true: false;
+    return err == 0 ? true: false;
 }
 
 
@@ -209,7 +206,7 @@ extern bool mpu_6050_reset_instruments(bool gyro, bool accel, bool temp) {
 
     uint8_t err = i2c3_full_write(mpu_address, MPU_REG_SIGNAL_PATH_RESET, &value, 1);
 
-    return err != 0 ? true: false;
+    return err == 0 ? true: false;
 }
 
 
@@ -229,7 +226,7 @@ extern bool mpu_6050_read_accel(mpu_accel_t *accel_data) {
 	3	±16g	2048 LSB/g
 	**/
 
-    return err != 0 ? true: false;
+    return err == 0 ? true: false;
 }
 
 
@@ -248,7 +245,7 @@ extern bool mpu_6050_read_gyro(mpu_gyro_t *gyro_data) {
 	3	± 2000 °/s	16.4 LSB/°/s
 	**/
 
-    return err != 0 ? true: false;
+    return err == 0 ? true: false;
 }
 
 
@@ -260,7 +257,7 @@ extern bool mpu_6050_read_temp(uint16_t *temp_data) {
 
 	//! Temperature in degrees C = (TEMP_OUT Register Value as a signed quantity)/340 + 36.53
 
-    return err != 0 ? true: false;
+    return err == 0 ? true: false;
 }
 
 
@@ -278,5 +275,5 @@ extern bool mpu_6050_read_all(mpu_data_t *data) {
 	data->gyro.y = ((int16_t)data_raw[10]) << 8 | data_raw[11];
 	data->gyro.z = ((int16_t)data_raw[12]) << 8 | data_raw[13];
 
-    return err != 0 ? true: false;
+    return err == 0 ? true: false;
 }

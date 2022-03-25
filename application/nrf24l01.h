@@ -3,6 +3,20 @@
 
 #include "main.h"
 
+#ifndef NRF_POWERUP_DELAY
+#define NRF_POWERUP_DELAY	5
+#endif
+
+#ifndef BIT_VALUE
+#define BIT_VALUE(n)	(1 << (n))
+#endif
+#ifndef BIT_SET
+#define BIT_SET(reg, n)	(reg |= BIT_VALUE(n))
+#endif
+#ifndef BIT_CLEAR
+#define BIT_CLEAR(reg, n)	(reg &= ~BIT_VALUE(n))
+#endif
+
 //! NRF commands
 #define NRF24L01_COMMAND_READ_REGISTER			0x00
 #define NRF24L01_COMMAND_WRITE_REGISTER			0x20
@@ -46,24 +60,31 @@
 #define NRF24L01_REGISTER_FEATURE		0x1D
 
 // Params for the CONFIG Register
+#define NRF24L01_CONFIG_RX_DR_INT_BIT	6
 #define NRF24L01_CONFIG_RX_DR_INT_ON	0x00	// Default
 #define NRF24L01_CONFIG_RX_DR_INT_OFF	0x40
 
+#define NRF24L01_CONFIG_TX_DS_INT_BIT	5
 #define NRF24L01_CONFIG_TX_DS_INT_ON	0x00	// Default
 #define NRF24L01_CONFIG_TX_DS_INT_OFF	0x20
 
+#define NRF24L01_CONFIG_MAX_RT_INT_BIT	4
 #define NRF24L01_CONFIG_MAX_RT_INT_ON	0x00	// Default
 #define NRF24L01_CONFIG_MAX_RT_INT_OFF	0x10
 
+#define NRF24L01_CONFIG_CRC_EN_BIT		3
 #define NRF24L01_CONFIG_CRC_DISABLE		0x00
 #define NRF24L01_CONFIG_CRC_ENABLE		0x08	// Default
 
+#define NRF24L01_CONFIG_CRC_SIZE_BIT	2
 #define NRF24L01_CONFIG_CRC_1BIT		0x00	// Default
 #define NRF24L01_CONFIG_CRC_2BIT		0x04
 
+#define NRF24L01_CONFIG_POWER_BIT		1
 #define NRF24L01_CONFIG_POWER_DOWN		0x00	// Default
 #define NRF24L01_CONFIG_POWER_UP		0x02
 
+#define NRF24L01_CONFIG_PRIM_BIT		0
 #define NRF24L01_CONFIG_PRIM_TX			0x00	// Default
 #define NRF24L01_CONFIG_PRIM_RX			0x01
 
@@ -87,8 +108,8 @@
 #define NRF24L01_RF_SETTINGS_6DBM		0x04
 #define NRF24L01_RF_SETTINGS_0DBM		0x06	// Default
 
-// Params for the Dynamic Payload length Register
-#define NRF24L01_DYNPD_ENABLE_PIPE(x)	(1 << (x & 0x3F))
+// Params for Pipe Registers
+#define NRF24L01_ENABLE_PIPE(x)	(1 << (x & 0x3F))
 
 // Params for the Feature Register
 #define NRF24L01_FEATURE_NOACK_PAYLOAD_DISABLE	0x00
@@ -122,9 +143,10 @@ typedef struct nrf24l01_config {
 
 typedef union nrf24l01_status {
 	struct {
-		uint8_t unused : 4;
-		uint8_t tx_ok : 1;
+		uint8_t tx_full : 1;
+		uint8_t unused : 3;
 		uint8_t tx_fail : 1;
+		uint8_t tx_ok : 1;
 		uint8_t rx_ready : 1;	
 	};
 	uint8_t value;
@@ -135,7 +157,7 @@ typedef union nrf24l01_status {
 // #endif
 
 
-extern bool nrf_init(uint8_t radio_rx_id);
+extern bool nrf_init(uint8_t radio_rx_id, uint8_t radio_tx_id);
 
 //* NRF Low Level *******************************************************************
 extern uint8_t nrf_read_register(uint8_t reg);
@@ -147,10 +169,15 @@ extern uint8_t nrf_get_status(void);
 extern void nrf_flush_rx_buffer(void);
 extern void nrf_flush_tx_buffer(void);
 extern void nrf_clear_interrupt(void);
-extern uint8_t nrf_set_rx_mode(void);
+extern void nrf_power_down(void);
+extern void nrf_power_up(void);
+extern void nrf_stop_rx(void);
+extern void nrf_start_rx(void);
+// extern uint8_t nrf_set_rx_mode(void);
 extern nrf24l01_status_t * nrf_has_data_isr(void);
 extern uint8_t nrf_has_data(void);
 extern uint8_t nrf_read_data(uint8_t *data);
-extern bool nrf_write_data(uint8_t radio_tx_id, uint8_t *data, uint8_t data_size, bool ack);
+extern bool nrf_write_data(uint8_t *data, uint8_t data_size, bool ack);
+extern bool nrf_write_ack_data(uint8_t *data, uint8_t data_size);
 
 #endif

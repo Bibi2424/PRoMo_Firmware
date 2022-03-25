@@ -12,9 +12,6 @@
 #include "scheduler.h"
 
 
-static void sensors_get_event(void);
-
-
 static void vl53l0x_gpio_init(void) {
 	LL_GPIO_InitTypeDef GPIO_InitStruct;
 
@@ -55,66 +52,55 @@ static void vl53l0x_gpio_init(void) {
 }
 
 
-extern void sensors_vl53l0x_init(void) {
-	bool res;
+extern bool sensors_vl53l0x_init(void) {
+	uint8_t fault = 0;
 
 	vl53l0x_gpio_init();
 	i2c1_init();
 
 	setAddress(ADDRESS_DEFAULT);
 	SET_PIN(VL53L0X_XSHUT_Port, VL53L0X_FRONT_PIN, 1);
-	res = initVL53L0X(1);
-	if(res == false) { debugf("Error Init VL53L0X FRONT\n"); }
+	if(initVL53L0X(true) == false) {
+		fault++;
+		debugf("Error Init VL53L0X FRONT\n");
+	}
 	startContinuous(100);
 	writeAddress(VL53L0X_FRONT_ADDRESS);
 	// LL_mDelay(1);
 
 	setAddress(ADDRESS_DEFAULT);
 	SET_PIN(VL53L0X_XSHUT_Port, VL53L0X_LEFT_PIN, 1);
-	res = initVL53L0X(1);
-	if(res == false) { debugf("Error Init VL53L0X LEFT\n"); }
+	if(initVL53L0X(true) == false) {
+		fault++;
+		debugf("Error Init VL53L0X LEFT\n");
+	}
 	startContinuous(100);
 	writeAddress(VL53L0X_LEFT_ADDRESS);
 	// LL_mDelay(1);
 
 	setAddress(ADDRESS_DEFAULT);
 	SET_PIN(VL53L0X_XSHUT_Port, VL53L0X_RIGHT_PIN, 1);
-	res = initVL53L0X(1);
-	if(res == false) { debugf("Error Init VL53L0X RIGHT\n"); }
+	if(initVL53L0X(true) == false) {
+		fault++;
+		debugf("Error Init VL53L0X RIGHT\n");
+	}
 	startContinuous(100);
 	writeAddress(VL53L0X_RIGHT_ADDRESS);
 	// LL_mDelay(1);
 
 	setAddress(ADDRESS_DEFAULT);
 	SET_PIN(VL53L0X_XSHUT_Port, VL53L0X_BACK_PIN, 1);
-	res = initVL53L0X(1);
-	if(res == false) { debugf("Error Init VL53L0X BACK\n"); }
+	if(initVL53L0X(true) == false) {
+		fault++;
+		debugf("Error Init VL53L0X BACK\n");
+	}
 	startContinuous(100);
 	writeAddress(VL53L0X_BACK_ADDRESS);
 
 	setMeasurementTimingBudget( 50 * MILLIS );
 	setTimeout( 50 );
 
-	debugf("\tVL53 Init OK\n");
-	
-    scheduler_add_event(SCHEDULER_TASK_VL53_GET, 250*MS, SCHEDULER_ALWAYS, sensors_get_event);
-
-}
-
-
-static void sensors_get_event(void) {
-
-	// statInfo_t range;
-	// uint16_t result = sensors_vl53l0x_get_next(&range);
-	// debugf("VL53 - %u\n", result);
-
-	// statInfo_t range;
-	// uint16_t result = sensors_vl53l0x_range_one(VL53L0X_FRONT_ADDRESS, &range);
-	// debugf("VL53 - %u\n", result);
-
-	statInfo_t ranges[4];
-	sensors_vl53l0x_get_all(ranges);
-	debugf("VL53 - L: %u, F: %u, R: %u, B: %u\n", ranges[1].rawDistance, ranges[0].rawDistance, ranges[2].rawDistance, ranges[3].rawDistance);
+	return fault ? false : true;
 }
 
 

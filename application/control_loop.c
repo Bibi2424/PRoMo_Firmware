@@ -38,7 +38,7 @@ extern void do_control_loop(void) {
     int32_t motor_left_command = pid_compute(&pid_speed_left, target_speed_left, current_left_speed);
     int32_t motor_right_command = pid_compute(&pid_speed_right, target_speed_right, current_right_speed);
 
-    static debug_cnt = 0;
+    static uint8_t debug_cnt = 0;
     if(debug_cnt == 0) {
         debugf("@Left: %ld - %ld - %ld\n", target_speed_left, current_left_speed, motor_left_command);
         // debugf("@More: %ld - %ld\n", target_speed_left - current_left_speed, pid_speed_left.integral_error);
