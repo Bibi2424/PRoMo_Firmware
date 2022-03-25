@@ -49,12 +49,14 @@ STM32_LIBRAIRIES_PATH = STM32_HAL_min
 STM32_LIBRAIRIES_SRC = $(STM32_LIBRAIRIES_PATH)/STM32F4xx_HAL_Driver/Src
 STM32_LIBRAIRIES_INC = $(STM32_LIBRAIRIES_PATH)/STM32F4xx_HAL_Driver/Inc
 # STL-Link Flasher Path
-STM32_FLASHER_EXEC := "C:/Program Files (x86)/STMicroelectronics/STM32 ST-LINK Utility/ST-LINK Utility/"
+# STM32_FLASHER_EXEC := "C:/Program Files (x86)/STMicroelectronics/STM32 ST-LINK Utility/ST-LINK Utility/"
+STM32_FLASHER_EXEC := "C:/Program Files/STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/"
 
 # If you need to select some libaries....
 USED_LIBS += VL53L0X MPU6050
 # USED_LIBS += test
 APP_LIBS = $(foreach dir, $(USED_LIBS), $(LIB_DIR)/$(dir))
+
 # Or just use them all
 # APP_LIBS = $(sort $(dir $(wildcard $(LIB_DIR)/*/)))
 
@@ -253,11 +255,13 @@ clean:
 #######################################
 # flash: all
 flash: $(BUILD_DIR)/$(TARGET).hex | $(BUILD_DIR)
-	@$(STM32_FLASHER_EXEC)ST-LINK_CLI.exe -c HOTPLUG -P $< 0x08000000 -Rst
+# 	@$(STM32_FLASHER_EXEC)ST-LINK_CLI.exe -c HOTPLUG -P $< 0x08000000 -Rst
+	@$(STM32_FLASHER_EXEC)STM32_Programmer_CLI.exe -c port=SWD -d $< 0x08000000 -rst
 
 
 reset:
-	@$(STM32_FLASHER_EXEC)ST-LINK_CLI.exe -c -Rst
+# 	@$(STM32_FLASHER_EXEC)ST-LINK_CLI.exe -c -Rst
+	$(STM32_FLASHER_EXEC)STM32_Programmer_CLI.exe -c port=SWD -rst
 
 #######################################
 # dependencies
