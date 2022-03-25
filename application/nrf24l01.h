@@ -143,7 +143,8 @@ typedef struct nrf24l01_config {
 
 typedef union nrf24l01_status {
 	struct {
-		uint8_t unused : 4;
+		uint8_t tx_full : 1;
+		uint8_t unused : 3;
 		uint8_t tx_fail : 1;
 		uint8_t tx_ok : 1;
 		uint8_t rx_ready : 1;	
@@ -177,5 +178,6 @@ extern nrf24l01_status_t * nrf_has_data_isr(void);
 extern uint8_t nrf_has_data(void);
 extern uint8_t nrf_read_data(uint8_t *data);
 extern bool nrf_write_data(uint8_t *data, uint8_t data_size, bool ack);
+extern bool nrf_write_ack_data(uint8_t *data, uint8_t data_size);
 
 #endif

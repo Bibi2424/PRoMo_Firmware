@@ -26,7 +26,6 @@ extern bool radio_init(radio_settings_t *settings) {
     if(res == false) { return false; }
 
     nrf_start_rx();
-    // nrf_stop_rx();
     return true;
 }
 
@@ -51,6 +50,17 @@ extern void radio_process_rx(void) {
         scheduler_add_event(SCHEDULER_TASK_LED2, 50*MS, SCHEDULER_ONE_SHOT, blink_led2);
 
         scheduler_remove_event(SCHEDULER_TASK_LOST_CONNECTION);
-        scheduler_add_event(SCHEDULER_TASK_LOST_CONNECTION, 200*MS, SCHEDULER_ONE_SHOT, current_settings->on_connection_lost);
+        scheduler_add_event(SCHEDULER_TASK_LOST_CONNECTION, 500*MS, SCHEDULER_ONE_SHOT, current_settings->on_connection_lost);
+    }
+}
+
+
+extern void radio_set_ack_payload(uint8_t *data, uint8_t size) {
+    if(data == NULL || size == 0) { return; }
+
+    bool res = nrf_write_ack_data(data, size);
+    if(!res) {
+        nrf_flush_tx_buffer();
+        debugf("TXFULL\n");
     }
 }

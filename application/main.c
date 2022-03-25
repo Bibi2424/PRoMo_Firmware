@@ -72,7 +72,7 @@ extern int main(void) {
 
     if(sensors_vl53l0x_init()) { debugf("\t- VL53 Init OK\n"); }
     else { debugf("\t- VL53 Init error\n"); }
-    // scheduler_add_event(SCHEDULER_TASK_VL53_GET, 250*MS, SCHEDULER_ALWAYS, sensors_get_event);
+    scheduler_add_event(SCHEDULER_TASK_VL53_GET, 250*MS, SCHEDULER_ALWAYS, sensors_get_event);
 
     static radio_settings_t radio_settings = {
         .radio_rx_id = 2,
@@ -146,7 +146,6 @@ extern void blink_led2(void) {
 
 
 static void sensors_get_event(void) {
-
     // statInfo_t range;
     // uint16_t result = sensors_vl53l0x_get_next(&range);
     // debugf("VL53 - %u\n", result);
@@ -157,7 +156,12 @@ static void sensors_get_event(void) {
 
     statInfo_t ranges[4];
     sensors_vl53l0x_get_all(ranges);
-    debugf("VL53 - L: %u, F: %u, R: %u, B: %u\n", ranges[1].rawDistance, ranges[0].rawDistance, ranges[2].rawDistance, ranges[3].rawDistance);
+    // debugf("VL53 - L: %u, F: %u, R: %u, B: %u\n", ranges[1].rawDistance, ranges[0].rawDistance, ranges[2].rawDistance, ranges[3].rawDistance);
+    uint8_t sensors_buffer[4*2];
+    for(uint8_t i = 0; i < 4; i++) {
+        memcpy(&sensors_buffer[2*i], &ranges[i].rawDistance, sizeof(uint16_t));
+    }
+    radio_set_ack_payload(sensors_buffer, 4*sizeof(uint16_t));
 }
 
 

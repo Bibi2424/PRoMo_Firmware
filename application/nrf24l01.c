@@ -149,6 +149,15 @@ void EXTI2_IRQHandler(void) {
 }
 
 
+static void nrf_check_on_isr(void) {
+	last_nrf_status.value = nrf_read_register(NRF24L01_REGISTER_STATUS);
+	// debugf("[%02X]", last_nrf_status.value);
+	last_nrf_status.value &= (NRF24L01_STATUS_DATA_READY_INT | NRF24L01_STATUS_DATA_SENT_INT | NRF24L01_STATUS_MAX_RT_INT);
+	//! Clear any set interrupt bit
+	if(last_nrf_status.value) { nrf_write_register(NRF24L01_REGISTER_STATUS, last_nrf_status.value); }
+}
+
+
 //* NRF Low Level *******************************************************************
 extern uint8_t nrf_read_register(uint8_t reg) {
 	reg &= 0x1f;
@@ -340,15 +349,6 @@ extern bool nrf_write_data(uint8_t *data, uint8_t data_size, bool ack) {
 }
 
 
-static void nrf_check_on_isr(void) {
-	last_nrf_status.value = nrf_read_register(NRF24L01_REGISTER_STATUS);
-	// debugf("[%02X]", last_nrf_status.value);
-	last_nrf_status.value &= (NRF24L01_STATUS_DATA_READY_INT | NRF24L01_STATUS_DATA_SENT_INT | NRF24L01_STATUS_MAX_RT_INT);
-	//! Clear any set interrupt bit
-	if(last_nrf_status.value) { nrf_write_register(NRF24L01_REGISTER_STATUS, last_nrf_status.value); }
-}
-
-
 static void prepare_radio_for_tx(bool ack) {
 	//! Verify radio in TX mode
 	if((nrf_config_register & BIT_VALUE(NRF24L01_CONFIG_PRIM_BIT)) != 0) {
@@ -397,3 +397,16 @@ static bool wait_for_tx_end(void) {
 	return false;
 }
 
+
+extern bool nrf_write_ack_data(uint8_t *data, uint8_t data_size) {
+	const uint8_t pipe = 1;
+
+	CSN_LOW;
+	spi2_send_byte_waiting(NRF24L01_COMMAND_W_ACK_PAYLOAD | pipe, NULL);
+	spi2_send_multiple_bytes_waiting(data, NULL, data_size);
+	CSN_HIGH;
+
+	// TODO: Can we switch to last_nrf_status.tx_full ??
+	uint8_t nrf_status = nrf_get_status();
+    return !(nrf_status & BIT_VALUE(NRF24L01_STATUS_TX_FULL_INT));
+}
