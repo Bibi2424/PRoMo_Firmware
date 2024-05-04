@@ -119,6 +119,11 @@ static void scheduler_handler(uint32_t elapse_time) {
 
     for(i = 0; i < SCHEDULER_MAX_EVENT; i++) {
         if(scheduler[i].status == USED && scheduler[i].time_left == 0) {
+            if(scheduler[i].callback != NULL) {
+                debugf("Callback for event %u [%d]\r\n", i, scheduler[i].n);
+                scheduler[i].callback();
+            }
+            //! NOTE: Update time once callback has finished
             if(scheduler[i].n != 0) {
                 if(scheduler[i].n > 0) { scheduler[i].n--; }
                 scheduler[i].time_left = scheduler[i].period;
@@ -126,10 +131,6 @@ static void scheduler_handler(uint32_t elapse_time) {
             if(scheduler[i].n == 0) {
                 debugf("Event[%u] stoped\r", i);
                 scheduler[i].status = UNUSED;
-            }
-            if(scheduler[i].callback != NULL) {
-                debugf("Callback for event %u [%d]\r\n", i, scheduler[i].n);
-                scheduler[i].callback();
             }
         }
     }

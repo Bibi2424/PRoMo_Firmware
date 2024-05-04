@@ -9,8 +9,10 @@
 #define I2C_READ    1
 #define I2C_WRITE   0
 
+#define I2C_NO_ERROR	0
+
 #ifndef TM_I2C_TIMEOUT
-#define TM_I2C_TIMEOUT					5
+#define TM_I2C_TIMEOUT	10
 #endif
 
 

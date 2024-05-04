@@ -159,7 +159,7 @@ static void sensors_get_event(void) {
     for(uint8_t i = 0; i < 4; i++) {
         memcpy(&sensors_buffer[2*i], &ranges[i].rawDistance, sizeof(uint16_t));
     }
-    radio_set_ack_payload(sensors_buffer, 4*sizeof(uint16_t));
+    radio_set_ack_payload(sensors_buffer, 8*sizeof(uint8_t));
 }
 
 
