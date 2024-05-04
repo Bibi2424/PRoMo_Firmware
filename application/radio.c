@@ -13,14 +13,12 @@
 #include "gpio.h"
 
 
-uint8_t nrf_rx_size = 0;
-uint8_t nrf_data[32] = {0};
 static radio_settings_t *current_settings;
-volatile static bool remote_connection = false;
+volatile static bool remote_connection_alive = false;
 
 
 static void on_connection_lost(void) {
-    remote_connection = false;
+    remote_connection_alive = false;
     current_settings->on_connection_lost();
 }
 
@@ -37,13 +35,13 @@ extern bool radio_init(radio_settings_t *settings) {
 }
 
 
-extern bool radio_is_rx_ready(void) {
+static bool radio_is_rx_ready(void) {
     nrf24l01_status_t nrf_status = nrf_has_data_isr();
     return nrf_status.rx_ready == 1 ? true: false;
 }
 
 
-extern bool radio_process_rx(void) {
+static bool radio_process_rx(void) {
     nrf24l01_status_t nrf_status = nrf_has_data_isr();
 
     if(nrf_status.rx_ready == 0) {
@@ -51,7 +49,9 @@ extern bool radio_process_rx(void) {
     }
 
     debugf("#");
-    remote_connection = true;
+    uint8_t nrf_rx_size = 0;
+    uint8_t nrf_data[32] = {0};
+    remote_connection_alive = true;
     nrf_rx_size = nrf_read_data(nrf_data);
     nrf_flush_rx_buffer();
 
@@ -66,9 +66,17 @@ extern bool radio_process_rx(void) {
 }
 
 
+extern void radio_loop(void) {
+    nrf_loop();
+    if(radio_is_rx_ready()) {
+        radio_process_rx();
+    }
+}
+
+
 extern void radio_set_ack_payload(uint8_t *data, uint8_t size) {
     if(data == NULL || size == 0) { return; }
-    if(remote_connection == false) { return; }
+    if(remote_connection_alive == false) { return; }
 
     bool res = nrf_write_ack_data(data, size);
     if(!res) {

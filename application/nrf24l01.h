@@ -157,7 +157,6 @@ typedef union nrf24l01_status {
 // #endif
 
 
-extern bool nrf_init(uint8_t radio_rx_id, uint8_t radio_tx_id);
 
 //* NRF Low Level *******************************************************************
 extern uint8_t nrf_read_register(uint8_t reg);
@@ -173,7 +172,9 @@ extern void nrf_power_down(void);
 extern void nrf_power_up(void);
 extern void nrf_stop_rx(void);
 extern void nrf_start_rx(void);
-// extern uint8_t nrf_set_rx_mode(void);
+//* NRF High Level *******************************************************************
+extern bool nrf_init(uint8_t radio_rx_id, uint8_t radio_tx_id);
+extern void nrf_loop(void);
 extern nrf24l01_status_t nrf_has_data_isr(void);
 extern uint8_t nrf_has_data(void);
 extern uint8_t nrf_read_data(uint8_t *data);
