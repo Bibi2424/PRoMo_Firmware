@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "global.h"
+#include "utils.h"
 #include "debug.h"
 
 #include "scheduler.h"

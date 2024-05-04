@@ -1,6 +1,6 @@
 #define DEBUG_THIS_FILE   DEBUG_I2C_FILE
 
-#include "global.h"
+#include "utils.h"
 #include "debug.h"
 
 #include "i2c.h"

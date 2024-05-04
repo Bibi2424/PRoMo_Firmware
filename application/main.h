@@ -6,36 +6,26 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "stm32f4xx.h"
-#include "stm32f4xx_ll_rcc.h"
-#include "stm32f4xx_ll_bus.h"
-#include "stm32f4xx_ll_system.h"
-#include "stm32f4xx_ll_exti.h"
-#include "stm32f4xx_ll_cortex.h"
-#include "stm32f4xx_ll_utils.h"
-#include "stm32f4xx_ll_pwr.h"
-#include "stm32f4xx_ll_dma.h"
-#include "stm32f4xx_ll_usart.h"
-#include "stm32f4xx_ll_gpio.h"
-#include "stm32f4xx_ll_i2c.h"
-#include "stm32f4xx_ll_tim.h"
-#include "stm32f4xx_ll_spi.h"
-
 #include "debug.h"
-
-
-#define xstr(s) str(s)
-#define str(s) #s
-
 
 #if HW_TYPE == HW_PROMO_V0_1
 #include "promo_v0_1_bsp.h"
 #endif
 
+#define xstr(s) str(s)
+#define str(s) #s
+
 //! Debug
+#ifndef DEBUG_ENABLE
+#define DEBUG_ENABLE 		0
+#endif
+#ifndef DEBUG_UART
 #define DEBUG_UART			6
-#define DEBUG_BAUDRATE		921600UL
-// #define DEBUG_BAUDRATE		230400UL
+#endif
+#ifndef DEBUG_BAUDRATE
+// #define DEBUG_BAUDRATE		921600UL
+#define DEBUG_BAUDRATE		230400UL
+#endif
 
 
 //! For motor and encoder

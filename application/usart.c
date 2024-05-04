@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "global.h"
+#include "utils.h"
 #include "debug.h"
 
 #include "usart.h"

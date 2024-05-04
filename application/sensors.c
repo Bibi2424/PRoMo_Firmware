@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "global.h"
+#include "utils.h"
 #include "debug.h"
 
 #include "sensors.h"
@@ -18,7 +18,7 @@ const statInfo_t range_error = {
 	.signalCnt = 0,
 	.ambientCnt = 0,
 	.spadCnt = 0,
-	.rangeStatus = 255,
+	.rangeStatus = (uint8_t)VL53L1_RANGESTATUS_GENERIC_ERROR,
 };
 
 static void vl53l0x_gpio_init(void) {
@@ -102,76 +102,87 @@ extern bool sensors_vl53l0x_init(void) {
 	vl53l0x_gpio_init();
 	i2c1_init();
 
-	fault += sensor_init(ADDRESS_DEFAULT, VL53L0X_FRONT_ADDRESS);
-	fault += sensor_init(ADDRESS_DEFAULT, VL53L0X_LEFT_ADDRESS);
-	fault += sensor_init(ADDRESS_DEFAULT, VL53L0X_RIGHT_ADDRESS);
-	fault += sensor_init(ADDRESS_DEFAULT, VL53L0X_BACK_ADDRESS);
+	fault += sensor_init(ADDRESS_DEFAULT, VL53L0X_FRONT_ADDRESS) == true ? 0: 1 << 0;
+	fault += sensor_init(ADDRESS_DEFAULT, VL53L0X_LEFT_ADDRESS) == true ? 0: 1 << 1;
+	fault += sensor_init(ADDRESS_DEFAULT, VL53L0X_RIGHT_ADDRESS) == true ? 0: 1 << 2;
+	fault += sensor_init(ADDRESS_DEFAULT, VL53L0X_BACK_ADDRESS) == true ? 0: 1 << 3;
 
 	return fault ? false : true;
 }
 
-
 //! For Single mode operation
-extern uint16_t sensors_vl53l0x_range_one(uint8_t sensor_id, statInfo_t *range) {
+extern range_status_t sensors_vl53l0x_range_one(uint8_t sensor_id, statInfo_t *range) {
 	if(is_busy == true) { 
-		memcpy(range, &range_error, sizeof(statInfo_t)); 
-		return 65535; 
+		range->rangeStatus = VL53L1_RANGESTATUS_RESSOURCE_BUSY;
+		return range->rangeStatus;
 	}
 	is_busy = true;
+
 	setAddress(sensor_id);
-	uint16_t error = readRangeSingleMillimeters( range );
-	is_busy = false;
-	if(timeoutOccurred() || error == 65535) { 
-		memcpy(range, &range_error, sizeof(statInfo_t));
+	uint16_t value = readRangeSingleMillimeters( range );
+
+	if(value == 65535 && sensors_vl53l0x_is_status_ok(range->rangeStatus) == true) {
+		range->rangeStatus = VL53L1_RANGESTATUS_RANGE_INFINY; 
 	}
-	return error;
+	if(timeoutOccurred()) { 
+		range->rangeStatus = VL53L1_RANGESTATUS_TIMEOUT;
+	}
+	is_busy = false;
+	return range->rangeStatus;
 }
 
 
-extern uint16_t sensors_vl53l0x_range_all(statInfo_t *ranges) {	
-	uint16_t error = 0;
+extern range_status_t sensors_vl53l0x_range_all(statInfo_t *ranges) {	
+	range_status_t last_error = 0;
 	for(uint8_t id = VL53L0X_FRONT_ADDRESS; id <= VL53L0X_BACK_ADDRESS; id += 2) {
 		uint8_t i = (id - VL53L0X_FRONT_ADDRESS) / 2;
-		if(sensors_vl53l0x_range_one(id, &ranges[i]) == 65535) { error = 65535; }
+		range_status_t error = sensors_vl53l0x_range_one(id, &ranges[i]);
+		if(sensors_vl53l0x_is_status_ok(error) == false) { last_error = error; }
 	}
-	return error;
+	return last_error;
 }
 
 
 //! For continuous operation
-extern uint16_t sensors_vl53l0x_get_one(uint8_t sensor_id, statInfo_t *range) {
+extern range_status_t sensors_vl53l0x_get_one(uint8_t sensor_id, statInfo_t *range) {
 	if(is_busy == true) { 
-		memcpy(range, &range_error, sizeof(statInfo_t));
-		return 65535; 
+		range->rangeStatus = VL53L1_RANGESTATUS_RESSOURCE_BUSY;
+		return range->rangeStatus;
 	}
 	is_busy = true;
 	setAddress(sensor_id);
-	uint16_t error = readRangeContinuousMillimeters(range);
-	is_busy = false;
-	if(timeoutOccurred() || error == 65535) {
-		memcpy(range, &range_error, sizeof(statInfo_t));
+	uint16_t value = readRangeContinuousMillimeters(range);
+
+	if(value == 65535 && sensors_vl53l0x_is_status_ok(range->rangeStatus) == true) {
+		range->rangeStatus = VL53L1_RANGESTATUS_RANGE_INFINY; 
 	}
-	return error;
+	if(timeoutOccurred()) { 
+		range->rangeStatus = VL53L1_RANGESTATUS_TIMEOUT;
+	}
+
+	is_busy = false;
+	return range->rangeStatus;
 }
 
 
-extern uint16_t sensors_vl53l0x_get_next(statInfo_t *range) {
+extern range_status_t sensors_vl53l0x_get_next(statInfo_t *range) {
 	static uint8_t next_id = VL53L0X_FRONT_ADDRESS;
 
-	uint16_t result = sensors_vl53l0x_get_one(next_id, range);
+	sensors_vl53l0x_get_one(next_id, range);
 
 	next_id += 2;
 	if(next_id > VL53L0X_BACK_ADDRESS) { next_id = VL53L0X_FRONT_ADDRESS; }
 
-	return result;
+	return range->rangeStatus;
 }
 
 
-extern uint16_t sensors_vl53l0x_get_all(statInfo_t *ranges) {
-	uint16_t error = 0;
+extern range_status_t sensors_vl53l0x_get_all(statInfo_t *ranges) {
+	range_status_t last_error = 0;
 	for(uint8_t id = VL53L0X_FRONT_ADDRESS; id <= VL53L0X_BACK_ADDRESS; id += 2) {
 		uint8_t i = (id - VL53L0X_FRONT_ADDRESS) / 2;
-		if(sensors_vl53l0x_get_one(id, &ranges[i]) == 65535) { error = 65535; }
+		range_status_t error = sensors_vl53l0x_range_one(id, &ranges[i]);
+		if(sensors_vl53l0x_is_status_ok(error) == false) { last_error = error; }
 	}
-	return error;
+	return last_error;
 }

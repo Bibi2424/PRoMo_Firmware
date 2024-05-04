@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "global.h"
+#include "utils.h"
 #include "debug.h"
 
 #include "main.h"
@@ -144,27 +144,29 @@ extern void blink_led2(void) {
 
 
 static void sensors_get_event(void) {
-    // statInfo_t range;
-    // uint16_t result = sensors_vl53l0x_get_next(&range);
-    // debugf("VL53 - %u\n", result);
-
-    // statInfo_t range;
-    // uint16_t result = sensors_vl53l0x_range_one(VL53L0X_FRONT_ADDRESS, &range);
-    // debugf("VL53 - %u\n", result);
-
     statInfo_t ranges[4];
     sensors_vl53l0x_get_all(ranges);
-    // debugf("VL53 - L: %u, F: %u, R: %u, B: %u\n", ranges[1].rawDistance, ranges[0].rawDistance, ranges[2].rawDistance, ranges[3].rawDistance);
+    debugf("VL53 - L[%02X]: %u, F[%02X]: %u, R[%02X]: %u, B[%02X]: %u\n", \
+        ranges[1].rangeStatus, ranges[1].rawDistance, \
+        ranges[0].rangeStatus, ranges[0].rawDistance, \
+        ranges[2].rangeStatus, ranges[2].rawDistance, \
+        ranges[3].rangeStatus, ranges[3].rawDistance \
+        );
     uint8_t sensors_buffer[4*2];
     for(uint8_t i = 0; i < 4; i++) {
-        memcpy(&sensors_buffer[2*i], &ranges[i].rawDistance, sizeof(uint16_t));
+        if(sensors_vl53l0x_is_status_ok(ranges[i].rangeStatus) == false) {
+            sensors_buffer[2*i] = (uint8_t)ranges[i].rangeStatus;
+            sensors_buffer[2*i+1] = 1 << 7;
+        }
+        else {
+            memcpy(&sensors_buffer[2*i], &ranges[i].rawDistance, sizeof(uint16_t));
+        }
     }
     radio_set_ack_payload(sensors_buffer, 8*sizeof(uint8_t));
 }
 
 
 static void get_data_from_radio(uint8_t *data, uint8_t size) {
-
     int8_t forward_speed = (int8_t)data[0];
     int8_t steer_speed = (int8_t)data[1];
     // debugf("NRF: %d - %d\n", forward_speed, steer_speed);

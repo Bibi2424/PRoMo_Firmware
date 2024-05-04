@@ -1,9 +1,5 @@
-#ifndef GLOBAL_H
-#define	GLOBAL_H
-
-#include "debug.h"
-
-#define DEBUG_ENABLE 1
+#ifndef UTILS_H
+#define	UTILS_H
 
 #define MILLIS 	1000UL
 #define SECONDS 1000 * 1000UL

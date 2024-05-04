@@ -1,6 +1,6 @@
 #define DEBUG_THIS_FILE   DEBUG_SPI_FILE
 
-#include "global.h"
+#include "utils.h"
 #include "debug.h"
 
 #include "spi.h"

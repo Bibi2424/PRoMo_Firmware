@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "global.h"
+#include "utils.h"
 #include "main.h"
 
 #include "control_loop.h"
@@ -41,8 +41,7 @@ extern void do_control_loop(void) {
     static uint8_t debug_cnt = 0;
     if(debug_cnt == 0) {
         debugf("@Left: %ld - %ld - %ld\n", target_speed_left, current_left_speed, motor_left_command);
-        // debugf("@More: %ld - %ld\n", target_speed_left - current_left_speed, pid_speed_left.integral_error);
-        debugf("@Right: %ld - %ld - %ld\n", target_speed_right, current_right_speed, motor_right_command);   
+        debugf("@Right: %ld - %ld - %ld\n", target_speed_right, current_right_speed, motor_right_command);
         debug_cnt = 5;
     }
     debug_cnt--;
