@@ -38,20 +38,20 @@ extern bool radio_init(radio_settings_t *settings) {
 
 
 extern bool radio_is_rx_ready(void) {
-    return nrf_has_data_isr()->rx_ready ? true: false;
+    nrf24l01_status_t nrf_status = nrf_has_data_isr();
+    return nrf_status.rx_ready == 1 ? true: false;
 }
 
 
 extern bool radio_process_rx(void) {
-    nrf24l01_status_t * nrf_status = nrf_has_data_isr();
+    nrf24l01_status_t nrf_status = nrf_has_data_isr();
 
-    if(nrf_status->rx_ready == false) {
+    if(nrf_status.rx_ready == 0) {
         return false;
     }
 
     debugf("#");
     remote_connection = true;
-    nrf_status->rx_ready = 0;
     nrf_rx_size = nrf_read_data(nrf_data);
     nrf_flush_rx_buffer();
 

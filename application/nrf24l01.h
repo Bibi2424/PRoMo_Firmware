@@ -174,7 +174,7 @@ extern void nrf_power_up(void);
 extern void nrf_stop_rx(void);
 extern void nrf_start_rx(void);
 // extern uint8_t nrf_set_rx_mode(void);
-extern nrf24l01_status_t * nrf_has_data_isr(void);
+extern nrf24l01_status_t nrf_has_data_isr(void);
 extern uint8_t nrf_has_data(void);
 extern uint8_t nrf_read_data(uint8_t *data);
 extern bool nrf_write_data(uint8_t *data, uint8_t data_size, bool ack);
