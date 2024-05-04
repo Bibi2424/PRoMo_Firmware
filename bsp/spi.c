@@ -63,6 +63,7 @@ extern void spi_init(SPI_TypeDef *SPIx) {
 #define SPI_DEFAULT_TIMEOUT		5
 
 static bool spi_wait_received(SPI_TypeDef *SPIx, uint32_t timeout) {
+	if(timeout == 0) { return false; }
 	while(LL_SPI_IsActiveFlag_RXNE(SPIx) == 0 || LL_SPI_IsActiveFlag_BSY(SPIx)) {
         if (!LL_SYSTICK_IsActiveCounterFlag()) { continue; }
         if(--timeout == 0) {

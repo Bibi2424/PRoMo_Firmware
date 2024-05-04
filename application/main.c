@@ -52,7 +52,7 @@ extern int main(void) {
     #endif
     setbuf(stdout, NULL);       //! For unbuffered ouput
     debugf("\n**************************************\n");
-    debugf(  "* " xstr(TARGET) "fw v" xstr(FW_VERSION_MAJOR) "." xstr(FW_VERSION_MINOR) "." xstr(FW_VERSION_REV) "\n");
+    debugf(  "* " xstr(TARGET) " - fw v" xstr(FW_VERSION_MAJOR) "." xstr(FW_VERSION_MINOR) "." xstr(FW_VERSION_REV) "\n");
     debugf(  "* " xstr(HW_TYPE) "\n" );
     debugf(  "* System_Frequency: %lu MHz\n", SystemCoreClock);
     debugf(  "**************************************\n");
@@ -101,9 +101,7 @@ extern int main(void) {
             // debugf("Sending... %s\n", res?"ok":"fail");
         }
 
-        if(radio_is_rx_ready()) {
-            radio_process_rx();
-        }
+        radio_loop();
 
         if(MOTOR_CONTROL_INTERVAL_MS > 0 && current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL_MS) {
             motor_control_last_execution = current_time;
