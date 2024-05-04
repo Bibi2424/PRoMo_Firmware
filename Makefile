@@ -17,7 +17,7 @@ MCU_TYPE = STM32F405
 
 FW_VERSION_MAJOR = 0
 FW_VERSION_MINOR = 2
-FW_VERSION_REV 	 = 2
+FW_VERSION_REV 	 = 3
 
 HW_TYPE = HW_PROMO_V0_1
 
@@ -26,8 +26,6 @@ HW_TYPE = HW_PROMO_V0_1
 ######################################
 # debug build?
 DEBUG = 1
-# optimization
-OPT = -Og
 
 #######################################
 # paths
@@ -41,16 +39,18 @@ BSP_DIR = bsp
 
 LIB_DIR = lib
 
+TOOLS_DIR = tools
+
 # GCC toolchain path
 # GCC_PATH = "C:/Program Files (x86)/GNU Tools Arm Embedded/7 2018-q2-update/bin/"
-GCC_PATH = "C:/Program Files (x86)/GNU Tools Arm Embedded/9 2019-q4-major/bin/"
+GCC_PATH = "E:/Program Files (x86)/GNU Tools Arm Embedded/9 2019-q4-major/bin/"
 # STM32 HAL librairies
 STM32_LIBRAIRIES_PATH = STM32_HAL_min
 STM32_LIBRAIRIES_SRC = $(STM32_LIBRAIRIES_PATH)/STM32F4xx_HAL_Driver/Src
 STM32_LIBRAIRIES_INC = $(STM32_LIBRAIRIES_PATH)/STM32F4xx_HAL_Driver/Inc
 # STL-Link Flasher Path
 # STM32_FLASHER_EXEC := "C:/Program Files (x86)/STMicroelectronics/STM32 ST-LINK Utility/ST-LINK Utility/"
-STM32_FLASHER_EXEC := "C:/Program Files/STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/"
+STM32_FLASHER_EXEC := "E:/Program Files/STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/"
 
 # If you need to select some libaries....
 USED_LIBS += VL53L0X MPU6050
@@ -164,6 +164,11 @@ else ifeq ($(MCU_TYPE), STM32F411)
 	C_DEFS += -DSTM32F411xE
 endif
 
+ifeq ($(DEBUG), 1)
+OPT = -Og
+else
+OPT = -O1
+endif
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
@@ -198,18 +203,10 @@ LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BU
 # build the application
 #######################################
 
-.PHONY: all build clean flash reset test
-
 # default action: build all
 all: build
 
 build: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
-
-
-test:
-	@echo $(SOURCE_FOLDER)
-# 	@echo $(C_SOURCES)
-
 
 OBJECTS = $(addprefix $(BUILD_DIR)/,$(notdir $(C_SOURCES:.c=.o)))
 vpath %.c $(sort $(dir $(C_SOURCES)))
@@ -263,9 +260,17 @@ reset:
 # 	@$(STM32_FLASHER_EXEC)ST-LINK_CLI.exe -c -Rst
 	$(STM32_FLASHER_EXEC)STM32_Programmer_CLI.exe -c port=SWD -rst
 
+run-openocd:
+	openocd -f $(TOOLS_DIR)/stlink.cfg  -f $(TOOLS_DIR)/stm32f4x.cfg
+
+run-gdb:
+	arm-none-eabi-gdb.exe $(BUILD_DIR)/PRoMo.elf -x $(TOOLS_DIR)/.gdbinit
+
 #######################################
 # dependencies
 #######################################
 -include $(wildcard $(BUILD_DIR)/*.d)
+
+.PHONY: all build clean flash reset run-openocd run-gdb
 
 # *** EOF ***

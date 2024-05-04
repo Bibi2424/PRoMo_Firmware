@@ -52,7 +52,7 @@ extern int main(void) {
     #endif
     setbuf(stdout, NULL);       //! For unbuffered ouput
     debugf("\n**************************************\n");
-    debugf(  "* " xstr(TARGET) "fw v" xstr(FW_VERSION_MAJOR) "." xstr(FW_VERSION_MINOR) "." xstr(FW_VERSION_REV) "\n");
+    debugf(  "* " xstr(TARGET) " - fw v" xstr(FW_VERSION_MAJOR) "." xstr(FW_VERSION_MINOR) "." xstr(FW_VERSION_REV) "\n");
     debugf(  "* " xstr(HW_TYPE) "\n" );
     debugf(  "* System_Frequency: %lu MHz\n", SystemCoreClock);
     debugf(  "**************************************\n");
