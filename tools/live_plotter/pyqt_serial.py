@@ -43,11 +43,11 @@ class SerialWidget(QtWidgets.QWidget):
 
         self.serial = QtSerialPort.QSerialPort(
             'COM17',
-            baudRate=230400,
+            baudRate=921600,
             readyRead=self.receive
         )
         self.port_input.setText('COM17')
-        self.baudrate_input.setText('230400')
+        self.baudrate_input.setText('921600')
 
         self.text_received = deque(maxlen=100)
 
@@ -69,7 +69,7 @@ class SerialWidget(QtWidgets.QWidget):
 
             used = False
             if self.callback:
-                used = self.callback(time.time(), text)
+                used = self.callback(text)
 
             if used == True and self.show_data_draw:
                 continue

@@ -21,6 +21,7 @@
 #include "ws2812b.h"
 #include "mpu_6050.h"
 
+#include "lerp.h"
 
 static void sensors_get_event(void);
 static void get_data_from_radio(uint8_t *data, uint8_t size);
@@ -83,11 +84,16 @@ extern int main(void) {
     if(radio_init(&radio_settings)) { debugf("\t- NRF Init OK\n"); }
     else { debugf("\t- NRF Init Error\n"); }
 
+    control_loop_init();
+
     debugf("Init Done\n");
 
     uint32_t motor_control_last_execution = 0;
     uint32_t aleds_last_execution = 0;
     uint32_t mpu_last_execution = 0;
+
+    float t = 0.0f;
+    debugf("&Lerp,,command,current\n");
 
     while (1) {
         uint32_t current_time = millis();
@@ -107,6 +113,9 @@ extern int main(void) {
             motor_control_last_execution = current_time;
 
             do_control_loop();
+
+            debugf("@Lerp,,1,%u\n", (unsigned)lerp(0, 100, t));
+            t += 0.01f;
         }
 
         if(MPU_INTERVAL_MS > 0 && current_time - mpu_last_execution > MPU_INTERVAL_MS) {

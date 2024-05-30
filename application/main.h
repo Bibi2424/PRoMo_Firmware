@@ -23,8 +23,8 @@
 #define DEBUG_UART			6
 #endif
 #ifndef DEBUG_BAUDRATE
-// #define DEBUG_BAUDRATE		921600UL
-#define DEBUG_BAUDRATE		230400UL
+#define DEBUG_BAUDRATE		921600UL
+// #define DEBUG_BAUDRATE		230400UL
 #endif
 
 

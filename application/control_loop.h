@@ -3,6 +3,7 @@
 
 
 
+extern void control_loop_init(void);
 extern void do_control_loop(void);
 extern void set_target_speed(int32_t left, int32_t right);
 

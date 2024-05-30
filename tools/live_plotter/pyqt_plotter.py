@@ -102,7 +102,6 @@ class GraphWidget(QtWidgets.QWidget):
 
 # Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.).
 class MyMplCanvas(FigureCanvas):
-
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = mpl.figure.Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
@@ -115,17 +114,8 @@ class MyMplCanvas(FigureCanvas):
                                    QtWidgets.QSizePolicy.Expanding)
         FigureCanvas.updateGeometry(self)
 
-
     def compute_initial_figure(self):
         pass
-
-
-
-class MyStaticMplCanvas(MyMplCanvas):
-
-    def compute_initial_figure(self):
-        pass
-
 
 
 # A canvas that updates itself every second with a new plot.
@@ -136,7 +126,8 @@ class MyDynamicMplCanvas(MyMplCanvas):
         super(MyDynamicMplCanvas, self).__init__(*args, **kwargs)
 
         self.x = deque(maxlen=self.MAXLEN)
-        self.data = []
+        self.y_list = []
+        self.y_names = []
         self.is_paused = False
         self.y_limit = [-200, 200]
 
@@ -157,7 +148,7 @@ class MyDynamicMplCanvas(MyMplCanvas):
 
     def reset(self):
         self.x.clear()
-        self.data = []
+        self.y_list = []
         self.update_figure(forced = True)
         self.start_time = time.time()
 
@@ -166,14 +157,16 @@ class MyDynamicMplCanvas(MyMplCanvas):
         self.is_paused = is_paused
 
 
-    def add_data(self, x, data):
+    def add_data(self, x, new_data):
         if self.is_paused:
             return
 
-        while len(data) > len(self.data):
-            self.data.append(deque([0] * len(self.x), maxlen=self.MAXLEN))
+        while len(new_data) > len(self.y_list):
+            self.y_list.append(deque([0] * len(self.x), maxlen=self.MAXLEN))
+            self.y_names.append(len(self.y_names))
+
         self.x.append(x - self.start_time)
-        for y, d, in zip(self.data, data):
+        for y, d, in zip(self.y_list, new_data):
             y.append(d)
 
 
@@ -185,8 +178,8 @@ class MyDynamicMplCanvas(MyMplCanvas):
             return
 
         self.axes.cla()
-        for i, y in enumerate(self.data):
-            self.axes.plot(list(self.x), list(y), label = f'{i}')
+        for i, y in enumerate(self.y_list):
+            self.axes.plot(list(self.x), list(y), label = f'{self.y_names[i]}')
             self.axes.legend()
         self.axes.set_ylim(self.y_limit)
         self.draw()
@@ -268,32 +261,67 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             p.reset()
 
 
-    def get_data(self, timestamp, text):
-        # Expect a line: "@{Graph Name}: {y1}-{y2}-{yn}"
-        if text.startswith('@') == False:
-            return False
-        text = text[1:]
-        if ':' not in text:
-            return False
-        
+    def process_graph_info(self, text):
         try:
-            name, data = text.split(':')
+            text.replace(' ', '')
+            data = text.split(',')
         except ValueError as e:
             print(f'Error spliting :{text}')
-            return
-
-        if name not in self.plots:
             return False
 
+        if len(data) < 3:
+            print(f'Not enough info to extract (min 3): {text}')
+
+        graph_name = data.pop(0)
+        x_axis_legend = data.pop(0)
+        
+        if graph_name not in self.plots:
+            # TODO: Add a plot with the graph_name
+            return False
+
+        for i, y_axis_legend in enumerate(data):
+            if not y_axis_legend:
+                continue
+            self.plots[graph_name].y_names[i] = y_axis_legend
+
+
+    def process_new_points(self, text):
         try:
-            r = map(int, data.strip().split(' - '))
-            data = list(r)
-            self.plots[name].add_data(timestamp, data)
+            text.replace(' ', '')
+            data = text.split(',')
+        except ValueError as e:
+            print(f'Error spliting :{text}')
+            return False
+
+        if len(data) < 3:
+            print(f'Not enough data to graph (min 3): {text}')
+
+        graph_name = data.pop(0)
+        timestamp = data.pop(0)
+
+        if graph_name not in self.plots:
+            # TODO: Add a plot with the graph_name
+            return False
+
+        if not timestamp:
+            timestamp = time.time()
+
+        try:
+            self.plots[graph_name].add_data(timestamp, data)
         except Exception as e:
             print(f'Error decoding: {text}')
             return False
 
         return True
+
+    def get_data(self, text):
+        # Expect a line: "@{Graph Name},{time:optional},{y1},{y2},{...},{yn}"
+        if text.startswith('@') == True:
+            return self.process_new_points(text[1:])
+        # Expect a line: "@{Graph Name},{x_legend:optional},{y1_legend:optional},{y2_legend:optional},{...},{yn_legend:optional}"
+        elif text.startswith('&') == True:
+            return self.process_graph_info(text[1:])
+        return False
 
 
     @QtCore.pyqtSlot()

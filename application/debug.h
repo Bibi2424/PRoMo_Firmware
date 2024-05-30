@@ -17,16 +17,17 @@
 
 #define DEBUG_SCHEDULER_FILE 					0
 
-#define DEBUG_CONTROL_LOOP_FILE					0
+#define DEBUG_CONTROL_LOOP_FILE					1
 #define DEBUG_PID_FILE							0
 #define DEBUG_MOTOR_FILE						0
 #define DEBUG_ENCODER_FILE						0
+#define DEBUG_LERP_FILE							1
 
 #define DEBUG_SENSORS_FILE						0
 #define DEBUG_I2C_FILE							0
 
-#define DEBUG_RADIO_FILE						1
-#define DEBUG_NRF24L01_FILE						1
+#define DEBUG_RADIO_FILE						0
+#define DEBUG_NRF24L01_FILE						0
 #define DEBUG_SPI_FILE							0
 
 /*------------------------- MACRO -------------------------*/

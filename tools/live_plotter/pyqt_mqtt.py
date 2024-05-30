@@ -94,7 +94,7 @@ class MQTTWidget(QtWidgets.QWidget, QtCore.QObject):
 
             used = False
             if self.callback:
-                used = self.callback(time.time(), text)
+                used = self.callback(text)
 
             if used == True and self.show_data_draw:
                 return

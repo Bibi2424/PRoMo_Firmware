@@ -27,6 +27,11 @@ static pid_controller_t pid_speed_left = DEFAULT_SPEED_PID;
 static pid_controller_t pid_speed_right = DEFAULT_SPEED_PID;
 
 
+extern void control_loop_init(void) {
+    debugf("&Left,t,target_speed,current_speed,motor_command\n");
+    debugf("&Right,t,target_speed,current_speed,motor_command\n");
+}
+
 
 extern void do_control_loop(void) {
 
@@ -40,8 +45,8 @@ extern void do_control_loop(void) {
 
     static uint8_t debug_cnt = 0;
     if(debug_cnt == 0) {
-        debugf("@Left: %ld - %ld - %ld\n", target_speed_left, current_left_speed, motor_left_command);
-        debugf("@Right: %ld - %ld - %ld\n", target_speed_right, current_right_speed, motor_right_command);
+        debugf("@Left,,%ld,%ld,%ld\n", target_speed_left, current_left_speed, motor_left_command);
+        debugf("@Right,,%ld,%ld,%ld\n", target_speed_right, current_right_speed, motor_right_command);
         debug_cnt = 5;
     }
     debug_cnt--;
