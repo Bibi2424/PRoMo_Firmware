@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "global.h"
+#include "utils.h"
 #include "debug.h"
 
 #include "nrf24l01.h"
@@ -19,7 +19,7 @@
 #define CONFIG_FOR_RX_MODE 		(NRF24L01_CONFIG_CRC_ENABLE | NRF24L01_CONFIG_CRC_2BIT | NRF24L01_CONFIG_POWER_UP | NRF24L01_CONFIG_PRIM_RX)
 
 #define DEFAULT_TX_TIMEOUT		100
-
+#define NRF_DEFAULT_TIMEOUT		10
 
 static nrf24l01_config_t nrf24l01_config = {
 	.rx_address = "PROM0",
@@ -28,7 +28,7 @@ static nrf24l01_config_t nrf24l01_config = {
 };
 
 volatile static bool nrf_isr = false;
-static bool nrf_lock = false;
+static bool nrf_lock_acquired = false;
 static nrf24l01_status_t last_nrf_status = {0};
 static uint8_t nrf_config_register = CONFIG_FOR_POWER_DOWN;
 
@@ -37,13 +37,19 @@ static void nrf_check_on_isr(void);
 static bool wait_for_tx_end(uint32_t timeout_ms);
 static void prepare_radio_for_tx(bool ack);
 
-static void nrf_lock_acquire_blocking(void) {
-	while(nrf_lock == true);
-	nrf_lock = true;
+static bool nrf_lock_acquire_blocking(uint32_t timeout_ms) {
+	uint32_t start_time = millis();
+	while(nrf_lock_acquired == true){
+		if(millis() - start_time > timeout_ms) {
+			return false;
+		}
+	}
+	nrf_lock_acquired = true;
+	return true;
 }
 
 static void nrf_lock_release(void) {
-	nrf_lock = false;
+	nrf_lock_acquired = false;
 }
 
 
@@ -150,7 +156,12 @@ static uint8_t _nrf_get_status(void) {
 	CSN_HIGH;
 	return status;
 }
-extern uint8_t nrf_get_status(void) { nrf_lock_acquire_blocking(); uint8_t ret = _nrf_get_status(); nrf_lock_release(); return ret; }
+extern uint8_t nrf_get_status(void) { 
+	if(nrf_lock_acquire_blocking(NRF_DEFAULT_TIMEOUT) == false) { return 0; }
+	uint8_t ret = _nrf_get_status(); 
+	nrf_lock_release(); 
+	return ret; 
+}
 
 
 static void _nrf_flush_rx_buffer(void) {
@@ -158,7 +169,11 @@ static void _nrf_flush_rx_buffer(void) {
 	spi2_send_byte_waiting(NRF24L01_COMMAND_FLUSH_RX, NULL);
 	CSN_HIGH;
 }
-extern void nrf_flush_rx_buffer(void) { nrf_lock_acquire_blocking(); _nrf_flush_rx_buffer(); nrf_lock_release(); }
+extern void nrf_flush_rx_buffer(void) { 
+	if(nrf_lock_acquire_blocking(NRF_DEFAULT_TIMEOUT) == false) { return; };
+	_nrf_flush_rx_buffer(); 
+	nrf_lock_release(); 
+}
 
 
 static void _nrf_flush_tx_buffer(void) {
@@ -166,7 +181,11 @@ static void _nrf_flush_tx_buffer(void) {
 	spi2_send_byte_waiting(NRF24L01_COMMAND_FLUSH_TX, NULL);
 	CSN_HIGH;	
 }
-extern void nrf_flush_tx_buffer(void) { nrf_lock_acquire_blocking(); _nrf_flush_tx_buffer(); nrf_lock_release(); }
+extern void nrf_flush_tx_buffer(void) { 
+	if(nrf_lock_acquire_blocking(NRF_DEFAULT_TIMEOUT) == false) { return; };
+	_nrf_flush_tx_buffer(); 
+	nrf_lock_release(); 
+}
 
 
 static void _nrf_clear_interrupt(void) {
@@ -174,7 +193,11 @@ static void _nrf_clear_interrupt(void) {
 		NRF24L01_STATUS_DATA_READY_INT | NRF24L01_STATUS_DATA_SENT_INT | NRF24L01_STATUS_MAX_RT_INT
 	);
 }
-extern void nrf_clear_interrupt(void) { nrf_lock_acquire_blocking(); _nrf_clear_interrupt(); nrf_lock_release(); }
+extern void nrf_clear_interrupt(void) { 
+	if(nrf_lock_acquire_blocking(NRF_DEFAULT_TIMEOUT) == false) { return; };
+	_nrf_clear_interrupt(); 
+	nrf_lock_release(); 
+}
 
 
 static void _nrf_power_down(void) {
@@ -182,7 +205,11 @@ static void _nrf_power_down(void) {
 	nrf_write_register(NRF24L01_REGISTER_CONFIG, CONFIG_FOR_POWER_DOWN);
 	nrf_config_register = CONFIG_FOR_POWER_DOWN;
 }
-extern void nrf_power_down(void) { nrf_lock_acquire_blocking(); _nrf_power_down(); nrf_lock_release(); }
+extern void nrf_power_down(void) { 
+	if(nrf_lock_acquire_blocking(NRF_DEFAULT_TIMEOUT) == false) { return; };
+	_nrf_power_down(); 
+	nrf_lock_release(); 
+}
 
 
 static void _nrf_power_up(void) {
@@ -193,7 +220,11 @@ static void _nrf_power_up(void) {
 		LL_mDelay(NRF_POWERUP_DELAY);
 	}
 }
-extern void nrf_power_up(void) { nrf_lock_acquire_blocking(); _nrf_power_up(); nrf_lock_release(); }
+extern void nrf_power_up(void) { 
+	if(nrf_lock_acquire_blocking(NRF_DEFAULT_TIMEOUT) == false) { return; };
+	_nrf_power_up(); 
+	nrf_lock_release(); 
+}
 
 
 static void _nrf_start_rx(void) {
@@ -210,7 +241,11 @@ static void _nrf_start_rx(void) {
     // close reading pipe 0
     nrf_write_register(NRF24L01_REGISTER_EN_RXADDR, nrf_read_register(NRF24L01_REGISTER_EN_RXADDR) & ~NRF24L01_ENABLE_PIPE(0));
 }
-extern void nrf_start_rx(void) { nrf_lock_acquire_blocking(); _nrf_start_rx(); nrf_lock_release(); }
+extern void nrf_start_rx(void) { 
+	if(nrf_lock_acquire_blocking(NRF_DEFAULT_TIMEOUT) == false) { return; };
+	_nrf_start_rx(); 
+	nrf_lock_release(); 
+}
 
 
 static void _nrf_stop_rx(void) {
@@ -223,7 +258,11 @@ static void _nrf_stop_rx(void) {
 	// Enable RX on pipe0
 	nrf_write_register(NRF24L01_REGISTER_EN_RXADDR, nrf_read_register(NRF24L01_REGISTER_EN_RXADDR) | NRF24L01_ENABLE_PIPE(0));
 }
-extern void nrf_stop_rx(void) { nrf_lock_acquire_blocking(); _nrf_stop_rx(); nrf_lock_release(); }
+extern void nrf_stop_rx(void) { 
+	if(nrf_lock_acquire_blocking(NRF_DEFAULT_TIMEOUT) == false) { return; };
+	_nrf_stop_rx(); 
+	nrf_lock_release(); 
+}
 
 //* NRF High Level *******************************************************************
 extern bool nrf_init(uint8_t radio_rx_id, uint8_t radio_tx_id) {
@@ -231,7 +270,7 @@ extern bool nrf_init(uint8_t radio_rx_id, uint8_t radio_tx_id) {
 	spi2_init();
 	LL_mDelay(10);
 
-	nrf_lock_acquire_blocking();
+	if(nrf_lock_acquire_blocking(NRF_DEFAULT_TIMEOUT) == false) { return false; }
 
 	// Set RF settings
 	nrf_write_register(NRF24L01_REGISTER_RF_SETUP, NRF24L01_RF_SETTINGS_1MBPS | NRF24L01_RF_SETTINGS_0DBM);
@@ -287,7 +326,7 @@ extern bool nrf_init(uint8_t radio_rx_id, uint8_t radio_tx_id) {
 
 extern void nrf_loop(void) {
 	if(nrf_isr == true) {
-		nrf_lock_acquire_blocking();
+		if(nrf_lock_acquire_blocking(NRF_DEFAULT_TIMEOUT) == false) { return; }
 		nrf_check_on_isr();
 		nrf_lock_release();
 		nrf_isr = false;
@@ -310,7 +349,7 @@ extern nrf24l01_status_t nrf_has_data_isr(void) {
 
 
 extern void nrf_set_my_address(uint8_t *address, uint8_t size) {
-	nrf_lock_acquire_blocking();
+	if(nrf_lock_acquire_blocking(NRF_DEFAULT_TIMEOUT) == false) { return; }
 	memcpy(&nrf24l01_config.rx_address[5-size], address, size);
 	nrf_write_multiple_bytes_register(NRF24L01_REGISTER_RX_ADDR_P1, nrf24l01_config.rx_address, 5);
 	nrf_lock_release();
@@ -318,7 +357,7 @@ extern void nrf_set_my_address(uint8_t *address, uint8_t size) {
 
 
 extern uint8_t nrf_has_data(void) {
-	nrf_lock_acquire_blocking();
+	if(nrf_lock_acquire_blocking(NRF_DEFAULT_TIMEOUT) == false) { return 0; }
 
 	if(nrf_config_register != CONFIG_FOR_RX_MODE) {
 		debugf("SET RX");
@@ -344,7 +383,7 @@ extern uint8_t nrf_has_data(void) {
 
 
 extern uint8_t nrf_read_data(uint8_t *data) {
-	nrf_lock_acquire_blocking();
+	if(nrf_lock_acquire_blocking(NRF_DEFAULT_TIMEOUT) == false) { return 0; }
 	//! Get data length
 	CSN_LOW;
 	spi2_send_byte_waiting(NRF24L01_COMMAND_R_RX_PL_WID, NULL);
@@ -371,7 +410,7 @@ extern uint8_t nrf_read_data(uint8_t *data) {
 
 
 extern bool nrf_write_data(uint8_t *data, uint8_t data_size, bool ack) {
-	nrf_lock_acquire_blocking();
+	if(nrf_lock_acquire_blocking(NRF_DEFAULT_TIMEOUT) == false) { return false; }
 	//! Put radio in tx
 	if((nrf_config_register & BIT_VALUE(NRF24L01_CONFIG_PRIM_BIT)) != 0) {
 		printf("NOT IN TX\n");
@@ -445,7 +484,7 @@ static bool wait_for_tx_end(uint32_t timeout_ms) {
 
 
 extern bool nrf_write_ack_data(uint8_t *data, uint8_t data_size) {
-	nrf_lock_acquire_blocking();
+	if(nrf_lock_acquire_blocking(NRF_DEFAULT_TIMEOUT) == false) { return false; }
 	const uint8_t pipe = 1;
 
 	CSN_LOW;

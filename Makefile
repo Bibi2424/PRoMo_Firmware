@@ -42,8 +42,8 @@ LIB_DIR = lib
 TOOLS_DIR = tools
 
 # GCC toolchain path
-# GCC_PATH = "C:/Program Files (x86)/GNU Tools Arm Embedded/7 2018-q2-update/bin/"
-GCC_PATH = "E:/Program Files (x86)/GNU Tools Arm Embedded/9 2019-q4-major/bin/"
+# GCC_PATH = "E:/Program Files (x86)/GNU Tools Arm Embedded/9 2019-q4-major/bin/"
+GCC_PATH = "E:/Program Files (x86)/GNU Arm Embedded Toolchain/10 2020-q4-major/bin"
 # STM32 HAL librairies
 STM32_LIBRAIRIES_PATH = STM32_HAL_min
 STM32_LIBRAIRIES_SRC = $(STM32_LIBRAIRIES_PATH)/STM32F4xx_HAL_Driver/Src
@@ -112,11 +112,13 @@ CC = $(GCC_PATH)/$(PREFIX)gcc
 AS = $(GCC_PATH)/$(PREFIX)gcc -x assembler-with-cpp
 CP = $(GCC_PATH)/$(PREFIX)objcopy
 SZ = $(GCC_PATH)/$(PREFIX)size
+GDB = $(GCC_PATH)/$(PREFIX)gdb
 else
 CC = $(PREFIX)gcc
 AS = $(PREFIX)gcc -x assembler-with-cpp
 CP = $(PREFIX)objcopy
 SZ = $(PREFIX)size
+GDB = $(PREFIX)gdb
 endif
 HEX = $(CP) -O ihex
 BIN = $(CP) -O binary -S
@@ -141,39 +143,42 @@ MCU = $(CPU) -mthumb $(FPU) $(FLOAT-ABI)
 AS_DEFS = 
 
 # C defines
-C_DEFS =  \
--DUSE_FULL_LL_DRIVER \
--DHSE_VALUE=25000000 \
--DHSE_STARTUP_TIMEOUT=100 \
--DLSE_STARTUP_TIMEOUT=5000 \
--DLSE_VALUE=32768 \
--DEXTERNAL_CLOCK_VALUE=12288000 \
--DHSI_VALUE=16000000 \
--DLSI_VALUE=32000 \
--DVDD_VALUE=3300 \
--DPREFETCH_ENABLE=1 \
--DINSTRUCTION_CACHE_ENABLE=1 \
--DDATA_CACHE_ENABLE=1
+USER_DEFS += USE_FULL_LL_DRIVER
+USER_DEFS += HSE_VALUE=25000000
+USER_DEFS += HSE_STARTUP_TIMEOUT=100
+USER_DEFS += LSE_STARTUP_TIMEOUT=5000
+USER_DEFS += LSE_VALUE=32768
+USER_DEFS += EXTERNAL_CLOCK_VALUE=12288000
+USER_DEFS += HSI_VALUE=16000000
+USER_DEFS += LSI_VALUE=32000
+USER_DEFS += VDD_VALUE=3300
+USER_DEFS += PREFETCH_ENABLE=1
+USER_DEFS += INSTRUCTION_CACHE_ENABLE=1
+USER_DEFS += DATA_CACHE_ENABLE=1
 
-USER_DEFS = TARGET=$(TARGET) FW_VERSION_MAJOR=$(FW_VERSION_MAJOR) FW_VERSION_MINOR=$(FW_VERSION_MINOR) FW_VERSION_REV=$(FW_VERSION_REV) HW_TYPE=$(HW_TYPE)
-C_DEFS += $(addprefix -D,$(USER_DEFS))
+USER_DEFS += TARGET=$(TARGET)
+USER_DEFS += FW_VERSION_MAJOR=$(FW_VERSION_MAJOR)
+USER_DEFS += FW_VERSION_MINOR=$(FW_VERSION_MINOR)
+USER_DEFS += FW_VERSION_REV=$(FW_VERSION_REV)
+USER_DEFS += HW_TYPE=$(HW_TYPE)
 
 ifeq ($(MCU_TYPE), STM32F405)
-	C_DEFS += -DSTM32F405xx
+	USER_DEFS += STM32F405xx
 else ifeq ($(MCU_TYPE), STM32F411)
-	C_DEFS += -DSTM32F411xE
+	USER_DEFS += STM32F411xE
 endif
 
 ifeq ($(DEBUG), 1)
-OPT = -Og
-else
-OPT = -O1
+	USER_DEFS += DEBUG_ENABLE=1
 endif
 
-# compile gcc flags
-ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
+C_DEFS = $(addprefix -D,$(USER_DEFS))
 
-CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
+
+# compile gcc flags
+ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -ffreestanding
+
+CFLAGS = $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections -ffreestanding
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2
@@ -263,14 +268,14 @@ reset:
 run-openocd:
 	openocd -f $(TOOLS_DIR)/stlink.cfg  -f $(TOOLS_DIR)/stm32f4x.cfg
 
-run-gdb:
-	arm-none-eabi-gdb.exe $(BUILD_DIR)/PRoMo.elf -x $(TOOLS_DIR)/.gdbinit
+gdb:
+	@echo \"$(GDB)\" $(BUILD_DIR)/PRoMo.elf -x $(TOOLS_DIR)/.gdbinit
 
 #######################################
 # dependencies
 #######################################
 -include $(wildcard $(BUILD_DIR)/*.d)
 
-.PHONY: all build clean flash reset run-openocd run-gdb
+.PHONY: all build clean flash reset run-openocd gdb
 
 # *** EOF ***

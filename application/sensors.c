@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "global.h"
+#include "utils.h"
 #include "debug.h"
 
 #include "sensors.h"
@@ -11,6 +11,15 @@
 #include "i2c.h"
 #include "scheduler.h"
 
+
+volatile bool is_busy = false;
+const statInfo_t range_error = {
+	.rawDistance = 65535,
+	.signalCnt = 0,
+	.ambientCnt = 0,
+	.spadCnt = 0,
+	.rangeStatus = (uint8_t)VL53L1_RANGESTATUS_GENERIC_ERROR,
+};
 
 static void vl53l0x_gpio_init(void) {
 	LL_GPIO_InitTypeDef GPIO_InitStruct;
@@ -52,99 +61,128 @@ static void vl53l0x_gpio_init(void) {
 }
 
 
+static uint32_t _get_sensor_pin(uint8_t sensor_id) {
+	switch(sensor_id) {
+	case VL53L0X_FRONT_ADDRESS:
+		return VL53L0X_XSHUT2_Pin;
+	case VL53L0X_LEFT_ADDRESS:
+		return VL53L0X_XSHUT3_Pin;
+	case VL53L0X_RIGHT_ADDRESS:
+		return VL53L0X_XSHUT1_Pin;
+	case VL53L0X_BACK_ADDRESS:
+		return VL53L0X_XSHUT4_Pin;
+	default:
+		return 0;
+	}
+}
+
+
+static bool sensor_init(uint8_t old_sensor_id, uint8_t new_sensor_id) {
+	setAddress(old_sensor_id);
+	uint32_t pin = _get_sensor_pin(new_sensor_id);
+	if(pin == 0) { return false; }
+	SET_PIN(VL53L0X_XSHUT_Port, pin, 1);
+	if(initVL53L0X(true) == false) {
+		return false;
+		debugf("Error Init VL53L0X %u\n", new_sensor_id);
+	}
+	startContinuous(100);
+	writeAddress(new_sensor_id);
+	// LL_mDelay(1);
+
+	setMeasurementTimingBudget( 50 * MILLIS );
+	setTimeout( 50*2 );
+	return true;
+}
+
+
 extern bool sensors_vl53l0x_init(void) {
 	uint8_t fault = 0;
 
 	vl53l0x_gpio_init();
 	i2c1_init();
 
-	setAddress(ADDRESS_DEFAULT);
-	SET_PIN(VL53L0X_XSHUT_Port, VL53L0X_FRONT_PIN, 1);
-	if(initVL53L0X(true) == false) {
-		fault++;
-		debugf("Error Init VL53L0X FRONT\n");
-	}
-	startContinuous(100);
-	writeAddress(VL53L0X_FRONT_ADDRESS);
-	// LL_mDelay(1);
-
-	setAddress(ADDRESS_DEFAULT);
-	SET_PIN(VL53L0X_XSHUT_Port, VL53L0X_LEFT_PIN, 1);
-	if(initVL53L0X(true) == false) {
-		fault++;
-		debugf("Error Init VL53L0X LEFT\n");
-	}
-	startContinuous(100);
-	writeAddress(VL53L0X_LEFT_ADDRESS);
-	// LL_mDelay(1);
-
-	setAddress(ADDRESS_DEFAULT);
-	SET_PIN(VL53L0X_XSHUT_Port, VL53L0X_RIGHT_PIN, 1);
-	if(initVL53L0X(true) == false) {
-		fault++;
-		debugf("Error Init VL53L0X RIGHT\n");
-	}
-	startContinuous(100);
-	writeAddress(VL53L0X_RIGHT_ADDRESS);
-	// LL_mDelay(1);
-
-	setAddress(ADDRESS_DEFAULT);
-	SET_PIN(VL53L0X_XSHUT_Port, VL53L0X_BACK_PIN, 1);
-	if(initVL53L0X(true) == false) {
-		fault++;
-		debugf("Error Init VL53L0X BACK\n");
-	}
-	startContinuous(100);
-	writeAddress(VL53L0X_BACK_ADDRESS);
-
-	setMeasurementTimingBudget( 50 * MILLIS );
-	setTimeout( 50 );
+	fault += sensor_init(ADDRESS_DEFAULT, VL53L0X_FRONT_ADDRESS) == true ? 0: 1 << 0;
+	fault += sensor_init(ADDRESS_DEFAULT, VL53L0X_LEFT_ADDRESS) == true ? 0: 1 << 1;
+	fault += sensor_init(ADDRESS_DEFAULT, VL53L0X_RIGHT_ADDRESS) == true ? 0: 1 << 2;
+	fault += sensor_init(ADDRESS_DEFAULT, VL53L0X_BACK_ADDRESS) == true ? 0: 1 << 3;
 
 	return fault ? false : true;
 }
 
-
 //! For Single mode operation
-extern uint16_t sensors_vl53l0x_range_one(uint8_t sensor_id, statInfo_t *range) {
+extern range_status_t sensors_vl53l0x_range_one(uint8_t sensor_id, statInfo_t *range) {
+	if(is_busy == true) { 
+		range->rangeStatus = VL53L1_RANGESTATUS_RESSOURCE_BUSY;
+		return range->rangeStatus;
+	}
+	is_busy = true;
+
 	setAddress(sensor_id);
-	return readRangeSingleMillimeters( range );
+	uint16_t value = readRangeSingleMillimeters( range );
+
+	if(value == 65535 && sensors_vl53l0x_is_status_ok(range->rangeStatus) == true) {
+		range->rangeStatus = VL53L1_RANGESTATUS_RANGE_INFINY; 
+	}
+	if(timeoutOccurred()) { 
+		range->rangeStatus = VL53L1_RANGESTATUS_TIMEOUT;
+	}
+	is_busy = false;
+	return range->rangeStatus;
 }
 
 
-extern uint16_t sensors_vl53l0x_range_all(statInfo_t *ranges) {	
-	uint16_t error = 0;
+extern range_status_t sensors_vl53l0x_range_all(statInfo_t *ranges) {	
+	range_status_t last_error = 0;
 	for(uint8_t id = VL53L0X_FRONT_ADDRESS; id <= VL53L0X_BACK_ADDRESS; id += 2) {
 		uint8_t i = (id - VL53L0X_FRONT_ADDRESS) / 2;
-		if(sensors_vl53l0x_range_one(id, &ranges[i]) == 65535) { error = 65535; }
+		range_status_t error = sensors_vl53l0x_range_one(id, &ranges[i]);
+		if(sensors_vl53l0x_is_status_ok(error) == false) { last_error = error; }
 	}
-	return error;
+	return last_error;
 }
 
 
 //! For continuous operation
-extern uint16_t sensors_vl53l0x_get_one(uint8_t sensor_id, statInfo_t *range) {
+extern range_status_t sensors_vl53l0x_get_one(uint8_t sensor_id, statInfo_t *range) {
+	if(is_busy == true) { 
+		range->rangeStatus = VL53L1_RANGESTATUS_RESSOURCE_BUSY;
+		return range->rangeStatus;
+	}
+	is_busy = true;
 	setAddress(sensor_id);
-	return readRangeContinuousMillimeters(range);
+	uint16_t value = readRangeContinuousMillimeters(range);
+
+	if(value == 65535 && sensors_vl53l0x_is_status_ok(range->rangeStatus) == true) {
+		range->rangeStatus = VL53L1_RANGESTATUS_RANGE_INFINY; 
+	}
+	if(timeoutOccurred()) { 
+		range->rangeStatus = VL53L1_RANGESTATUS_TIMEOUT;
+	}
+
+	is_busy = false;
+	return range->rangeStatus;
 }
 
 
-extern uint16_t sensors_vl53l0x_get_next(statInfo_t *range) {
+extern range_status_t sensors_vl53l0x_get_next(statInfo_t *range) {
 	static uint8_t next_id = VL53L0X_FRONT_ADDRESS;
 
-	uint16_t result = sensors_vl53l0x_get_one(next_id, range);
+	sensors_vl53l0x_get_one(next_id, range);
 
 	next_id += 2;
 	if(next_id > VL53L0X_BACK_ADDRESS) { next_id = VL53L0X_FRONT_ADDRESS; }
 
-	return result;
+	return range->rangeStatus;
 }
 
 
-extern uint16_t sensors_vl53l0x_get_all(statInfo_t *ranges) {
-	uint16_t error = 0;
+extern range_status_t sensors_vl53l0x_get_all(statInfo_t *ranges) {
+	range_status_t last_error = 0;
 	for(uint8_t id = VL53L0X_FRONT_ADDRESS; id <= VL53L0X_BACK_ADDRESS; id += 2) {
 		uint8_t i = (id - VL53L0X_FRONT_ADDRESS) / 2;
-		if(sensors_vl53l0x_get_one(id, &ranges[i]) == 65535) { error = 65535; }
+		range_status_t error = sensors_vl53l0x_range_one(id, &ranges[i]);
+		if(sensors_vl53l0x_is_status_ok(error) == false) { last_error = error; }
 	}
-	return error;
+	return last_error;
 }

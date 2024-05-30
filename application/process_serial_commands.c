@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "global.h"
+#include "utils.h"
 #include "debug.h"
 
 #include "process_serial_commands.h"
@@ -75,7 +75,7 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 		else if(strcmp(word, "vl53.get-all") == 0) {
 			statInfo_t ranges[4];
 			sensors_vl53l0x_range_all(ranges);
-			printf("L:%u F:%u R:%u\n", ranges[0].rawDistance, ranges[1].rawDistance, ranges[2].rawDistance);
+			printf("L:%u F:%u R:%u B:%u\n", ranges[0].rawDistance, ranges[1].rawDistance, ranges[2].rawDistance, ranges[3].rawDistance);
 		}
 
 		//! I2C

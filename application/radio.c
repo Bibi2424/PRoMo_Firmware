@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "global.h"
+#include "utils.h"
 #include "debug.h"
 
 #include "radio.h"
@@ -48,7 +48,7 @@ static bool radio_process_rx(void) {
         return false;
     }
 
-    debugf("#");
+    // debugf("#");
     uint8_t nrf_rx_size = 0;
     uint8_t nrf_data[32] = {0};
     remote_connection_alive = true;
