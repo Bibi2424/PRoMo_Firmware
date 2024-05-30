@@ -25,7 +25,7 @@ class SerialWidget(QtWidgets.QWidget):
         self.connect_button = QtWidgets.QPushButton(
             text="Connect", 
             checkable=True,
-            toggled=self.on_toggled
+            toggled=self.on_connect
         )
 
         lay = QtWidgets.QVBoxLayout(self)
@@ -42,12 +42,12 @@ class SerialWidget(QtWidgets.QWidget):
         lay.addWidget(self.output_text)
 
         self.serial = QtSerialPort.QSerialPort(
-            'COM4',
-            baudRate=1000000,
+            'COM17',
+            baudRate=230400,
             readyRead=self.receive
         )
-        self.port_input.setText('COM4')
-        self.baudrate_input.setText('1000000')
+        self.port_input.setText('COM17')
+        self.baudrate_input.setText('230400')
 
         self.text_received = deque(maxlen=100)
 
@@ -86,8 +86,8 @@ class SerialWidget(QtWidgets.QWidget):
 
 
     @QtCore.pyqtSlot(bool)
-    def on_toggled(self, checked):
-        print(f'On toggle: {checked}')
+    def on_connect(self, checked):
+        print(f'{"Connecting" if checked else "Disconnecting"} {self.port_input.text()}@{self.baudrate_input.text()}')
         self.connect_button.setText("Disconnect" if checked else "Connect")
         if checked:
             if not self.serial.isOpen():

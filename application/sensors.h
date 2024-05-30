@@ -37,7 +37,7 @@ typedef enum {
 
 extern bool sensors_vl53l0x_init(void);
 
-static inline sensors_vl53l0x_is_status_ok(range_status_t status) {
+static inline bool sensors_vl53l0x_is_status_ok(range_status_t status) {
 	if(status == VL53L1_RANGESTATUS_RANGE_VALID || status == VL53L1_RANGESTATUS_RANGE_VALID_NO_WRAP_CHECK_FAIL || status == VL53L1_RANGESTATUS_RANGE_VALID_MERGED_PULSE) { return true; }
 	return false;
 }

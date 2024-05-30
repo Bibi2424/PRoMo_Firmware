@@ -269,7 +269,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
 
     def get_data(self, timestamp, text):
-
+        # Expect a line: "@{Graph Name}: {y1}-{y2}-{yn}"
+        if text.startswith('@') == False:
+            return False
+        text = text[1:]
         if ':' not in text:
             return False
         
