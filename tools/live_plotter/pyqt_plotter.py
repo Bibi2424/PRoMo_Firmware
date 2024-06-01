@@ -189,17 +189,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         h = QtWidgets.QHBoxLayout(self.main_widget)
 
-        l = QtWidgets.QVBoxLayout()
+        self.graphs_layout = QtWidgets.QVBoxLayout()
 
         target_speed = TargetSpeedWidget(get_values_cb = self.send_target_speed)
-        l.addWidget(target_speed)
+        self.graphs_layout.addWidget(target_speed)
 
         # Single PID Widget for both side
         pid_both = PIDWidget(get_values_cb = lambda x, y, z:self.upload_pid(x, y, z))
-        l.addWidget(pid_both)
+        self.graphs_layout.addWidget(pid_both)
 
         graph_control = GraphControl(reset_cb = self.reset_all, pause_cb = self.pause_all)
-        l.addWidget(graph_control)
+        self.graphs_layout.addWidget(graph_control)
 
 
         # TODO: Change to a collection that preserve order
@@ -207,11 +207,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         for name in plot_names:
             dc = GraphWidget(name)
-            l.addWidget(dc)
+            self.graphs_layout.addWidget(dc)
             self.plots[name] = dc.get_canvas()
             print(f'Creating plot: \"{name}\"')
 
-        h.addLayout(l)
+        h.addLayout(self.graphs_layout)
 
         if use_serial:
             self.ser = SerialWidget(window=self, callback=self.get_data, show_data_draw = show_data_draw)
@@ -251,7 +251,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         timestamp = data.pop(0)
 
         if graph_name not in self.plots:
-            # TODO: Add a plot with the graph_name
+            dc = GraphWidget(graph_name)
+            self.graphs_layout.addWidget(dc)
+            self.plots[graph_name] = dc.get_canvas()
+            print(f'Creating plot: \"{graph_name}\"')
             return False
 
         if not timestamp:
@@ -296,7 +299,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 def main():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--names', '-n', nargs='*', default=['Left', 'Right'], help='List of names for the graph')
+    parser.add_argument('--names', '-n', nargs='*', default=[''], help='List of names for the graph')
     parser.add_argument('--show-data-draw', action='store_false', help='Will prevent graph data to appear in serial console')
     parser.add_argument('--use-serial', action='store_true', help='By default, will use mqtt, set this to use serial')
     parser.add_argument('--auto-connect', action='store_true', help='Use this flag to connect on open')
