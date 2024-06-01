@@ -11,6 +11,7 @@ mpl.use('Qt5Agg')
 from PyQt5 import QtCore, QtWidgets, QtSerialPort
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 
 from pyqt_serial import SerialWidget
 from pyqt_mqtt import MQTTWidget
@@ -63,15 +64,17 @@ class GraphWidget(QtWidgets.QWidget):
         hlayout.addWidget(QtWidgets.QLabel(name))
         # reset_button = QtWidgets.QPushButton(text = 'Reset', clicked = self.on_click)
         # hlayout.addWidget(reset_button)
+
+        self.canvas = MyDynamicMplCanvas(parent = self)
+
         hlayout.addWidget(QtWidgets.QLabel("y limit"))
-        self.y_limit_minus = QtWidgets.QLineEdit("-200")
+        self.y_limit_minus = QtWidgets.QLineEdit(str(self.canvas.y_limit[0]))
         self.y_limit_minus.textChanged.connect(lambda x: self.update_y_limits('minus', x))
         hlayout.addWidget(self.y_limit_minus)
-        self.y_limit_plus = QtWidgets.QLineEdit("200")
+        self.y_limit_plus = QtWidgets.QLineEdit(str(self.canvas.y_limit[1]))
         self.y_limit_plus.textChanged.connect(lambda x: self.update_y_limits('plus', x))
         hlayout.addWidget(self.y_limit_plus)
 
-        self.canvas = MyDynamicMplCanvas(parent = self)
         vlayout.addWidget(self.canvas)
 
         self.setLayout(vlayout)
@@ -83,7 +86,6 @@ class GraphWidget(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot(str, str)
     def update_y_limits(self, side, text):
-        print(text)
         try:
             if side == 'plus':
                 self.canvas.y_limit[1] = int(text)
@@ -99,37 +101,21 @@ class GraphWidget(QtWidgets.QWidget):
 
 
 
-
-# Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.).
-class MyMplCanvas(FigureCanvas):
-    def __init__(self, parent=None, width=5, height=4, dpi=100):
-        fig = mpl.figure.Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
-
-        super(MyMplCanvas, self).__init__(fig)
-        self.setParent(parent)
-
-        FigureCanvas.setSizePolicy(self,
-                                   QtWidgets.QSizePolicy.Expanding,
-                                   QtWidgets.QSizePolicy.Expanding)
-        FigureCanvas.updateGeometry(self)
-
-    def compute_initial_figure(self):
-        pass
-
-
 # A canvas that updates itself every second with a new plot.
-class MyDynamicMplCanvas(MyMplCanvas):
+class MyDynamicMplCanvas(FigureCanvas):
     MAXLEN = 100
 
-    def __init__(self, *args, **kwargs):
-        super(MyDynamicMplCanvas, self).__init__(*args, **kwargs)
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        self.fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = self.fig.add_subplot(111)
+        super(MyDynamicMplCanvas, self).__init__(self.fig)
+        self.setParent(parent)
 
         self.x = deque(maxlen=self.MAXLEN)
         self.y_list = []
-        self.y_names = []
+        self.plots = []
         self.is_paused = False
-        self.y_limit = [-200, 200]
+        self.y_limit = [-200, 4096]
 
         timer = QtCore.QTimer(self)
         timer.timeout.connect(self.update_figure)
@@ -140,10 +126,6 @@ class MyDynamicMplCanvas(MyMplCanvas):
 
     def change_max_len(self, new_max_len):
         self.x.maxlen = new_max_len
-
-
-    def compute_initial_figure(self):
-        self.axes.plot([], [])
 
 
     def reset(self):
@@ -163,7 +145,7 @@ class MyDynamicMplCanvas(MyMplCanvas):
 
         while len(new_data) > len(self.y_list):
             self.y_list.append(deque([0] * len(self.x), maxlen=self.MAXLEN))
-            self.y_names.append(len(self.y_names))
+            self.plots.append(self.axes.plot([])[0])
 
         self.x.append(x - self.start_time)
         for y, d, in zip(self.y_list, new_data):
@@ -179,7 +161,7 @@ class MyDynamicMplCanvas(MyMplCanvas):
 
         self.axes.cla()
         for i, y in enumerate(self.y_list):
-            self.axes.plot(list(self.x), list(y), label = f'{self.y_names[i]}')
+            self.axes.plot(list(self.x), list(y), label = f'{i}')
             self.axes.legend()
         self.axes.set_ylim(self.y_limit)
         self.draw()
@@ -216,12 +198,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         pid_both = PIDWidget(get_values_cb = lambda x, y, z:self.upload_pid(x, y, z))
         l.addWidget(pid_both)
 
-        # One PID Widget per side
-        # pid_left = PIDWidget('Left', get_values_cb = lambda x, y, z:self.upload_pid(x, y, z, side = 'left'))
-        # pid_right = PIDWidget('Right', get_values_cb = lambda x, y, z:self.upload_pid(x, y, z, side = 'right'))
-        # l.addWidget(pid_left)
-        # l.addWidget(pid_right)
-
         graph_control = GraphControl(reset_cb = self.reset_all, pause_cb = self.pause_all)
         l.addWidget(graph_control)
 
@@ -231,7 +207,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         for name in plot_names:
             dc = GraphWidget(name)
-            # dc = MyDynamicMplCanvas(parent = self.main_widget)
             l.addWidget(dc)
             self.plots[name] = dc.get_canvas()
             print(f'Creating plot: \"{name}\"')
@@ -248,7 +223,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.main_widget)
 
         if auto_connect:
-            self.ser.on_toggled(True)
+            self.ser.on_connect(True)
 
 
     def pause_all(self, is_paused):
@@ -259,30 +234,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def reset_all(self):
         for p in self.plots.values():
             p.reset()
-
-
-    def process_graph_info(self, text):
-        try:
-            text.replace(' ', '')
-            data = text.split(',')
-        except ValueError as e:
-            print(f'Error spliting :{text}')
-            return False
-
-        if len(data) < 3:
-            print(f'Not enough info to extract (min 3): {text}')
-
-        graph_name = data.pop(0)
-        x_axis_legend = data.pop(0)
-        
-        if graph_name not in self.plots:
-            # TODO: Add a plot with the graph_name
-            return False
-
-        for i, y_axis_legend in enumerate(data):
-            if not y_axis_legend:
-                continue
-            self.plots[graph_name].y_names[i] = y_axis_legend
 
 
     def process_new_points(self, text):
@@ -307,6 +258,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             timestamp = time.time()
 
         try:
+            data = [float(x) for x in data]
             self.plots[graph_name].add_data(timestamp, data)
         except Exception as e:
             print(f'Error decoding: {text}')
@@ -318,9 +270,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         # Expect a line: "@{Graph Name},{time:optional},{y1},{y2},{...},{yn}"
         if text.startswith('@') == True:
             return self.process_new_points(text[1:])
-        # Expect a line: "@{Graph Name},{x_legend:optional},{y1_legend:optional},{y2_legend:optional},{...},{yn_legend:optional}"
-        elif text.startswith('&') == True:
-            return self.process_graph_info(text[1:])
         return False
 
 
