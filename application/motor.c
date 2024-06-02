@@ -160,44 +160,31 @@ extern void motor_set_dir(actuator_t side, uint8_t dir) {
 }
 
 
-#define OUTPUT_FILTER	50
-static void motor_left_set_speed(uint32_t speed) {
-	static uint32_t last_speed = 0;
-	speed = (speed * (100 - OUTPUT_FILTER) + last_speed * OUTPUT_FILTER) / 100;
-	last_speed = speed;
+static void motor_left_set_speed(uint32_t percent) {
+	uint32_t command = (uint32_t) (max_autoreload * percent / 100UL);
+	if(command > max_autoreload) { command = max_autoreload; }
 
-	speed = (uint32_t)((uint64_t)max_autoreload * (uint64_t)speed) / MAX_SPEED;
-	if(speed > max_autoreload) { speed = max_autoreload; }
-
-	LL_TIM_OC_SetCompareCH1(TIM2, speed);
-	LL_TIM_OC_SetCompareCH2(TIM2, speed);
-	debugf("Set speed %lu/%lu\r\n", speed, max_autoreload);
+	LL_TIM_OC_SetCompareCH1(TIM2, command);
+	LL_TIM_OC_SetCompareCH2(TIM2, command);
+	// debugf("Left command %0.2f -> %lu/%lu\r\n", percent, command, max_autoreload);
 }
 
 
-static void motor_right_set_speed(uint32_t speed) {
-	static uint32_t last_speed = 0;
-	speed = (speed * (100 - OUTPUT_FILTER) + last_speed * OUTPUT_FILTER) / 100;
-	last_speed = speed;
+static void motor_right_set_speed(uint32_t percent) {
+	uint32_t command = (uint32_t) (max_autoreload * percent / 100UL);
+	if(command > max_autoreload) { command = max_autoreload; }
 
-	speed = (uint32_t)((uint64_t)max_autoreload * (uint64_t)speed) / MAX_SPEED;
-	if(speed > max_autoreload) { speed = max_autoreload; }
-
-	LL_TIM_OC_SetCompareCH3(TIM2, speed);
-	LL_TIM_OC_SetCompareCH4(TIM2, speed);
-	debugf("Set speed %lu/%lu\r\n", speed, max_autoreload);
+	LL_TIM_OC_SetCompareCH3(TIM2, command);
+	LL_TIM_OC_SetCompareCH4(TIM2, command);
+	// debugf("Right command %0.2f -> %lu/%lu\r\n", percent, command, max_autoreload);
 }
 
 
-extern void motor_set_speed(actuator_t side, uint32_t speed) {
-	if(speed > max_autoreload) {
-		speed = max_autoreload;
+extern void motor_set_speed(actuator_t side, uint32_t percent) {
+	if(side == LEFT_SIDE || side == BOTH_SIDE) {
+		motor_left_set_speed(percent);
 	}
-
-	if(side == LEFT_SIDE) {
-		motor_left_set_speed(speed);
-	}
-	else if(side == RIGHT_SIDE) {
-		motor_right_set_speed(speed);
+	if(side == RIGHT_SIDE || side == BOTH_SIDE) {
+		motor_right_set_speed(percent);
 	}
 }

@@ -124,10 +124,10 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 		//! CONTROL LOOP
 		else if(strcmp(word, "target.speed") == 0) {
 			word = get_next_word(commands, false);
-			int8_t speed_left = (int8_t)(strtol(word, NULL, 0) & 0xff);
+			int32_t speed_percent_left = (int32_t)(strtol(word, NULL, 0));
 			word = get_next_word(commands, false);
-			int8_t speed_right = (int8_t)(strtol(word, NULL, 0) & 0xff);
-			set_target_speed(speed_left, speed_right);
+			int32_t speed_percent_right = (int32_t)(strtol(word, NULL, 0));
+			set_target_speed_percent(speed_percent_left, speed_percent_right);
 		}
 
 		else if(strcmp(word, "pid.set") == 0) {
@@ -155,30 +155,29 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 
 		//! ENCODER
 		else if(strcmp(word, "get-tick") == 0) {
-			printf("L=%lu, R=%lu\n", encoder_get_value(LEFT_SIDE), encoder_get_value(RIGHT_SIDE));
+			printf("L=%lu, R=%lu\n", encoder_get_tick_count(LEFT_SIDE), encoder_get_tick_count(RIGHT_SIDE));
 		}
 
 		//! MOTOR CONTROL COMMANDS
-		else if(strcmp(word, "set-speed") == 0) {
+		else if(strcmp(word, "motor.speed") == 0) {
 			char wheels[10];
 			word = get_next_word(commands, false);
 			strncpy(wheels, word, 10);
 			word = get_next_word(commands, false);
-			uint8_t speed = (uint8_t)(strtoul(word, NULL, 0) & 0xff);
-			if(speed > 100) { speed = 100; }
+			uint32_t speed_percent = (uint32_t)(strtoul(word, NULL, 0) & 0xff);
+			if(speed_percent > 100) { speed_percent = 100; }
 			
 			if(strcmp(wheels, "left") == 0) {
-				motor_set_speed(LEFT_SIDE, speed);
+				motor_set_speed(LEFT_SIDE, speed_percent);
 			}
 			else if(strcmp(wheels, "right") == 0) {
-				motor_set_speed(RIGHT_SIDE, speed);
+				motor_set_speed(RIGHT_SIDE, speed_percent);
 			}
 			else if(strcmp(wheels, "both") == 0) {
-				motor_set_speed(LEFT_SIDE, speed);
-				motor_set_speed(RIGHT_SIDE, speed);
+				motor_set_speed(BOTH_SIDE, speed_percent);
 			}
 		}
-		else if(strcmp(word, "set-dir") == 0) {
+		else if(strcmp(word, "motor.dir") == 0) {
 			char wheels[10];
 			word = get_next_word(commands, false);
 			strncpy(wheels, word, 10);

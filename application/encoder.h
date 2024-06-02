@@ -11,7 +11,7 @@
 
 extern void encoders_init(void);
 
-extern uint32_t encoder_get_value(actuator_t side);
-extern int32_t encoder_get_speed(actuator_t side);
+extern uint32_t encoder_get_tick_count(actuator_t side);
+extern float encoder_get_speed(actuator_t side, float wheel_radius, float tick_per_wheel_turn_div_pi);
 
 #endif

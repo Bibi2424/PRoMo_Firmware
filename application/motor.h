@@ -14,6 +14,6 @@
 extern void motors_init(void);
 
 extern void motor_set_dir(actuator_t side, uint8_t dir);
-extern void motor_set_speed(actuator_t side, uint32_t speed_percent);
+extern void motor_set_speed(actuator_t side, uint32_t percent);
 
 #endif

@@ -11,7 +11,7 @@
 
 
 
-static int16_t last_value_left = 0, last_value_right = 0;
+static float last_encoder_count_left = 0, last_encoder_count_right = 0;
 
 
 extern void encoders_init(void) {
@@ -64,12 +64,12 @@ extern void encoders_init(void) {
 	LL_TIM_EnableCounter(TIM4);			//! Enable counter
 
 	//! NOTE: Should be 0 on init be leave it as a precaution
-	last_value_left = encoder_get_value(LEFT_SIDE);
-	last_value_right = encoder_get_value(RIGHT_SIDE);
+	last_encoder_count_left = encoder_get_tick_count(LEFT_SIDE);
+	last_encoder_count_right = encoder_get_tick_count(RIGHT_SIDE);
 }
 
 
-extern uint32_t encoder_get_value(actuator_t side) {
+extern uint32_t encoder_get_tick_count(actuator_t side) {
 	if(side == LEFT_SIDE) {
 		return LL_TIM_ReadReg(TIM3, CCR1);
 	}
@@ -80,46 +80,45 @@ extern uint32_t encoder_get_value(actuator_t side) {
 }
 
 
-static /*inline*/ int32_t calibrate_speed(int32_t tick_speed, uint32_t elapse_time_ms) {
-	//! NOTE: 1/T * speed_ticks * wheel_radius * (PI / TICKS_PER_TURN)
-	int32_t speed_mms = ((1000 / (int32_t)elapse_time_ms) * tick_speed * WHEEL_RADIUS_MM / TICKS_PER_WHEEL_TURN_DIV_PI);
-	//! NOTE: speed_mms = [-MAX_SPEED/s..MAX_SPEED/s]
-	return speed_mms;
+static /*inline*/ float convert_to_m_per_s(float tick_speed, float elapse_time, float wheel_radius, float tick_per_wheel_turn_div_pi) {
+	//! NOTE: speed_ms = [-MAX_SPEED/s..MAX_SPEED/s]
+	float speed_ms = tick_speed / elapse_time * tick_per_wheel_turn_div_pi * wheel_radius ;
+	return speed_ms;
 }
 
 
-extern int32_t encoder_get_speed(actuator_t side) {
-	static uint32_t last_compute_time_left = 0, last_compute_time_right = 0;
+extern float encoder_get_speed(actuator_t side, float wheel_radius, float tick_per_wheel_turn_div_pi) {
+	static float last_compute_time_left = 0, last_compute_time_right = 0;
 
-	int32_t speed = 0;
-	uint32_t now_ms = millis();
+	float speed = 0;
+	float now = (float)millis() / 1000.0f;
 
 	if(side == LEFT_SIDE) {
-		int16_t current_value = encoder_get_value(LEFT_SIDE);
-		//! Need to compute that diff from int16_t to not get errors, later moving to int32_t for avoiding overflow during calibration
-		int16_t speed16 = current_value - last_value_left;
-		speed = (int32_t)speed16;
+		int16_t encoder_count = encoder_get_tick_count(LEFT_SIDE);
+		//! Need to compute that diff from int16_t to not get errors, later moving to float for avoiding overflow during calibration
+		int16_t speed16 = encoder_count - last_encoder_count_left;
+		speed = (float)speed16;
 		#if INVERSE_LEFT_ENCODER
 			speed = -speed;
 		#endif
-		last_value_left = current_value;
+		last_encoder_count_left = encoder_count;
 
-		speed = calibrate_speed(speed, now_ms - last_compute_time_left);
-		last_compute_time_left = now_ms;
+		speed = convert_to_m_per_s(speed, now - last_compute_time_left, wheel_radius, tick_per_wheel_turn_div_pi);
+		last_compute_time_left = now;
 
 	}
 	else if(side == RIGHT_SIDE) {
-		int16_t current_value = encoder_get_value(RIGHT_SIDE);
+		int16_t encoder_count = encoder_get_tick_count(RIGHT_SIDE);
 		//! Need to compute that diff from int16_t to not get errors, later moving to int32_t for avoiding overflow during calibration
-		int16_t speed16 = current_value - last_value_right;
+		int16_t speed16 = encoder_count - last_encoder_count_right;
 		speed = (int32_t)speed16;
 		#if INVERSE_RIGHT_ENCODER
 			speed = -speed;
 		#endif
-		last_value_right = current_value;
+		last_encoder_count_right = encoder_count;
 
-		speed = calibrate_speed(speed, now_ms - last_compute_time_right);
-		last_compute_time_right = now_ms;
+		speed = convert_to_m_per_s(speed, now - last_compute_time_right, wheel_radius, tick_per_wheel_turn_div_pi);
+		last_compute_time_right = now;
 	}
 
 	return speed;

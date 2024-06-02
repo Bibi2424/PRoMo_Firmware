@@ -43,11 +43,15 @@ typedef enum {
 // #define ALEDS_INTERVAL_MS      			500
 #define ALEDS_INTERVAL_MS      			0
 
+#define PI 								(3.141592653f)
 
 //! TODO: Clean up and find a better place for those defines
-#define MAX_SPEED						180
-#define WHEEL_RADIUS_MM					32L
-#define TICKS_PER_WHEEL_TURN_DIV_PI		1138L	/* 3576 / PI */
+#define MIN_SPEED						(0.02f)		// m/s
+#define MAX_SPEED						(0.33f)		// m/s
+
+#define WHEEL_RADIUS					(0.032f)	// m
+#define SENSOR_TICK_PER_REV				(3578)
+#define SENSOR_TICK_TO_RAD				(2.0f*PI/(float)SENSOR_TICK_PER_REV)
 
 
 

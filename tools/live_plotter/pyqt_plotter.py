@@ -88,9 +88,9 @@ class GraphWidget(QtWidgets.QWidget):
     def update_y_limits(self, side, text):
         try:
             if side == 'plus':
-                self.canvas.y_limit[1] = int(text)
+                self.canvas.y_limit[1] = float(text)
             elif side == 'minus':
-                self.canvas.y_limit[0] = int(text)
+                self.canvas.y_limit[0] = float(text)
         except ValueError:
             pass
 

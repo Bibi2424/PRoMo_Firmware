@@ -114,8 +114,8 @@ extern int main(void) {
 
             do_control_loop();
 
-            debugf("@Lerp,,1,%u\n", (unsigned)lerp(0, 100, t));
-            t += 0.01f;
+            // debugf("@Lerp,,1,%u\n", (unsigned)lerp(0, 100, t));
+            // t += 0.01f;
         }
 
         if(MPU_INTERVAL_MS > 0 && current_time - mpu_last_execution > MPU_INTERVAL_MS) {
@@ -123,8 +123,8 @@ extern int main(void) {
 
             mpu_data_t mpu_data;
             mpu_6050_read_all(&mpu_data);
-            debugf("Accel: %d/%d/%d\n", mpu_data.accel.x, mpu_data.accel.y, mpu_data.accel.z);
-            debugf("Gyro: %d/%d/%d\n", mpu_data.gyro.x, mpu_data.gyro.y, mpu_data.gyro.z);
+            debugf("@Accel,%d,%d,%d\n", mpu_data.accel.x, mpu_data.accel.y, mpu_data.accel.z);
+            debugf("@Gyro,%d,%d,%d\n", mpu_data.gyro.x, mpu_data.gyro.y, mpu_data.gyro.z);
         }
 
         if(ALEDS_INTERVAL_MS > 0 && current_time - aleds_last_execution > ALEDS_INTERVAL_MS) {
@@ -183,12 +183,12 @@ static void get_data_from_radio(uint8_t *data, uint8_t size) {
     int8_t speed_left = forward_speed + (int8_t)steer_speed / 3;
     int8_t speed_right = forward_speed - (int8_t)steer_speed / 3;
     // debugf("NRF: %d - %d\n", speed_left, speed_right);
-    set_target_speed(speed_left, speed_right);
+    set_target_speed_percent(speed_left, speed_right);
 }
 
 
 static void lost_connection(void) {
-    set_target_speed(0, 0);
+    set_target_speed_percent(0, 0);
     debugf("Lost Connection with Remote\n");
 }
 

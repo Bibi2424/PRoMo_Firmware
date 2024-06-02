@@ -18,8 +18,8 @@
 #define DEBUG_SCHEDULER_FILE 					0
 
 #define DEBUG_CONTROL_LOOP_FILE					1
-#define DEBUG_PID_FILE							0
-#define DEBUG_MOTOR_FILE						0
+#define DEBUG_PID_FILE							1
+#define DEBUG_MOTOR_FILE						1
 #define DEBUG_ENCODER_FILE						0
 #define DEBUG_LERP_FILE							1
 

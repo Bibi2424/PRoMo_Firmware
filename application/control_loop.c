@@ -12,16 +12,12 @@
 #include "motor.h"
 
 
-volatile static int32_t target_speed_left = 0, target_speed_right = 0;
+volatile static float target_speed_left = 0, target_speed_right = 0;
 #define DEFAULT_SPEED_PID { \
     .compute_interval = MOTOR_CONTROL_INTERVAL_MS,  \
-    .proportional_gain = 150,   \
-    .integral_gain = 50,        \
-    .derivative_gain = 0,       \
-    .max_integral_error = 500,  \
-    .min_integral_error = 200,  \
-    .min_output = 5,           \
-    .max_output = 250           \
+    .proportional_gain = 1.0f,   \
+    .integral_gain = 0.1f,        \
+    .derivative_gain = 0.0f       \
 }
 static pid_controller_t pid_speed_left = DEFAULT_SPEED_PID;
 static pid_controller_t pid_speed_right = DEFAULT_SPEED_PID;
@@ -36,51 +32,71 @@ extern void control_loop_init(void) {
 extern void do_control_loop(void) {
 
     //! Encoder
-    int32_t current_left_speed = encoder_get_speed(LEFT_SIDE);
-    int32_t current_right_speed = encoder_get_speed(RIGHT_SIDE);
+    float current_speed_left = encoder_get_speed(LEFT_SIDE, WHEEL_RADIUS, SENSOR_TICK_TO_RAD);
+    float current_speed_right = encoder_get_speed(RIGHT_SIDE, WHEEL_RADIUS, SENSOR_TICK_TO_RAD);
 
     //! PID
-    int32_t motor_left_command = pid_compute(&pid_speed_left, target_speed_left, current_left_speed);
-    int32_t motor_right_command = pid_compute(&pid_speed_right, target_speed_right, current_right_speed);
+    float motor_command_left = pid_compute(&pid_speed_left, target_speed_left, current_speed_left);
+    float motor_command_right = pid_compute(&pid_speed_right, target_speed_right, current_speed_right);
 
     static uint8_t debug_cnt = 0;
     if(debug_cnt == 0) {
-        debugf("@Left,,%ld,%ld,%ld\n", target_speed_left, current_left_speed, motor_left_command);
-        debugf("@Right,,%ld,%ld,%ld\n", target_speed_right, current_right_speed, motor_right_command);
+        debugf("@Left,,%.3f,%.3f,%.3f\n", target_speed_left, current_speed_left, motor_command_left);
+        debugf("@Right,,%.3f,%.3f,%.3f\n", target_speed_right, current_speed_right, motor_command_right);
         debug_cnt = 5;
     }
     debug_cnt--;
 
-    //! Motors
-    if(motor_left_command > 0) {
+    //! Clamp motor command
+    if(motor_command_left > MAX_SPEED) { motor_command_left = MAX_SPEED; }
+    else if(motor_command_left < -MAX_SPEED) { motor_command_left = -MAX_SPEED; }
+    else if(motor_command_left > 0.0f && motor_command_left < MIN_SPEED) { motor_command_left = 0.0f; }
+    else if(motor_command_left < 0.0f && motor_command_left > -MIN_SPEED) { motor_command_left = 0.0f; }
+    if(motor_command_right > MAX_SPEED) { motor_command_right = MAX_SPEED; }
+    else if(motor_command_right < -MAX_SPEED) { motor_command_right = -MAX_SPEED; }
+    else if(motor_command_right > 0.0f && motor_command_right < MIN_SPEED) { motor_command_right = 0.0f; }
+    else if(motor_command_right < 0.0f && motor_command_right > -MIN_SPEED) { motor_command_right = 0.0f; }
+
+    // Scale command to percent of max_speed
+    int32_t motor_percent_left = motor_command_left * 100.0f / MAX_SPEED;
+    int32_t motor_percent_right = motor_command_right * 100.0f / MAX_SPEED;
+
+    //! Set Motor commands
+    if(motor_percent_left > 0) {
         motor_set_dir(LEFT_SIDE, MOTOR_DIR_FORWARD);
-        motor_set_speed(LEFT_SIDE, (uint32_t)motor_left_command);
+        motor_set_speed(LEFT_SIDE, motor_percent_left);
     } 
     else {
         motor_set_dir(LEFT_SIDE, MOTOR_DIR_REVERSE);
-        motor_set_speed(LEFT_SIDE, (uint32_t)-motor_left_command);
+        motor_set_speed(LEFT_SIDE, -motor_percent_left);
     }
-    if(motor_right_command > 0) {
+    if(motor_percent_right > 0) {
         motor_set_dir(RIGHT_SIDE, MOTOR_DIR_FORWARD);
-        motor_set_speed(RIGHT_SIDE, (uint32_t)motor_right_command);
+        motor_set_speed(RIGHT_SIDE, motor_percent_right);
     } 
     else {
         motor_set_dir(RIGHT_SIDE, MOTOR_DIR_REVERSE);
-        motor_set_speed(RIGHT_SIDE, (uint32_t)-motor_right_command);
+        motor_set_speed(RIGHT_SIDE, -motor_percent_right);
     }
 
 }
 
 
-extern void set_target_speed(int32_t left_percent, int32_t right_percent) {
-    //! NOTE: speed = [0..MAX_SPEED]
-	target_speed_left = left_percent * MAX_SPEED / 100;
-	target_speed_right = right_percent * MAX_SPEED / 100;
+extern void set_target_speed_percent(int32_t target_percent_left, int32_t target_percent_right) {
+    //! NOTE: speed = [-MAX_SPEED..MAX_SPEED]
+    if(target_percent_left > 100) { target_percent_left = 100; }
+    else if(target_percent_left < -100) { target_percent_left = -100; }
+    if(target_percent_right > 100) { target_percent_right = 100; }
+    else if(target_percent_right < -100) { target_percent_right = -100; }
+
+	target_speed_left = (float)target_percent_left * MAX_SPEED / 100.0f;
+	target_speed_right = (float)target_percent_right * MAX_SPEED / 100.0f;
+    debugf("Set target speed %0.3f-%0.3f", target_speed_left, target_speed_right);
 }
 
 
 
-extern void update_speed_pid(actuator_t side, uint32_t p, uint32_t i, uint32_t d) {
+extern void update_speed_pid(actuator_t side, float p, float i, float d) {
     if(side == LEFT_SIDE || side == BOTH_SIDE) {
         pid_speed_left.proportional_gain = p;
         pid_speed_left.integral_gain = i;
@@ -95,5 +111,5 @@ extern void update_speed_pid(actuator_t side, uint32_t p, uint32_t i, uint32_t d
         pid_speed_right.integral_error = 0;
         debugf("Update Right, ");
     }
-    debugf("p=%lu, i=%lu, d=%lu\n", p, i, d);
+    debugf("p=%f, i=%f, d=%f\n", p, i, d);
 }
