@@ -112,6 +112,7 @@ extern int main(void) {
         if(MOTOR_CONTROL_INTERVAL_MS > 0 && current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL_MS) {
             motor_control_last_execution = current_time;
 
+            // TODO move to a dedicated timer (use the motor timer ?)
             do_control_loop();
 
             // debugf("@Lerp,,1,%u\n", (unsigned)lerp(0, 100, t));

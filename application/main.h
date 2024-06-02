@@ -37,7 +37,7 @@ typedef enum {
 
 
 
-#define MOTOR_CONTROL_INTERVAL_MS      	10
+#define MOTOR_CONTROL_INTERVAL_MS      	5
 // #define MPU_INTERVAL_MS      			500
 #define MPU_INTERVAL_MS      			0
 // #define ALEDS_INTERVAL_MS      			500
@@ -46,6 +46,7 @@ typedef enum {
 #define PI 								(3.141592653f)
 
 //! TODO: Clean up and find a better place for those defines
+#define MAX_ACCEL						(1.5f)		// m/s2
 #define MIN_SPEED						(0.02f)		// m/s
 #define MAX_SPEED						(0.33f)		// m/s
 

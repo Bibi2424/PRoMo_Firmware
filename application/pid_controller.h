@@ -14,7 +14,6 @@ typedef struct {
 	//! Internal stuff
 	float last_error;
 	float integral_error;
-
 } pid_controller_t;
 
 
