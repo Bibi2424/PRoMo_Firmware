@@ -53,7 +53,7 @@ STM32_LIBRAIRIES_INC = $(STM32_LIBRAIRIES_PATH)/STM32F4xx_HAL_Driver/Inc
 STM32_FLASHER_EXEC := "E:/Program Files/STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/"
 
 # If you need to select some libaries....
-USED_LIBS += VL53L0X MPU6050
+USED_LIBS += VL53L0X MPU6050 PRoMo_lib
 # USED_LIBS += test
 APP_LIBS = $(foreach dir, $(USED_LIBS), $(LIB_DIR)/$(dir))
 

@@ -13,7 +13,7 @@
 #include "gpio.h"
 #include "usart.h"
 #include "scheduler.h"
-#include "control_loop.h"
+#include "drive_speed_control.h"
 #include "motor.h"
 #include "encoder.h"
 #include "spi.h"

@@ -4,8 +4,6 @@
 #include "main.h"
 
 
-
-//! NOTE: To avoid floating point, those value will be / 100 when used
 typedef struct {
 	float compute_interval;
 	float proportional_gain;

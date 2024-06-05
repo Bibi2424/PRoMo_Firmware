@@ -16,7 +16,7 @@
 #include "scheduler.h"
 #include "VL53L0X.h"
 #include "sensors.h"
-#include "control_loop.h"
+#include "drive_speed_control.h"
 #include "pid_controller.h"
 #include "ws2812b.h"
 #include "mpu_6050.h"
@@ -84,7 +84,7 @@ extern int main(void) {
     if(radio_init(&radio_settings)) { debugf("\t- NRF Init OK\n"); }
     else { debugf("\t- NRF Init Error\n"); }
 
-    control_loop_init();
+    drive_speed_control_init();
 
     debugf("Init Done\n");
 
@@ -113,7 +113,7 @@ extern int main(void) {
             motor_control_last_execution = current_time;
 
             // TODO move to a dedicated timer (use the motor timer ?)
-            do_control_loop();
+            drive_speed_control_loop();
 
             // debugf("@Lerp,,1,%u\n", (unsigned)lerp(0, 100, t));
             // t += 0.01f;

@@ -35,10 +35,8 @@ typedef struct {
 } control_loop_t;
 
 
-extern void control_loop_init(void);
-extern void do_control_loop(void);
-extern void set_target_speed_percent(int32_t target_left, int32_t target_right);
+extern void control_loop_run(control_loop_t* control);
+extern void set_target(control_loop_t* control, float target);
 
-extern void update_speed_pid(actuator_t side, float p, float i, float d);
 
 #endif

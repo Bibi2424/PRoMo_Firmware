@@ -1,13 +1,11 @@
-#define DEBUG_THIS_FILE DEBUG_CONTROL_LOOP_FILE
+#define DEBUG_THIS_FILE DEBUG_DRIVE_SPEED_CONTROL_FILE
 
 #include <stdint.h>
 #include <stdbool.h>
 
 #include "utils.h"
 #include "main.h"
-
 #include "control_loop.h"
-#include "pid_controller.h"
 #include "encoder.h"
 #include "motor.h"
 
@@ -15,12 +13,10 @@
 #define MAX_ACCEL_PER_LOOP (MAX_ACCEL * (MOTOR_CONTROL_INTERVAL_MS / 1000.0f))
 
 
-volatile static float target_speed_left = 0, target_speed_right = 0;
-volatile static float new_speed_left = 0, new_speed_right = 0;
-
 static float get_speed(unsigned id);
 static void set_speed(unsigned id, float output);
 static float get_time(void);
+
 
 #define DEFAULT_SPEED_PID { \
     .compute_interval = MOTOR_CONTROL_INTERVAL_MS,  \
@@ -40,7 +36,6 @@ static float get_time(void);
     .last_output = 0.0f,        \
     .last_time_run = 0.0f
 
-
 static control_loop_t control_loops[2] = {
     {
         .name = "Left",
@@ -53,40 +48,6 @@ static control_loop_t control_loops[2] = {
         DEFAULT_CONTROL_LOOP_PARAMS,
     }
 };
-
-
-extern void control_loop_init(void) {
-    debugf("&Left,t,target_speed,current_speed,motor_command\n");
-    debugf("&Right,t,target_speed,current_speed,motor_command\n");
-}
-
-
-extern void control_loop_run(control_loop_t* control) {
-    float now = control->get_time();
-    // TODO: Input filtering
-
-    float feedback = control->get_feedback(control->id);
-
-    control->pid.compute_interval = now - control->last_time_run;
-    float output = pid_compute(&control->pid, control->target, feedback);
-
-    //! Clamp output
-    if(output > control->max_output) { output = control->max_output; }
-    else if(output < -control->max_output) { output = -control->max_output; }
-    else if(output > 0.0f && output < control->min_output) { output = 0.0f; }
-    else if(output < 0.0f && output > -control->min_output) { output = 0.0f; }
-
-    control->set_output(control->id, output);
-
-    control->last_output = output;
-    control->last_feedback = feedback;
-    control->last_time_run = now;
-}
-
-
-extern void set_target(control_loop_t* control, float target) {
-    control->target = target;
-}
 
 
 static float get_speed(unsigned id) {
@@ -130,7 +91,16 @@ static float get_time(void) {
 }
 
 
-extern void do_control_loop(void) {
+extern void drive_speed_control_init(void) {
+    debugf("&Left,t,target_speed,current_speed,motor_command\n");
+    debugf("&Right,t,target_speed,current_speed,motor_command\n");
+}
+
+
+
+volatile static float target_speed_left = 0, target_speed_right = 0;
+volatile static float new_speed_left = 0, new_speed_right = 0;
+extern void drive_speed_control_loop(void) {
     //! Clamp target speed with MAX_ACCEL
     if(new_speed_left - target_speed_left > 0.0f) {
         if(new_speed_left - target_speed_left > MAX_ACCEL_PER_LOOP) {
