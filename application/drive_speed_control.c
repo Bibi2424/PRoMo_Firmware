@@ -40,50 +40,30 @@ static void set_speed(unsigned id, float output);
 static control_loop_t control_loops[2] = {
     {
         .name = "Left",
-        .id = 0,
+        .id = LEFT_SIDE,
         DEFAULT_CONTROL_LOOP_PARAMS,
     },
     {
         .name = "Right",
-        .id = 1,
+        .id = RIGHT_SIDE,
         DEFAULT_CONTROL_LOOP_PARAMS,
     }
 };
+static control_loop_t *speed_left = &control_loops[0], *speed_right = &control_loops[1];
+
+volatile static float target_speed_left = 0, target_speed_right = 0;
 
 
 static float get_speed(unsigned id) {
-    switch(id) {
-    case 0:
-        return encoder_get_speed(LEFT_SIDE, WHEEL_RADIUS, SENSOR_TICK_TO_RAD);
-        break;
-    case 1:
-        return encoder_get_speed(RIGHT_SIDE, WHEEL_RADIUS, SENSOR_TICK_TO_RAD);
-        break;
-    default:
-        return 0.0f;
-        break;
-    }
+	return encoder_get_speed(id, WHEEL_RADIUS, SENSOR_TICK_TO_RAD);
 }
 
 
 static void set_speed(unsigned id, float output) {
     int32_t output_percent = output * 100.0f / MAX_SPEED;
-    actuator_t side; 
-    switch(id) {
-    case 0:
-        side = LEFT_SIDE;
-        break;
-    case 1:
-        side = RIGHT_SIDE;
-        break;
-    default:
-        side = NO_SIDE;
-        break;
-    }
-    if(side == NO_SIDE) { return; }
 
-    motor_set_dir(side, (output > 0)? MOTOR_DIR_FORWARD: MOTOR_DIR_REVERSE);
-    motor_set_speed(side, (output > 0)? output_percent: -output_percent);
+    motor_set_dir(id, (output > 0)? MOTOR_DIR_FORWARD: MOTOR_DIR_REVERSE);
+    motor_set_speed(id, (output > 0)? output_percent: -output_percent);
 }
 
 
@@ -93,12 +73,14 @@ extern void drive_speed_control_init(void) {
 }
 
 
+static inline void debug_control(control_loop_t* control) {
+	debugf("@%s,%0.3f,%.3f,%.3f,%.3f\n", control->name, control->last_time_run, control->target, control->last_feedback, control->last_output);
+}
 
-volatile static float target_speed_left = 0, target_speed_right = 0;
 
 extern void drive_speed_control_loop(void) {
-    set_target(&control_loops[0], target_speed_left);
-    set_target(&control_loops[1], target_speed_right);
+    set_target(speed_left, target_speed_left);
+    set_target(speed_right, target_speed_right);
 
     for(unsigned i = 0; i < 2; i++) {
         control_loop_run(&control_loops[i], (float)millis() / 1000.0f);
@@ -106,8 +88,8 @@ extern void drive_speed_control_loop(void) {
 
     static uint8_t debug_cnt = 0;
     if(debug_cnt == 0) {
-        debugf("@Left,,%.3f,%.3f,%.3f\n", control_loops[0].target, control_loops[0].last_feedback, control_loops[0].last_output);
-        debugf("@Right,,%.3f,%.3f,%.3f\n", control_loops[0].target, control_loops[0].last_feedback, control_loops[0].last_output);
+    	debug_control(speed_left);
+    	debug_control(speed_right);
         debug_cnt = 4;
     }
     debug_cnt--;

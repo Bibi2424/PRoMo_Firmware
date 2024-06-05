@@ -259,6 +259,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         if not timestamp:
             timestamp = time.time()
+        else:
+            timestamp = float(timestamp)
 
         try:
             data = [float(x) for x in data]
