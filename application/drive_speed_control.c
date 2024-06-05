@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include "utils.h"
 #include "main.h"
@@ -15,7 +16,6 @@
 
 static float get_speed(unsigned id);
 static void set_speed(unsigned id, float output);
-static float get_time(void);
 
 
 #define DEFAULT_SPEED_PID { \
@@ -26,12 +26,13 @@ static float get_time(void);
 }
 #define DEFAULT_CONTROL_LOOP_PARAMS \
     .target = 0.0f,             \
+    .max_input_derivative = MAX_ACCEL_PER_LOOP, \
     .min_output = MIN_SPEED,    \
     .max_output = MAX_SPEED,    \
     .pid = DEFAULT_SPEED_PID,   \
     .get_feedback = get_speed,  \
     .set_output = set_speed,    \
-    .get_time = get_time,       \
+    .new_target = 0.0f,      	\
     .last_feedback = 0.0f,      \
     .last_output = 0.0f,        \
     .last_time_run = 0.0f
@@ -86,11 +87,6 @@ static void set_speed(unsigned id, float output) {
 }
 
 
-static float get_time(void) {
-    return (float)millis() / 1000.0f;
-}
-
-
 extern void drive_speed_control_init(void) {
     debugf("&Left,t,target_speed,current_speed,motor_command\n");
     debugf("&Right,t,target_speed,current_speed,motor_command\n");
@@ -99,47 +95,13 @@ extern void drive_speed_control_init(void) {
 
 
 volatile static float target_speed_left = 0, target_speed_right = 0;
-volatile static float new_speed_left = 0, new_speed_right = 0;
-extern void drive_speed_control_loop(void) {
-    //! Clamp target speed with MAX_ACCEL
-    if(new_speed_left - target_speed_left > 0.0f) {
-        if(new_speed_left - target_speed_left > MAX_ACCEL_PER_LOOP) {
-            target_speed_left += MAX_ACCEL_PER_LOOP;
-        }
-        else {
-            target_speed_left = new_speed_left;
-        }
-    }
-    else {
-        if(new_speed_left - target_speed_left < -MAX_ACCEL_PER_LOOP) {
-            target_speed_left -= MAX_ACCEL_PER_LOOP;
-        }
-        else {
-            target_speed_left = new_speed_left;
-        }
-    }
-    if(new_speed_right - target_speed_right > 0.0f) {
-        if(new_speed_right - target_speed_right > MAX_ACCEL_PER_LOOP) {
-            target_speed_right += MAX_ACCEL_PER_LOOP;
-        }
-        else {
-            target_speed_right = new_speed_right;
-        }
-    }
-    else {
-        if(new_speed_right - target_speed_right < -MAX_ACCEL_PER_LOOP) {
-            target_speed_right -= MAX_ACCEL_PER_LOOP;
-        }
-        else {
-            target_speed_right = new_speed_right;
-        }
-    }
 
+extern void drive_speed_control_loop(void) {
     set_target(&control_loops[0], target_speed_left);
-    set_target(&control_loops[1], target_speed_left);
+    set_target(&control_loops[1], target_speed_right);
 
     for(unsigned i = 0; i < 2; i++) {
-        control_loop_run(&control_loops[i]);
+        control_loop_run(&control_loops[i], (float)millis() / 1000.0f);
     }
 
     static uint8_t debug_cnt = 0;
@@ -159,9 +121,9 @@ extern void set_target_speed_percent(int32_t target_percent_left, int32_t target
     if(target_percent_right > 100) { target_percent_right = 100; }
     else if(target_percent_right < -100) { target_percent_right = -100; }
 
-	new_speed_left = (float)target_percent_left * MAX_SPEED / 100.0f;
-	new_speed_right = (float)target_percent_right * MAX_SPEED / 100.0f;
-    debugf("@TS,,%0.3f,%0.3f\n", new_speed_left, new_speed_right);
+	target_speed_left = (float)target_percent_left * MAX_SPEED / 100.0f;
+	target_speed_right = (float)target_percent_right * MAX_SPEED / 100.0f;
+    debugf("@TS,,%0.3f,%0.3f\n", target_speed_left, target_speed_right);
 }
 
 

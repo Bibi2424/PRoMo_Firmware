@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include "utils.h"
 #include "main.h"
@@ -10,9 +11,32 @@
 #include "motor.h"
 
 
-extern void control_loop_run(control_loop_t* control) {
-    float now = control->get_time();
-    // TODO: Input filtering
+static float control_loop_filter_input(control_loop_t* control) {
+    if(control->max_input_derivative == NAN) {
+        return control->new_target;
+    }
+
+    if(control->new_target - control->target > 0.0f) {
+        if(control->new_target - control->target > control->max_input_derivative) {
+            return control->target + control->max_input_derivative;
+        }
+        else {
+            return control->new_target;
+        }
+    }
+    else {
+        if(control->new_target - control->target < -control->max_input_derivative) {
+            return control->target - control->max_input_derivative;
+        }
+        else {
+            return control->new_target;
+        }
+    }
+}
+
+
+extern void control_loop_run(control_loop_t* control, float now) {
+    control->target = control_loop_filter_input(control);
 
     float feedback = control->get_feedback(control->id);
 
@@ -34,6 +58,6 @@ extern void control_loop_run(control_loop_t* control) {
 
 
 extern void set_target(control_loop_t* control, float target) {
-    control->target = target;
+    control->new_target = target;
 }
 

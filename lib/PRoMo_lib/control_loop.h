@@ -10,7 +10,6 @@
 
 typedef float (*cb_get_feedback_t)(unsigned id);
 typedef void (*cb_set_output_t)(unsigned id, float output);
-typedef float (*cb_get_time_t)(void);
 
 
 typedef struct {
@@ -19,6 +18,7 @@ typedef struct {
 
 	float target;
 
+	float max_input_derivative;
 	float min_output;
 	float max_output;
 
@@ -26,16 +26,16 @@ typedef struct {
 
 	cb_get_feedback_t get_feedback;
 	cb_set_output_t set_output;
-	cb_get_time_t get_time;
 
 	//Internal
+	float new_target;
 	float last_feedback;
 	float last_output;
 	float last_time_run;
 } control_loop_t;
 
 
-extern void control_loop_run(control_loop_t* control);
+extern void control_loop_run(control_loop_t* control, float now);
 extern void set_target(control_loop_t* control, float target);
 
 
