@@ -17,19 +17,116 @@
 
 volatile static float target_speed_left = 0, target_speed_right = 0;
 volatile static float new_speed_left = 0, new_speed_right = 0;
+
+static float get_speed(unsigned id);
+static void set_speed(unsigned id, float output);
+static float get_time(void);
+
 #define DEFAULT_SPEED_PID { \
     .compute_interval = MOTOR_CONTROL_INTERVAL_MS,  \
     .proportional_gain = 1.5f,    \
     .integral_gain = 0.3f,        \
     .derivative_gain = 0.0f       \
 }
-static pid_controller_t pid_speed_left = DEFAULT_SPEED_PID;
-static pid_controller_t pid_speed_right = DEFAULT_SPEED_PID;
+#define DEFAULT_CONTROL_LOOP_PARAMS \
+    .target = 0.0f,             \
+    .min_output = MIN_SPEED,    \
+    .max_output = MAX_SPEED,    \
+    .pid = DEFAULT_SPEED_PID,   \
+    .get_feedback = get_speed,  \
+    .set_output = set_speed,    \
+    .get_time = get_time,       \
+    .last_feedback = 0.0f,      \
+    .last_output = 0.0f,        \
+    .last_time_run = 0.0f
+
+
+static control_loop_t control_loops[2] = {
+    {
+        .name = "Left",
+        .id = 0,
+        DEFAULT_CONTROL_LOOP_PARAMS,
+    },
+    {
+        .name = "Right",
+        .id = 1,
+        DEFAULT_CONTROL_LOOP_PARAMS,
+    }
+};
 
 
 extern void control_loop_init(void) {
     debugf("&Left,t,target_speed,current_speed,motor_command\n");
     debugf("&Right,t,target_speed,current_speed,motor_command\n");
+}
+
+
+extern void control_loop_run(control_loop_t* control) {
+    float now = control->get_time();
+    // TODO: Input filtering
+
+    float feedback = control->get_feedback(control->id);
+
+    control->pid.compute_interval = now - control->last_time_run;
+    float output = pid_compute(&control->pid, control->target, feedback);
+
+    //! Clamp output
+    if(output > control->max_output) { output = control->max_output; }
+    else if(output < -control->max_output) { output = -control->max_output; }
+    else if(output > 0.0f && output < control->min_output) { output = 0.0f; }
+    else if(output < 0.0f && output > -control->min_output) { output = 0.0f; }
+
+    control->set_output(control->id, output);
+
+    control->last_output = output;
+    control->last_feedback = feedback;
+    control->last_time_run = now;
+}
+
+
+extern void set_target(control_loop_t* control, float target) {
+    control->target = target;
+}
+
+
+static float get_speed(unsigned id) {
+    switch(id) {
+    case 0:
+        return encoder_get_speed(LEFT_SIDE, WHEEL_RADIUS, SENSOR_TICK_TO_RAD);
+        break;
+    case 1:
+        return encoder_get_speed(RIGHT_SIDE, WHEEL_RADIUS, SENSOR_TICK_TO_RAD);
+        break;
+    default:
+        return 0.0f;
+        break;
+    }
+}
+
+
+static void set_speed(unsigned id, float output) {
+    int32_t output_percent = output * 100.0f / MAX_SPEED;
+    actuator_t side; 
+    switch(id) {
+    case 0:
+        side = LEFT_SIDE;
+        break;
+    case 1:
+        side = RIGHT_SIDE;
+        break;
+    default:
+        side = NO_SIDE;
+        break;
+    }
+    if(side == NO_SIDE) { return; }
+
+    motor_set_dir(side, (output > 0)? MOTOR_DIR_FORWARD: MOTOR_DIR_REVERSE);
+    motor_set_speed(side, (output > 0)? output_percent: -output_percent);
+}
+
+
+static float get_time(void) {
+    return (float)millis() / 1000.0f;
 }
 
 
@@ -68,53 +165,17 @@ extern void do_control_loop(void) {
         }
     }
 
-    //! Encoder
-    float current_speed_left = encoder_get_speed(LEFT_SIDE, WHEEL_RADIUS, SENSOR_TICK_TO_RAD);
-    float current_speed_right = encoder_get_speed(RIGHT_SIDE, WHEEL_RADIUS, SENSOR_TICK_TO_RAD);
+    set_target(&control_loops[0], target_speed_left);
+    set_target(&control_loops[1], target_speed_left);
 
-    //! PID
-    float motor_command_left = pid_compute(&pid_speed_left, target_speed_left, current_speed_left);
-    float motor_command_right = pid_compute(&pid_speed_right, target_speed_right, current_speed_right);
-
-    //! TODO: Look into anti-windup a bit more
-
-    //! Clamp motor command
-    if(motor_command_left > MAX_SPEED) { motor_command_left = MAX_SPEED; }
-    else if(motor_command_left < -MAX_SPEED) { motor_command_left = -MAX_SPEED; }
-    else if(motor_command_left > 0.0f && motor_command_left < MIN_SPEED) { motor_command_left = 0.0f; }
-    else if(motor_command_left < 0.0f && motor_command_left > -MIN_SPEED) { motor_command_left = 0.0f; }
-    if(motor_command_right > MAX_SPEED) { motor_command_right = MAX_SPEED; }
-    else if(motor_command_right < -MAX_SPEED) { motor_command_right = -MAX_SPEED; }
-    else if(motor_command_right > 0.0f && motor_command_right < MIN_SPEED) { motor_command_right = 0.0f; }
-    else if(motor_command_right < 0.0f && motor_command_right > -MIN_SPEED) { motor_command_right = 0.0f; }
-
-    // Scale command to percent of max_speed
-    int32_t motor_percent_left = motor_command_left * 100.0f / MAX_SPEED;
-    int32_t motor_percent_right = motor_command_right * 100.0f / MAX_SPEED;
-
-    //! Set Motor commands
-    if(motor_percent_left > 0) {
-        motor_set_dir(LEFT_SIDE, MOTOR_DIR_FORWARD);
-        motor_set_speed(LEFT_SIDE, motor_percent_left);
-    } 
-    else {
-        motor_set_dir(LEFT_SIDE, MOTOR_DIR_REVERSE);
-        motor_set_speed(LEFT_SIDE, -motor_percent_left);
-    }
-
-    if(motor_percent_right > 0) {
-        motor_set_dir(RIGHT_SIDE, MOTOR_DIR_FORWARD);
-        motor_set_speed(RIGHT_SIDE, motor_percent_right);
-    } 
-    else {
-        motor_set_dir(RIGHT_SIDE, MOTOR_DIR_REVERSE);
-        motor_set_speed(RIGHT_SIDE, -motor_percent_right);
+    for(unsigned i = 0; i < 2; i++) {
+        control_loop_run(&control_loops[i]);
     }
 
     static uint8_t debug_cnt = 0;
     if(debug_cnt == 0) {
-        debugf("@Left,,%.3f,%.3f,%.3f,%.3f\n", target_speed_left, current_speed_left, motor_command_left, pid_speed_left.integral_error);
-        debugf("@Right,,%.3f,%.3f,%.3f,%.3f\n", target_speed_right, current_speed_right, motor_command_right, pid_speed_left.integral_error);
+        debugf("@Left,,%.3f,%.3f,%.3f\n", control_loops[0].target, control_loops[0].last_feedback, control_loops[0].last_output);
+        debugf("@Right,,%.3f,%.3f,%.3f\n", control_loops[0].target, control_loops[0].last_feedback, control_loops[0].last_output);
         debug_cnt = 4;
     }
     debug_cnt--;
@@ -137,17 +198,17 @@ extern void set_target_speed_percent(int32_t target_percent_left, int32_t target
 
 extern void update_speed_pid(actuator_t side, float p, float i, float d) {
     if(side == LEFT_SIDE || side == BOTH_SIDE) {
-        pid_speed_left.proportional_gain = p;
-        pid_speed_left.integral_gain = i;
-        pid_speed_left.derivative_gain = d;
-        pid_speed_left.integral_error = 0;
+        control_loops[0].pid.proportional_gain = p;
+        control_loops[0].pid.integral_gain = i;
+        control_loops[0].pid.derivative_gain = d;
+        control_loops[0].pid.integral_error = 0;
         debugf("Update Left, p=%f, i=%f, d=%f\n", p, i, d);
     }
     if(side == RIGHT_SIDE || side == BOTH_SIDE) {
-        pid_speed_right.proportional_gain = p;
-        pid_speed_right.integral_gain = i;
-        pid_speed_right.derivative_gain = d;   
-        pid_speed_right.integral_error = 0;
+        control_loops[1].pid.proportional_gain = p;
+        control_loops[1].pid.integral_gain = i;
+        control_loops[1].pid.derivative_gain = d;   
+        control_loops[1].pid.integral_error = 0;
         debugf("Update Right, p=%f, i=%f, d=%f\n", p, i, d);
     }
 }

@@ -30,7 +30,8 @@
 
 //! For motor and encoder
 typedef enum {
-	LEFT_SIDE,
+	NO_SIDE = -1,
+	LEFT_SIDE = 0,
 	RIGHT_SIDE,
 	BOTH_SIDE
 } actuator_t;
