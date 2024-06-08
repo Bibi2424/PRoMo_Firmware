@@ -3,9 +3,7 @@
 // or paraphrased from the API source code, API user manual (UM2039), and the
 // VL53L0X datasheet.
 
-#include <stdint.h>
 #include "i2c.h"
-#include "main.h"
 #include "VL53L0X.h"
 
 //---------------------------------------------------------

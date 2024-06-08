@@ -1,5 +1,6 @@
 #ifndef MPU_6050_H
 #define MPU_6050_H
+
 #include <stdint.h>
 #include <stdbool.h>
 

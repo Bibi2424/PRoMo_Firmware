@@ -1,8 +1,6 @@
 #ifndef PID_H
 #define PID_H
 
-#include "main.h"
-
 
 typedef struct {
 	float compute_interval;

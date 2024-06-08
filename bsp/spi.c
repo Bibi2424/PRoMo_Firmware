@@ -1,8 +1,3 @@
-#define DEBUG_THIS_FILE   DEBUG_SPI_FILE
-
-#include "utils.h"
-#include "debug.h"
-
 #include "spi.h"
 #include "gpio.h"
 
@@ -67,7 +62,7 @@ static bool spi_wait_received(SPI_TypeDef *SPIx, uint32_t timeout) {
 	while(LL_SPI_IsActiveFlag_RXNE(SPIx) == 0 || LL_SPI_IsActiveFlag_BSY(SPIx)) {
         if (!LL_SYSTICK_IsActiveCounterFlag()) { continue; }
         if(--timeout == 0) {
-        	printf("SPI timeout\n");
+        	// printf("SPI timeout\n");
             return false;
         }
     }

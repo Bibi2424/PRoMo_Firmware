@@ -2,13 +2,8 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include "utils.h"
-#include "main.h"
-
 #include "control_loop.h"
 #include "pid_controller.h"
-#include "encoder.h"
-#include "motor.h"
 
 
 static float control_loop_filter_input(control_loop_t* control) {

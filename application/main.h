@@ -7,10 +7,7 @@
 #include <string.h>
 
 #include "debug.h"
-
-#if HW_TYPE == HW_PROMO_V0_1
 #include "promo_v0_1_bsp.h"
-#endif
 
 #define xstr(s) str(s)
 #define str(s) #s

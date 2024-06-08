@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "promo_v0_1_bsp.h"
 
 
 #define USE_DUMMY_IMPLEMENTATION	0

@@ -1,10 +1,5 @@
-#define DEBUG_THIS_FILE	DEBUG_PID_FILE
-
 #include <stdint.h>
 #include <stdbool.h>
-
-#include "utils.h"
-#include "debug.h"
 
 #include "pid_controller.h"
 

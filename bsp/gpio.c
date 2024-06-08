@@ -1,11 +1,3 @@
-#define DEBUG_THIS_FILE	DEBUG_GPIO_FILE
-
-#include <stdint.h>
-#include <stdbool.h>
-
-#include "utils.h"
-#include "debug.h"
-
 #include "gpio.h"
 
 
@@ -78,10 +70,10 @@ void EXTI0_IRQHandler(void)
 	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_0) != RESET)
 	{
 		static uint32_t last_irq_time = 0;
-		if(millis() - last_irq_time > 10) {
-			UserButton_Callback();
-			last_irq_time = millis();
-		}
+		// if(millis() - last_irq_time > 10) {
+		// 	UserButton_Callback();
+		// 	last_irq_time = millis();
+		// }
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_0);
 	}
 }
