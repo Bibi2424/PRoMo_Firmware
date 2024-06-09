@@ -3,8 +3,8 @@
 // or paraphrased from the API source code, API user manual (UM2039), and the
 // VL53L0X datasheet.
 
-#include "i2c.h"
 #include "VL53L0X.h"
+#include "i2c.h"
 
 //---------------------------------------------------------
 // Local variables within this file (private)

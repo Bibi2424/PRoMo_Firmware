@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "promo_v0_1_bsp.h"
+#include "bsp.h"
 
 #define SCL_CLOCK  100000L
 // #define SCL_CLOCK  400000L

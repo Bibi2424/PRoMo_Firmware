@@ -1,15 +1,8 @@
 #include <errno.h>
 #include <stdio.h>
 #include <sys/unistd.h> // STDOUT_FILENO, STDERR_FILENO
-#include "stm32f4xx_ll_usart.h"
-#include "main.h"
 
-#if DEBUG_UART == 1
-   #define D_USART USART1
-#elif DEBUG_UART == 6
-   #define D_USART USART6
-#endif
-
+#include "bsp.h"
 
 
 int _write (int fd, const void *buf, size_t count);

@@ -2,7 +2,9 @@
 *.d
 *.lst
 *.map
+.cache
 
-_build
+compile_commands.json
+build
 STM32_HAL_min/
 tools/serial_plotter/__pycache__/

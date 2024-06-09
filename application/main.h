@@ -7,7 +7,7 @@
 #include <string.h>
 
 #include "debug.h"
-#include "promo_v0_1_bsp.h"
+#include "bsp.h"
 
 #define xstr(s) str(s)
 #define str(s) #s
@@ -15,9 +15,6 @@
 //! Debug
 #ifndef DEBUG_ENABLE
 #define DEBUG_ENABLE 		0
-#endif
-#ifndef DEBUG_UART
-#define DEBUG_UART			6
 #endif
 #ifndef DEBUG_BAUDRATE
 #define DEBUG_BAUDRATE		921600UL
@@ -66,7 +63,6 @@ typedef enum {
 //! NOTE Comment/Uncomment the line below to expanse the "assert_param" macro in the HAL drivers code
 #define USE_FULL_ASSERT    1U 
 
-extern uint32_t millis(void);
 extern void blink_led1(void);
 extern void blink_led2(void);
 

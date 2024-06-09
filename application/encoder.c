@@ -8,6 +8,7 @@
 
 #include "encoder.h"
 #include "gpio.h"
+#include "utils.h"
 
 
 

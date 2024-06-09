@@ -113,5 +113,15 @@
 #define USART6_RX_GPIO_Port GPIOC
 #define USART6_GPIO_Port GPIOC
 
+//! DEBUG
+#ifndef DEBUG_UART
+	#define DEBUG_UART			6
+#endif
+
+#if DEBUG_UART == 1
+   #define D_USART USART1
+#elif DEBUG_UART == 6
+   #define D_USART USART6
+#endif
 
 #endif

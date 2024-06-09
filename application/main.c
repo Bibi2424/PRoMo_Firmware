@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <string.h>
 
 #include "utils.h"
 #include "debug.h"
@@ -12,16 +14,13 @@
 #include "encoder.h"
 #include "motor.h"
 #include "radio.h"
-#include "nrf24l01.h"
 #include "scheduler.h"
 #include "VL53L0X.h"
 #include "sensors.h"
 #include "drive_speed_control.h"
-#include "pid_controller.h"
 #include "ws2812b.h"
 #include "mpu_6050.h"
 
-#include "lerp.h"
 
 static void sensors_get_event(void);
 static void get_data_from_radio(uint8_t *data, uint8_t size);
@@ -29,9 +28,7 @@ static void lost_connection(void);
 static void SystemClock_Config(void);
 
 
-
 volatile static bool gpio_pressed = false;
-
 
 
 extern int main(void) {
@@ -92,9 +89,6 @@ extern int main(void) {
     uint32_t aleds_last_execution = 0;
     uint32_t mpu_last_execution = 0;
 
-    float t = 0.0f;
-    debugf("&Lerp,,command,current\n");
-
     while (1) {
         uint32_t current_time = millis();
 
@@ -114,9 +108,6 @@ extern int main(void) {
 
             // TODO move to a dedicated timer (use the motor timer ?)
             drive_speed_control_loop();
-
-            // debugf("@Lerp,,1,%u\n", (unsigned)lerp(0, 100, t));
-            // t += 0.01f;
         }
 
         if(MPU_INTERVAL_MS > 0 && current_time - mpu_last_execution > MPU_INTERVAL_MS) {
@@ -232,18 +223,6 @@ extern void UserButton_Callback(void) {
 extern void _Error_Handler(char *file, int line) {
     printf("Error\n");
     while(1) {}
-}
-
-
-volatile static uint32_t counter = 0;
-extern uint32_t millis(void) {
-    return counter;
-}
-
-
-void SysTick_Handler(void) {
-    // TOGGLE_PIN(DEBUG_Pin_Port, DEBUG_Pin_1);
-    counter++;
 }
 
 

@@ -8,8 +8,6 @@
 
 
 /*------------------------- DEFINE -------------------------*/
-// #define DBG_USART_BAUDRATE 		115200
-
 #define DEBUG_MAIN_FILE 						1
 #define DEBUG_PROCESS_SERIAL_COMMANDS_FILE		1
 #define DEBUG_USART_FILE						0

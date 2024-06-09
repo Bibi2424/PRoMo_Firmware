@@ -1,7 +1,5 @@
 #include "mpu_6050.h"
 
-#include "promo_v0_1_bsp.h"
-
 #include "i2c.h"
 
 
@@ -148,7 +146,6 @@ static void mpu_6050_gpio_init(void) {
 void EXTI15_10_IRQHandler(void) {
 	if (LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_14) != RESET) {
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_14);
-		// printf("MPU INT\n");
 	}
 }
 

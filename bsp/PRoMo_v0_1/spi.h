@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include "promo_v0_1_bsp.h"
+#include "bsp.h"
 
 #define spi2_init() 							spi_init(SPI2)
 #define spi2_send_byte_waiting(write_data, read_data) \

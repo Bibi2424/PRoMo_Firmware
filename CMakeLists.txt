@@ -22,7 +22,10 @@ endif()
 set(CMAKE_PROJECT_NAME PRoMo_fw)
 
 # Include toolchain file
+set(STM32_HAL_FOLDER STM32_HAL_MIN)
+set(STARTUP_FOLDER bsp/PRoMo_v0_1)
 include("gcc-arm-none-eabi.cmake")
+include("stm32_hal.cmake")
 
 # Enable compile command to ease indexing with e.g. clangd
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
@@ -34,10 +37,7 @@ enable_language(C ASM)
 project(${CMAKE_PROJECT_NAME})
 message("Build type: " ${CMAKE_BUILD_TYPE})
 
-# Add STM32CubeMX generated sources
-add_subdirectory(STM32_HAL_min)
-
-add_subdirectory(bsp)
+add_subdirectory(bsp/PRoMo_v0_1)
 add_subdirectory(lib/MPU6050)
 add_subdirectory(lib/PRoMo_lib)
 add_subdirectory(lib/VL53L0X)

@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "utils.h"
+
 //------------------------------------------------------------
 // For quick and dirty C++ compatibility
 //------------------------------------------------------------
@@ -13,8 +15,6 @@
 #ifndef true
 #define false 0
 #endif
-
-extern uint32_t millis(void);
 
 //------------------------------------------------------------
 // Defines
