@@ -35,7 +35,7 @@ BUILD_DIR = _build
 
 APP_DIR = application
 
-BSP_DIR = bsp
+BSP_DIR = bsp/PRoMo_v0_1
 
 LIB_DIR = lib
 
@@ -85,9 +85,9 @@ C_SOURCES += stm32f4xx_ll_exti.c
 
 # ASM sources
 ifeq ($(MCU_TYPE), STM32F405) 
-ASM_SOURCES =  startup_stm32f405xx.s
+ASM_SOURCES =  $(BSP_DIR)/startup_stm32f405xx.s
 else ifeq ($(MCU_TYPE), STM32F411)
-ASM_SOURCES =  startup_stm32f411xe.s
+ASM_SOURCES =  $(BSP_DIR)/startup_stm32f411xe.s
 endif
 
 # AS includes
@@ -229,7 +229,7 @@ $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
 	@echo "   [LD]" $@
-	@$(CC) $(OBJECTS) $(LDFLAGS) -o $@
+	$(CC) $(OBJECTS) $(LDFLAGS) -o $@
 	@echo "   [SIZE]"
 	@$(SZ) $@
 	@echo ""

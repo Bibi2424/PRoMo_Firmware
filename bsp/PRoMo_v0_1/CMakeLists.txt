@@ -4,7 +4,6 @@ add_library(bsp
 	spi.c
 	ws2812b.c
 	utils.c
-    syscalls.c
     system_stm32f4xx.c
 )
 

@@ -25,6 +25,7 @@
 static void sensors_get_event(void);
 static void get_data_from_radio(uint8_t *data, uint8_t size);
 static void lost_connection(void);
+static void user_button_cb(gpio_interrupt_type_t type);
 static void SystemClock_Config(void);
 
 
@@ -43,6 +44,7 @@ extern int main(void) {
     NVIC_EnableIRQ(SysTick_IRQn);
 
     MX_GPIO_Init();
+    gpio__register_callback(user_button_cb);
     #if(DEBUG_UART == 1)
         MX_USART1_UART_Init(DEBUG_BAUDRATE);
     #elif(DEBUG_UART == 6)
@@ -215,8 +217,10 @@ static void SystemClock_Config(void) {
 }
 
 
-extern void UserButton_Callback(void) {
-    gpio_pressed = true;
+static void user_button_cb(gpio_interrupt_type_t type) {
+    if(type == GPIO_INTERRUPT_FALLING) {
+        gpio_pressed = true;
+    }
 }
 
 

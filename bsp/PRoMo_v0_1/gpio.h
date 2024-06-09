@@ -10,6 +10,14 @@
 #define TOGGLE_PIN(PORT, PIN)		LL_GPIO_TogglePin(PORT, PIN)
 
 
+typedef enum {
+	GPIO_INTERRUPT_RISING,
+	GPIO_INTERRUPT_FALLING
+} gpio_interrupt_type_t;
+
+typedef void (*gpio_interrupt_cb)(gpio_interrupt_type_t);
+
 void MX_GPIO_Init(void);
+void gpio__register_callback(gpio_interrupt_cb cb);
 
 #endif

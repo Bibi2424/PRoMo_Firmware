@@ -8,8 +8,7 @@ add_executable( ${CMAKE_PROJECT_NAME}
         radio.c
         scheduler.c
         sensors.c
-        # syscalls.c
-        # system_stm32f4xx.c
+        syscalls.c
         usart.c
 )
 
@@ -25,3 +24,10 @@ target_link_libraries( ${CMAKE_PROJECT_NAME} PUBLIC
 target_include_directories( ${CMAKE_PROJECT_NAME} PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}
 )
+
+
+# Create binary file
+add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -O binary ${CMAKE_PROJECT_NAME}.elf ${CMAKE_PROJECT_NAME}.bin)
+add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -O ihex ${CMAKE_PROJECT_NAME}.elf ${CMAKE_PROJECT_NAME}.hex)
+add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_OBJDUMP} -d -S ${CMAKE_PROJECT_NAME}.elf > ${CMAKE_PROJECT_NAME}.dmp)
+add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_SIZE} ${CMAKE_PROJECT_NAME}.elf)

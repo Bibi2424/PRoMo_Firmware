@@ -54,4 +54,11 @@ if(CMAKE_C_STANDARD LESS 11)
     message(ERROR "Generated code requires C11 or higher")
 endif()
 
-
+# Add cli commands
+set(STM32_FLASHER_EXEC "E:/Program Files/STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/")
+add_custom_target(
+    flash
+    COMMAND ${STM32_FLASHER_EXEC}STM32_Programmer_CLI.exe
+    ARGS -c port=SWD -d application/${CMAKE_PROJECT_NAME}.hex 0x08000000 -rst
+    DEPENDS ${CMAKE_PROJECT_NAME}.elf
+)

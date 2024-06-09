@@ -12,16 +12,6 @@
 #define xstr(s) str(s)
 #define str(s) #s
 
-//! Debug
-#ifndef DEBUG_ENABLE
-#define DEBUG_ENABLE 		0
-#endif
-#ifndef DEBUG_BAUDRATE
-#define DEBUG_BAUDRATE		921600UL
-// #define DEBUG_BAUDRATE		230400UL
-#endif
-
-
 //! For motor and encoder
 typedef enum {
 	NO_SIDE = -1,
@@ -66,7 +56,6 @@ typedef enum {
 extern void blink_led1(void);
 extern void blink_led2(void);
 
-extern void UserButton_Callback(void);
 extern void _Error_Handler(char *, int);
 
 #define Error_Handler() _Error_Handler(__FILE__, __LINE__)

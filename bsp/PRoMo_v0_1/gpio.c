@@ -1,5 +1,10 @@
+#include <stddef.h>
+
 #include "gpio.h"
 #include "utils.h"
+
+
+static gpio_interrupt_cb gpio_int_cb = NULL;
 
 
 void MX_GPIO_Init(void) {
@@ -59,20 +64,23 @@ void MX_GPIO_Init(void) {
 	LL_GPIO_Init(DEBUG_Pin_Port, &GPIO_InitStruct);
 	SET_PIN(DEBUG_Pin_Port, DEBUG_Pin_1, 0);
 	SET_PIN(DEBUG_Pin_Port, DEBUG_Pin_2, 0);
+}
 
-
+//! TODO: Expand
+void gpio__register_callback(gpio_interrupt_cb cb) {
+	gpio_int_cb = cb;
 }
 
 
 void EXTI0_IRQHandler(void)
 {
-	// debugf("Push\r\n");
 	/* Manage Flags */
 	if(LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_0) != RESET)
 	{
 		static uint32_t last_irq_time = 0;
 		if(millis() - last_irq_time > 10) {
-			UserButton_Callback();
+			// UserButton_Callback(GPIO_INTERRUPT_FALLING);
+			if(gpio_int_cb != NULL) { gpio_int_cb(GPIO_INTERRUPT_FALLING); }
 			last_irq_time = millis();
 		}
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_0);
