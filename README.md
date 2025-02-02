@@ -22,3 +22,8 @@ Update the PATH for that in the Makefile also
  - Datasheet of the uc : [STM32F411xE Datasheet](https://www.st.com/content/ccc/resource/technical/document/datasheet/b3/a5/46/3b/b4/e5/4c/85/DM00115249.pdf/files/DM00115249.pdf/jcr:content/translations/en.DM00115249.pdf). You can found the list of the pins alternate functions here.
  - You can also found the HAL User Manual with the STM32CubeF4 in _\<User>/STM32Cube/Repository/STM32Cube_FW_F4_V1.21.0/Drivers/STM32F4xx_HAL_Driver/STM32F411xE_User_Manual.chm_. You can see the details of every HAL functions and a list of the structures fields and possible values.
 
+## PyQt Plotter
+
+```python
+python .\pyqt_plotter.py -p COM8 --auto-connect -n Left Right
+```

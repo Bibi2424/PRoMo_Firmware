@@ -115,7 +115,7 @@ class MyDynamicMplCanvas(FigureCanvas):
         self.y_list = []
         self.plots = []
         self.is_paused = False
-        self.y_limit = [-200, 4096]
+        self.y_limit = [-200, 200]
 
         timer = QtCore.QTimer(self)
         timer.timeout.connect(self.update_figure)
@@ -169,7 +169,7 @@ class MyDynamicMplCanvas(FigureCanvas):
 
 
 class ApplicationWindow(QtWidgets.QMainWindow):
-    def __init__(self, plot_names, use_serial = False, show_data_draw = True, auto_connect = False):
+    def __init__(self, plot_names, endpoint = "COM8", detail = 921600, use_mqtt = False, show_data_draw = True, auto_connect = False):
         QtWidgets.QMainWindow.__init__(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
         self.setWindowTitle("Serial Plotter")
@@ -213,8 +213,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         h.addLayout(self.graphs_layout)
 
-        if use_serial:
-            self.ser = SerialWidget(window=self, callback=self.get_data, show_data_draw = show_data_draw)
+        if not use_mqtt:
+            self.ser = SerialWidget(window=self, port=endpoint, baudrate=detail, callback=self.get_data, show_data_draw = show_data_draw)
         else:
             self.ser = MQTTWidget(window=self, callback=self.get_data, show_data_draw = show_data_draw)
         h.addWidget(self.ser)
@@ -223,7 +223,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.main_widget)
 
         if auto_connect:
-            self.ser.on_connect(True)
+            self.ser.connect_button.click()
 
 
     def pause_all(self, is_paused):
@@ -301,15 +301,20 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 def main():
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--names', '-n', nargs='*', default=[''], help='List of names for the graph')
+    parser.add_argument('--names', '-n', nargs='*', default=[], help='List of names for the graph')
     parser.add_argument('--show-data-draw', action='store_false', help='Will prevent graph data to appear in serial console')
-    parser.add_argument('--use-serial', action='store_true', help='By default, will use mqtt, set this to use serial')
+    parser.add_argument('--port', '-p', default=None, help='serial port')
+    parser.add_argument('--baudrate', '-b', type=int, default=921600, help='Baudrate for the serial port')
+    parser.add_argument('--use-mqtt', action='store_true', help='By default, will use serial, set this to use mqtt')
     parser.add_argument('--auto-connect', action='store_true', help='Use this flag to connect on open')
     args = parser.parse_args()
 
     qApp = QtWidgets.QApplication(sys.argv)
 
-    aw = ApplicationWindow(args.names, use_serial=args.use_serial, show_data_draw = args.show_data_draw, auto_connect = args.auto_connect)
+    if args.port:
+        aw = ApplicationWindow(args.names, endpoint=args.port, detail=args.baudrate, use_mqtt=args.use_mqtt, show_data_draw = args.show_data_draw, auto_connect = args.auto_connect)
+    else:
+        aw = ApplicationWindow(args.names, use_mqtt=args.use_mqtt, show_data_draw = args.show_data_draw, auto_connect = args.auto_connect)
     # aw.setWindowTitle("%s" % progname)
     aw.show()
     sys.exit(qApp.exec_())

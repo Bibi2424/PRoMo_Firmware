@@ -8,7 +8,7 @@ from PyQt5 import QtCore, QtWidgets, QtSerialPort
 
 
 class SerialWidget(QtWidgets.QWidget):
-    def __init__(self, window=None, callback=None, show_data_draw = True):
+    def __init__(self, window=None, port = "COM8", baudrate = 921600, callback=None, show_data_draw = True):
         super(SerialWidget, self).__init__(window)
         self.window = window
         self.callback = callback
@@ -16,11 +16,12 @@ class SerialWidget(QtWidgets.QWidget):
 
         self.port_input = QtWidgets.QLineEdit()
         self.baudrate_input = QtWidgets.QLineEdit()
+        
         self.message_le = QtWidgets.QLineEdit()
-        self.send_btn = QtWidgets.QPushButton(
-            text="Send",
-            clicked=lambda: self.write(self.message_le.text())
-        )
+        self.send_btn = QtWidgets.QPushButton(text="Send")
+        self.message_le.returnPressed.connect(self.send_btn.click)
+        self.send_btn.clicked.connect(lambda: self.write(self.message_le.text()))
+
         self.output_text = QtWidgets.QTextEdit(readOnly=True)
         self.connect_button = QtWidgets.QPushButton(
             text="Connect", 
@@ -42,12 +43,12 @@ class SerialWidget(QtWidgets.QWidget):
         lay.addWidget(self.output_text)
 
         self.serial = QtSerialPort.QSerialPort(
-            'COM17',
-            baudRate=921600,
+            port,
+            baudRate=baudrate,
             readyRead=self.receive
         )
-        self.port_input.setText('COM17')
-        self.baudrate_input.setText('921600')
+        self.port_input.setText(port)
+        self.baudrate_input.setText(str(baudrate))
 
         self.text_received = deque(maxlen=100)
 
@@ -82,6 +83,7 @@ class SerialWidget(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot()
     def write(self, data):
+        data = data.strip() + '\n'
         self.serial.write(data.encode())
 
 
