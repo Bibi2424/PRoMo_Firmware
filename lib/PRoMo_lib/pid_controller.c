@@ -11,6 +11,12 @@ extern float pid_compute(pid_controller_t *pid, float set_point, float current_v
 	float p_term = pid->proportional_gain * error;
 	
 	pid->integral_error += error;
+	if(pid->integral_error > 0 && pid->integral_error > pid->max_integral_error) {
+		pid->integral_error = pid->max_integral_error; 
+	}
+	else if(pid->integral_error < 0 && pid->integral_error < -pid->max_integral_error) {
+		pid->integral_error = -pid->max_integral_error; 
+	}
 	float i_term = pid->integral_gain * pid->integral_error;
 
 	float d_term = pid->derivative_gain * (error - pid->last_error);

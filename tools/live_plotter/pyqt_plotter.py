@@ -115,7 +115,7 @@ class MyDynamicMplCanvas(FigureCanvas):
         self.y_list = []
         self.plots = []
         self.is_paused = False
-        self.y_limit = [-200, 200]
+        self.y_limit = [-1, 1]
 
         timer = QtCore.QTimer(self)
         timer.timeout.connect(self.update_figure)
@@ -190,6 +190,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         h = QtWidgets.QHBoxLayout(self.main_widget)
 
         self.graphs_layout = QtWidgets.QVBoxLayout()
+        self.graphs_layout.addStretch(0)
 
         target_speed = TargetSpeedWidget(get_values_cb = self.send_target_speed)
         self.graphs_layout.addWidget(target_speed)
@@ -201,7 +202,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         graph_control = GraphControl(reset_cb = self.reset_all, pause_cb = self.pause_all)
         self.graphs_layout.addWidget(graph_control)
 
-
+        self.graphs_layout.addStretch(1)
         # TODO: Change to a collection that preserve order
         self.plots = {}
 
@@ -210,6 +211,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.graphs_layout.addWidget(dc)
             self.plots[name] = dc.get_canvas()
             print(f'Creating plot: \"{name}\"')
+            
+        self.graphs_layout.addStretch(1)
 
         h.addLayout(self.graphs_layout)
 

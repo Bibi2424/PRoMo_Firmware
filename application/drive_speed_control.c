@@ -19,10 +19,10 @@ static void set_speed(unsigned id, float output);
 
 
 #define DEFAULT_SPEED_PID { \
-    .compute_interval = MOTOR_CONTROL_INTERVAL_MS,  \
     .proportional_gain = 1.5f,    \
     .integral_gain = 0.3f,        \
-    .derivative_gain = 0.0f       \
+    .derivative_gain = 0.0f,      \
+    .max_integral_error = 1.0f,  \
 }
 #define DEFAULT_CONTROL_LOOP_PARAMS \
     .target = 0.0f,             \
@@ -74,7 +74,8 @@ extern void drive_speed_control_init(void) {
 
 
 static inline void debug_control(control_loop_t* control) {
-	debugf("@%s,%0.3f,%.3f,%.3f,%.3f\n", control->name, control->last_time_run, control->target, control->last_feedback, control->last_output);
+	debugf("@%s,,%.4f,%.4f,%.4f,%.4f\n", control->name,
+        control->target, control->last_feedback, control->last_output, control->pid.integral_error);
 }
 
 

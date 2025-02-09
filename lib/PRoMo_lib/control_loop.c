@@ -35,7 +35,8 @@ extern void control_loop_run(control_loop_t* control, float now) {
 
     float feedback = control->get_feedback(control->id);
 
-    control->pid.compute_interval = now - control->last_time_run;
+    // TODO: Do something about compute interval to compute derivative term
+    float compute_interval = now - control->last_time_run;
     float output = pid_compute(&control->pid, control->target, feedback);
 
     //! Clamp output

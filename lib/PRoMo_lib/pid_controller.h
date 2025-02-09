@@ -3,10 +3,10 @@
 
 
 typedef struct {
-	float compute_interval;
 	float proportional_gain;
 	float integral_gain;
 	float derivative_gain;
+	float max_integral_error;
 	//! Internal stuff
 	float last_error;
 	float integral_error;
