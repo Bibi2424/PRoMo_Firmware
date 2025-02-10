@@ -10,6 +10,7 @@
 
 #include "process_serial_commands.h"
 #include "main.h"
+#include "time.h"
 #include "gpio.h"
 #include "usart.h"
 #include "scheduler.h"

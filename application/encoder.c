@@ -8,7 +8,7 @@
 
 #include "encoder.h"
 #include "gpio.h"
-#include "utils.h"
+#include "time.h"
 
 
 
@@ -92,7 +92,7 @@ extern float encoder_get_speed(actuator_t side, float wheel_radius, float tick_p
 	static float last_compute_time_left = 0, last_compute_time_right = 0;
 
 	float speed = 0;
-	float now = (float)millis() / 1000.0f;
+	float now = get_time_microsecond() / 1000000.0f;
 
 	if(side == LEFT_SIDE) {
 		int16_t encoder_count = encoder_get_tick_count(LEFT_SIDE);
@@ -104,8 +104,10 @@ extern float encoder_get_speed(actuator_t side, float wheel_radius, float tick_p
 		#endif
 		last_encoder_count_left = encoder_count;
 
-		speed = convert_to_m_per_s(speed, now - last_compute_time_left, wheel_radius, tick_per_wheel_turn_div_pi);
+		float elapse = (now - last_compute_time_left);
+		if(now < last_compute_time_left) { elapse += 1.0f; }
 		last_compute_time_left = now;
+		speed = convert_to_m_per_s(speed, elapse, wheel_radius, tick_per_wheel_turn_div_pi);
 
 	}
 	else if(side == RIGHT_SIDE) {
@@ -118,8 +120,10 @@ extern float encoder_get_speed(actuator_t side, float wheel_radius, float tick_p
 		#endif
 		last_encoder_count_right = encoder_count;
 
-		speed = convert_to_m_per_s(speed, now - last_compute_time_right, wheel_radius, tick_per_wheel_turn_div_pi);
+		float elapse = (now - last_compute_time_right);
+		if(now < last_compute_time_right) { elapse += 1.0f; }
 		last_compute_time_right = now;
+		speed = convert_to_m_per_s(speed, elapse, wheel_radius, tick_per_wheel_turn_div_pi);
 	}
 
 	return speed;

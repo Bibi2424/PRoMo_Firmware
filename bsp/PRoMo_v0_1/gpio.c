@@ -1,7 +1,7 @@
 #include <stddef.h>
 
 #include "gpio.h"
-#include "utils.h"
+#include "time.h"
 
 
 static gpio_interrupt_cb gpio_int_cb = NULL;

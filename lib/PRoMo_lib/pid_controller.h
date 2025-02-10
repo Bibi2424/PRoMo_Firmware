@@ -8,6 +8,7 @@ typedef struct {
 	float derivative_gain;
 	float max_integral_error;
 	//! Internal stuff
+	float last_run;
 	float last_error;
 	float integral_error;
 } pid_controller_t;

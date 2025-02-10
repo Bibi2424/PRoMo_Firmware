@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "utils.h"
+#include "time.h"
 
 //------------------------------------------------------------
 // For quick and dirty C++ compatibility

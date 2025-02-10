@@ -8,6 +8,7 @@
 #include "debug.h"
 
 #include "nrf24l01.h"
+#include "time.h"
 #include "spi.h"
 #include "gpio.h"
 

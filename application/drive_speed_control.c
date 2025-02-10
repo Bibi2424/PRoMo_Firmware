@@ -1,11 +1,10 @@
 #define DEBUG_THIS_FILE DEBUG_DRIVE_SPEED_CONTROL_FILE
 
-#include <stdint.h>
-#include <stdbool.h>
 #include <math.h>
 
-#include "utils.h"
+#include "time.h"
 #include "main.h"
+#include "drive_speed_control.h"
 #include "control_loop.h"
 #include "encoder.h"
 #include "motor.h"
@@ -70,11 +69,49 @@ static void set_speed(unsigned id, float output) {
 extern void drive_speed_control_init(void) {
     debugf("&Left,t,target_speed,current_speed,motor_command\n");
     debugf("&Right,t,target_speed,current_speed,motor_command\n");
+
+    LL_TIM_InitTypeDef TIM_InitStruct = {0};
+
+    /* Peripheral clock enable */
+    LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM11);
+
+    /* TIM11 interrupt Init */
+    NVIC_SetPriority(TIM1_TRG_COM_TIM11_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 3, 0));
+    NVIC_EnableIRQ(TIM1_TRG_COM_TIM11_IRQn);
+
+    // TIM_InitStruct.Prescaler = 0;
+    TIM_InitStruct.Prescaler = __LL_TIM_CALC_PSC(SystemCoreClock, 200);
+    TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
+    TIM_InitStruct.Autoreload = 200;
+    TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
+    LL_TIM_Init(TIM11, &TIM_InitStruct);
+    LL_TIM_DisableARRPreload(TIM11);
+}
+
+extern void drive_speed_control_enable(bool enable) {
+    if(enable) {
+        LL_TIM_EnableCounter(TIM11);
+        LL_TIM_ClearFlag_UPDATE(TIM11);
+        LL_TIM_EnableIT_UPDATE(TIM11);
+    }
+    else {
+        LL_TIM_DisableCounter(TIM11);
+        LL_TIM_DisableIT_UPDATE(TIM11);
+    }
+}
+
+
+void TIM1_TRG_COM_TIM11_IRQHandler(void)
+{
+    if(LL_TIM_IsActiveFlag_UPDATE(TIM11) == 1) {
+        LL_TIM_ClearFlag_UPDATE(TIM11);             // Clear the update interrupt flag
+        drive_speed_control_loop();
+    }
 }
 
 
 static inline void debug_control(control_loop_t* control) {
-	debugf("@%s,,%.4f,%.4f,%.4f,%.4f\n", control->name,
+	debugf("@%s,%.4f,%.4f,%.4f,%.4f,%.4f\n", control->name, (float)get_time_absolute_us() / 1000000.0f,
         control->target, control->last_feedback, control->last_output, control->pid.integral_error);
 }
 
@@ -89,9 +126,9 @@ extern void drive_speed_control_loop(void) {
 
     static uint8_t debug_cnt = 0;
     if(debug_cnt == 0) {
-    	debug_control(speed_left);
+        debug_control(speed_left);
     	debug_control(speed_right);
-        debug_cnt = 4;
+        debug_cnt = 2;
     }
     debug_cnt--;
 }

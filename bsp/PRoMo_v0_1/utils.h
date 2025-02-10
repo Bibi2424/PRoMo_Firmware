@@ -12,7 +12,4 @@
 #define ABS(x) 	( ((x) < 0) ? -(x) : (x) )
 
 
-extern uint32_t millis(void);
-
-
 #endif

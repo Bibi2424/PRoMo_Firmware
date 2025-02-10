@@ -103,7 +103,7 @@ class GraphWidget(QtWidgets.QWidget):
 
 # A canvas that updates itself every second with a new plot.
 class MyDynamicMplCanvas(FigureCanvas):
-    MAXLEN = 100
+    MAXLEN = 250
 
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         self.fig = Figure(figsize=(width, height), dpi=dpi)
@@ -147,7 +147,8 @@ class MyDynamicMplCanvas(FigureCanvas):
             self.y_list.append(deque([0] * len(self.x), maxlen=self.MAXLEN))
             self.plots.append(self.axes.plot([])[0])
 
-        self.x.append(x - self.start_time)
+        self.x.append(x)
+        # self.x.append(x - self.start_time)
         for y, d, in zip(self.y_list, new_data):
             y.append(d)
 

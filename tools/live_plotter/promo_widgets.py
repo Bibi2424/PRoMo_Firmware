@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtWidgets
 
 
 class PIDWidget(QtWidgets.QWidget):
-    def __init__(self, title = 'PID', get_values_cb = None, default = {'p':75, 'i':25, 'd':5}, *args, **kwargs):
+    def __init__(self, title = 'PID', get_values_cb = None, default = {'p':1.0, 'i':0.1, 'd':0.0}, *args, **kwargs):
         super(PIDWidget, self).__init__(*args, **kwargs)
 
         self.callback = get_values_cb

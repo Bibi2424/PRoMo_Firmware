@@ -28,7 +28,7 @@ extern void scheduler_init(void) {
 
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM9);
 
-    //! Init Timer9 for base generation of PWM
+    //! Init Timer9
     LL_TIM_InitTypeDef LL_TIM_InitStruct;
     LL_TIM_InitStruct.Prescaler = __LL_TIM_CALC_PSC(SystemCoreClock, 10000);
     LL_TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
