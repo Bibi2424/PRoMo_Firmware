@@ -38,19 +38,19 @@ extern void control_loop_run(control_loop_t* control, float now) {
 
     // TODO: Do something about compute interval to compute derivative term
     float compute_interval = now - control->last_time_run;
-    float output = pid_compute(&control->pid, control->target, feedback, control->clamped);
+    float output = pid_compute(&control->pid, control->target, feedback);
 
     //! Clamp output
     if(output > control->max_output) { 
         output = control->max_output; 
-        control->clamped = true;
+        control->pid.is_clamped = true;
     }
     else if(output < -control->max_output) { 
         output = -control->max_output; 
-        control->clamped = true;
+        control->pid.is_clamped = true;
     }
     else {
-        control->clamped = false;
+        control->pid.is_clamped = false;
     }
     if(output > 0.0f && output < control->min_output) { output = 0.0f; }
     else if(output < 0.0f && output > -control->min_output) { output = 0.0f; }

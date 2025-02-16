@@ -21,7 +21,6 @@ typedef struct {
 	float max_input_derivative;
 	float min_output;
 	float max_output;
-	bool clamped;
 
 	pid_controller_t pid;
 

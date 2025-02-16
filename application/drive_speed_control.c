@@ -27,7 +27,6 @@ static void set_speed(unsigned id, float output);
     .max_input_derivative = MAX_ACCEL_PER_LOOP, \
     .min_output = MIN_SPEED,    \
     .max_output = MAX_SPEED,    \
-    .clamped = false,           \
     .pid = DEFAULT_SPEED_PID,   \
     .get_feedback = get_speed,  \
     .set_output = set_speed,    \

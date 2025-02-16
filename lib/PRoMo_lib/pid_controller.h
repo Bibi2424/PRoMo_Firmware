@@ -7,13 +7,14 @@ typedef struct {
 	float integral_gain;
 	float derivative_gain;
 	//! Internal stuff
+	bool is_clamped;
 	float last_run;
 	float last_error;
 	float integral_error;
 } pid_controller_t;
 
 
-extern float pid_compute(pid_controller_t *pid, float set_point, float current_value, bool is_clamped);
+extern float pid_compute(pid_controller_t *pid, float set_point, float current_value);
 extern void pid_reset(pid_controller_t *pid);
 
 #endif
