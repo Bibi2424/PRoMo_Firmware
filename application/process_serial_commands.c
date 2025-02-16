@@ -137,11 +137,11 @@ extern uint16_t process_serial_buffer(char* buffer, uint16_t buffer_size) {
 			strncpy(side, word, 10);
 
 			word = get_next_word(commands, false);
-			uint32_t p = (uint32_t)(strtoul(word, NULL, 0));
+			float p = (strtoul(word, NULL, 0))/100.0f;
 			word = get_next_word(commands, false);
-			uint32_t i = (uint32_t)(strtoul(word, NULL, 0));
+			float i = (strtoul(word, NULL, 0))/100.0f;
 			word = get_next_word(commands, false);
-			uint32_t d = (uint32_t)(strtoul(word, NULL, 0));
+			float d = (strtoul(word, NULL, 0))/100.0f;
 
 			if(strcmp(side, "left") == 0) {
 				update_speed_pid(LEFT_SIDE, p, i, d);

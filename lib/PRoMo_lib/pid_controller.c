@@ -5,7 +5,7 @@
 #include "time.h"
 
 
-extern float pid_compute(pid_controller_t *pid, float set_point, float current_value) {
+extern float pid_compute(pid_controller_t *pid, float set_point, float current_value, bool is_clamped) {
 	float output = 0;
 	float error = set_point - current_value;
 	float now = ((float)get_time_microsecond() / 1000000.0f);
@@ -13,12 +13,8 @@ extern float pid_compute(pid_controller_t *pid, float set_point, float current_v
 
 	float p_term = pid->proportional_gain * error;
 	
-	pid->integral_error += error;
-	if(pid->integral_error > 0 && pid->integral_error > pid->max_integral_error) {
-		pid->integral_error = pid->max_integral_error; 
-	}
-	else if(pid->integral_error < 0 && pid->integral_error < -pid->max_integral_error) {
-		pid->integral_error = -pid->max_integral_error; 
+	if(is_clamped == false) {
+		pid->integral_error += error;
 	}
 	float i_term = pid->integral_gain * pid->integral_error;
 	// float i_term = pid->integral_gain * pid->integral_error * elapse_time;

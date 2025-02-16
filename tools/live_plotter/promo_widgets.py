@@ -27,9 +27,9 @@ class PIDWidget(QtWidgets.QWidget):
 
     @QtCore.pyqtSlot()
     def get_values(self):
-        p = int(self.p.text())
-        i = int(self.i.text())
-        d = int(self.d.text())
+        p = float(self.p.text())
+        i = float(self.i.text())
+        d = float(self.d.text())
         if self.callback:
             self.callback(p, i, d)
 

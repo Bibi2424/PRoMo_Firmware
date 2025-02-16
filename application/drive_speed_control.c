@@ -21,13 +21,13 @@ static void set_speed(unsigned id, float output);
     .proportional_gain = 1.5f,    \
     .integral_gain = 0.3f,        \
     .derivative_gain = 0.0f,      \
-    .max_integral_error = 1.0f,  \
 }
 #define DEFAULT_CONTROL_LOOP_PARAMS \
     .target = 0.0f,             \
     .max_input_derivative = MAX_ACCEL_PER_LOOP, \
     .min_output = MIN_SPEED,    \
     .max_output = MAX_SPEED,    \
+    .clamped = false,           \
     .pid = DEFAULT_SPEED_PID,   \
     .get_feedback = get_speed,  \
     .set_output = set_speed,    \
@@ -79,10 +79,11 @@ extern void drive_speed_control_init(void) {
     NVIC_SetPriority(TIM1_TRG_COM_TIM11_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 3, 0));
     NVIC_EnableIRQ(TIM1_TRG_COM_TIM11_IRQn);
 
+    const uint16_t frequency = MILLIS / MOTOR_CONTROL_INTERVAL_MS;
     // TIM_InitStruct.Prescaler = 0;
-    TIM_InitStruct.Prescaler = __LL_TIM_CALC_PSC(SystemCoreClock, 200);
+    TIM_InitStruct.Prescaler = __LL_TIM_CALC_PSC(SystemCoreClock, frequency);
     TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
-    TIM_InitStruct.Autoreload = 200;
+    TIM_InitStruct.Autoreload = frequency;
     TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
     LL_TIM_Init(TIM11, &TIM_InitStruct);
     LL_TIM_DisableARRPreload(TIM11);

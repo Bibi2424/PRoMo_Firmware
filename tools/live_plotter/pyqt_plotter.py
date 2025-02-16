@@ -285,11 +285,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     @QtCore.pyqtSlot()
     def upload_pid(self, p, i, d, side = None):
         if side == 'left':
-            command = f"pid.set left {p} {i} {d}\n"
+            command = f"pid.set left {int(p*100)} {int(i*100)} {int(d*100)}\n"
         elif side == 'right':
-            command = f"pid.set right {p} {i} {d}\n"
+            command = f"pid.set right {int(p*100)} {int(i*100)} {int(d*100)}\n"
         else:
-            command = f"pid.set both {p} {i} {d}\n"
+            command = f"pid.set both {int(p*100)} {int(i*100)} {int(d*100)}\n"
         print(command)
         self.ser.write(command)
 
