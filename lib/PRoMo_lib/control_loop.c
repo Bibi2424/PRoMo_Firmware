@@ -9,35 +9,34 @@
 static float control_loop_filter_input(control_loop_t* control) {
     // TODO: LERP
     if(control->max_input_derivative == NAN) {
-        return control->new_target;
+        return control->filtered_target;
     }
 
-    if(control->new_target - control->target > 0.0f) {
-        if(control->new_target - control->target > control->max_input_derivative) {
+    if(control->filtered_target - control->target > 0.0f) {
+        if(control->filtered_target - control->target > control->max_input_derivative) {
             return control->target + control->max_input_derivative;
         }
         else {
-            return control->new_target;
+            return control->filtered_target;
         }
     }
     else {
-        if(control->new_target - control->target < -control->max_input_derivative) {
+        if(control->filtered_target - control->target < -control->max_input_derivative) {
             return control->target - control->max_input_derivative;
         }
         else {
-            return control->new_target;
+            return control->filtered_target;
         }
     }
 }
 
 
-extern void control_loop_run(control_loop_t* control, float now) {
+extern void control_loop_run(control_loop_t* control) {
+    control->target = control->next_target;
     control->target = control_loop_filter_input(control);
 
-    float feedback = control->get_feedback(control->id);
+    float feedback = control->get_feedback(&control->odo);
 
-    // TODO: Do something about compute interval to compute derivative term
-    float compute_interval = now - control->last_time_run;
     float output = pid_compute(&control->pid, control->target, feedback);
 
     //! Clamp output
@@ -59,11 +58,5 @@ extern void control_loop_run(control_loop_t* control, float now) {
 
     control->last_output = output;
     control->last_feedback = feedback;
-    control->last_time_run = now;
-}
-
-
-extern void set_target(control_loop_t* control, float target) {
-    control->new_target = target;
 }
 

@@ -58,10 +58,10 @@ static bool radio_process_rx(void) {
     current_settings->get_data(nrf_data, nrf_rx_size);
 
     SET_PIN(LD2_GPIO_Port, LD2_Pin, 1);
-    scheduler_add_event(SCHEDULER_TASK_LED2, 50*MS, SCHEDULER_ONE_SHOT, blink_led2);
+    scheduler_add_event(SCHEDULER_TASK_LED2, 50*SCHEDULER_MS, SCHEDULER_ONE_SHOT, blink_led2);
 
     scheduler_remove_event(SCHEDULER_TASK_LOST_CONNECTION);
-    scheduler_add_event(SCHEDULER_TASK_LOST_CONNECTION, 500*MS, SCHEDULER_ONE_SHOT, on_connection_lost);
+    scheduler_add_event(SCHEDULER_TASK_LOST_CONNECTION, 500*SCHEDULER_MS, SCHEDULER_ONE_SHOT, on_connection_lost);
     return true;
 }
 

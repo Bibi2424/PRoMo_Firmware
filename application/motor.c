@@ -47,8 +47,7 @@ extern void motors_init(void) {
 
   	//! Init Timer2 for base generation of PWM
 	LL_TIM_InitTypeDef LL_TIM_InitStruct;
-	// LL_TIM_InitStruct.Prescaler = __LL_TIM_CALC_PSC(SystemCoreClock, 1000000);
-	LL_TIM_InitStruct.Prescaler = 1;
+	LL_TIM_InitStruct.Prescaler = __LL_TIM_CALC_PSC(SystemCoreClock, 1000000);
 	LL_TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
 	//! NOTE: 2kHz PWM
 	LL_TIM_InitStruct.Autoreload = __LL_TIM_CALC_ARR(SystemCoreClock, LL_TIM_InitStruct.Prescaler, 2000);
@@ -60,7 +59,7 @@ extern void motors_init(void) {
 	LL_TIM_Init(TIM2, &LL_TIM_InitStruct);
 	LL_TIM_EnableARRPreload(TIM2);
 
-  	//! Init Timer OutPut Compare for generation of PWM
+  	//! Init Timer Output Compare for generation of PWM
 	LL_TIM_OC_InitTypeDef LL_TIM_OC_InitStruct;
 	LL_TIM_OC_InitStruct.OCMode       = LL_TIM_OCMODE_PWM2;
 	LL_TIM_OC_InitStruct.OCState      = LL_TIM_OCSTATE_ENABLE;
@@ -88,7 +87,6 @@ extern void motors_init(void) {
   	motor_set_dir(LEFT_SIDE, MOTOR_DIR_DISABLE);
   	motor_set_speed(LEFT_SIDE, 0);
   	LL_TIM_EnableCounter(TIM2);			//! Enable counter
-
 }
 
 

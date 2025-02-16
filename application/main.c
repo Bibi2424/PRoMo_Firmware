@@ -61,7 +61,7 @@ extern int main(void) {
     debugf("Booting...\n");
 
     scheduler_init();
-    scheduler_add_event(SCHEDULER_TASK_LED1, 1*SECOND, SCHEDULER_ALWAYS, blink_led1);
+    scheduler_add_event(SCHEDULER_TASK_LED1, 1*SCHEDULER_SECOND, SCHEDULER_ALWAYS, blink_led1);
 
     ws2812b_init();
     rgb_t strip[5] = {{25, 0, 0}, {0, 25, 0}, {0, 0, 25}, {0, 0, 0}};
@@ -74,7 +74,7 @@ extern int main(void) {
 
     if(sensors_vl53l0x_init()) { debugf("\t- VL53 Init OK\n"); }
     else { debugf("\t- VL53 Init error\n"); }
-    scheduler_add_event(SCHEDULER_TASK_VL53_GET, 250*MS, SCHEDULER_ALWAYS, sensors_get_event);
+    scheduler_add_event(SCHEDULER_TASK_VL53_GET, 250*SCHEDULER_MS, SCHEDULER_ALWAYS, sensors_get_event);
 
     static radio_settings_t radio_settings = {
         .radio_rx_id = 2,

@@ -90,7 +90,7 @@ static bool sensor_init(uint8_t old_sensor_id, uint8_t new_sensor_id) {
 	writeAddress(new_sensor_id);
 	// LL_mDelay(1);
 
-	setMeasurementTimingBudget( 50 * MILLIS );
+	setMeasurementTimingBudget( 50 * US_TO_MS );
 	setTimeout( 50*2 );
 	return true;
 }

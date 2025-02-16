@@ -6,8 +6,8 @@
 #include <stdbool.h>
 
 
-#define MILLIS 	1000UL
-#define SECONDS 1000 * 1000UL
+#define US_TO_MS 	(1000UL)
+#define US_TO_S 	(1000 * US_TO_MS)
 
 extern void time_init(void);
 

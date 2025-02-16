@@ -1,4 +1,5 @@
 add_library(promo_lib
+	odometry.c
 	control_loop.c
 	pid_controller.c
 )

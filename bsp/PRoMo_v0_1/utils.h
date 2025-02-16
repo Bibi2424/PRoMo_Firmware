@@ -11,5 +11,6 @@
 
 #define ABS(x) 	( ((x) < 0) ? -(x) : (x) )
 
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof(*x))
 
 #endif

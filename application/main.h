@@ -22,11 +22,11 @@ typedef enum {
 
 
 
-#define MOTOR_CONTROL_INTERVAL_MS      	5
-// #define MPU_INTERVAL_MS      			500
-#define MPU_INTERVAL_MS      			0
-// #define ALEDS_INTERVAL_MS      			500
-#define ALEDS_INTERVAL_MS      			0
+#define MOTOR_CONTROL_INTERVAL_US      	(5000)
+// #define MPU_INTERVAL_MS      			(500)
+#define MPU_INTERVAL_MS      			(0)
+// #define ALEDS_INTERVAL_MS      			(500)
+#define ALEDS_INTERVAL_MS      			(0)
 
 #define PI 								(3.141592653f)
 
@@ -35,11 +35,12 @@ typedef enum {
 #define MIN_SPEED						(0.02f)		// m/s
 #define MAX_SPEED						(0.33f)		// m/s
 
+
+#define INVERSE_LEFT_ENCODER			(false)
+#define INVERSE_RIGHT_ENCODER			(true)
 #define WHEEL_RADIUS					(0.032f)	// m
 #define SENSOR_TICK_PER_REV				(3578)
-#define SENSOR_TICK_TO_RAD				(2.0f*PI/(float)SENSOR_TICK_PER_REV)
-
-
+#define SENSOR_TICK_TO_RAD				(2.0f * PI / (float)SENSOR_TICK_PER_REV)
 
 
 #ifndef NVIC_PRIORITYGROUP_0

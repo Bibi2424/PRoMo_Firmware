@@ -10,8 +10,8 @@
 extern float pid_compute(pid_controller_t *pid, float set_point, float current_value) {
 	float output = 0;
 	float error = set_point - current_value;
-	float now = ((float)get_time_microsecond() / 1000000.0f);
-	float elapse_time = (now - pid->last_run);
+	// float now = ((float)get_time_microsecond() / 1000000.0f);
+	// float elapse_time = (now - pid->last_run);
 
 	float p_term = pid->proportional_gain * error;
 	
@@ -32,7 +32,7 @@ extern float pid_compute(pid_controller_t *pid, float set_point, float current_v
 	pid->last_error = error;
 
 	output = p_term + i_term + d_term;
-	pid->last_run = now;
+	// pid->last_run = now;
 
 	return output;
 }
