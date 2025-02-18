@@ -5,6 +5,5 @@
 .cache
 
 compile_commands.json
-build
-STM32_HAL_min/
-tools/serial_plotter/__pycache__/
+build/
+*__pycache__/

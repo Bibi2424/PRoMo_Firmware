@@ -14,11 +14,26 @@ endif()
 # Set the project name
 set(CMAKE_PROJECT_NAME PRoMo_fw)
 
+# MCU Configuration
+set(MCU STM32F405)
+# set(MCU STM32F411)
+if(MCU MATCHES STM32F405)
+    set(STARTUP_FILE startup_stm32f405xx.s)
+    set(LINKER_FILE STM32F405RGTx_FLASH.ld)
+    set(MCU_TYPE STM32F405xx)
+    message(STATUS "STM32F405 Selected")
+elseif(MCU MATCHES STM32F411)
+    set(STARTUP_FILE startup_stm32f411xe.s)
+    set(LINKER_FILE STM32F411RETx_FLASH.ld)
+    set(MCU_TYPE STM32F411xE)
+    message(STATUS "STM32F411 Selected")
+else()
+    message( FATAL_ERROR "You need to select a supported MCU" )
+endif()
+
 # Include toolchain file
-set(STM32_HAL_FOLDER STM32_HAL_MIN)
+set(STM32_HAL_FOLDER STM32CubeF4/Drivers)
 set(STARTUP_FOLDER bsp/PRoMo_v0_1)
-set(STARTUP_FILE startup_stm32f405xx.s)
-set(LINKER_FILE STM32F405RGTx_FLASH.ld)
 include("cmake/gcc-arm-none-eabi.cmake")
 include("cmake/stm32_hal.cmake")
 

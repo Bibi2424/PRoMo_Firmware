@@ -27,7 +27,7 @@ target_compile_definitions(stm32hal PUBLIC
 	PREFETCH_ENABLE=1 
 	INSTRUCTION_CACHE_ENABLE=1 
 	DATA_CACHE_ENABLE=1 
-	STM32F405xx
+	${MCU_TYPE}
     $<$<CONFIG:Debug>:DEBUG>
 )
 if(CMAKE_BUILD_TYPE MATCHES Debug)
@@ -55,11 +55,11 @@ if(CMAKE_C_STANDARD LESS 11)
 endif()
 
 # Add cli commands
-set(STM32_FLASHER_EXEC "E:/Program Files/STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/")
+# set(STM32_FLASHER_EXEC "C:\ST\STM32CubeCLT_1.17.0\STM32CubeProgrammer\bin")
 add_custom_target(
     flash
     COMMAND ${STM32_FLASHER_EXEC}STM32_Programmer_CLI.exe
-    # ARGS -c port=SWD -d application/${CMAKE_PROJECT_NAME}.hex 0x08000000 -rst
+    # ARGS -c port=SWD -d application/${CMAKE_PROJECT_NAME}.elf 0x08000000 -rst
     ARGS -c port=SWD -d application/${CMAKE_PROJECT_NAME}.hex -rst
     DEPENDS ${CMAKE_PROJECT_NAME}.elf
 )
