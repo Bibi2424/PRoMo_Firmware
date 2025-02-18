@@ -17,8 +17,10 @@ set(CMAKE_PROJECT_NAME PRoMo_fw)
 # Include toolchain file
 set(STM32_HAL_FOLDER STM32_HAL_MIN)
 set(STARTUP_FOLDER bsp/PRoMo_v0_1)
-include("gcc-arm-none-eabi.cmake")
-include("stm32_hal.cmake")
+set(STARTUP_FILE startup_stm32f405xx.s)
+set(LINKER_FILE STM32F405RGTx_FLASH.ld)
+include("cmake/gcc-arm-none-eabi.cmake")
+include("cmake/stm32_hal.cmake")
 
 # Enable compile command to ease indexing with e.g. clangd
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

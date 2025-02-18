@@ -11,7 +11,7 @@ add_library(stm32hal
     ${STM32_HAL_FOLDER}/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_spi.c
     ${STM32_HAL_FOLDER}/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_tim.c
     ${STM32_HAL_FOLDER}/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usart.c
-    ${STARTUP_FOLDER}/startup_stm32f405xx.s
+    ${STARTUP_FOLDER}/${STARTUP_FILE}
 )
 
 target_compile_definitions(stm32hal PUBLIC 
