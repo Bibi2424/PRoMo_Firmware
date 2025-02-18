@@ -8,7 +8,6 @@ add_executable( ${PROJECT_NAME}
         radio.c
         scheduler.c
         sensors.c
-        syscalls.c
         usart.c
 )
 

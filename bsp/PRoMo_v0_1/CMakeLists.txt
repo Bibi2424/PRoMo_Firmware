@@ -6,6 +6,8 @@ add_library(bsp
 	time.c
 	stm32f4xx_it.c
     system_stm32f4xx.c
+	syscalls.c
+	sysmem.c
 )
 
 target_link_libraries( bsp PUBLIC stm32hal )

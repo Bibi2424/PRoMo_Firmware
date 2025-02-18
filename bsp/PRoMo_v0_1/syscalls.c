@@ -38,11 +38,10 @@ extern int __io_putchar(int ch) __attribute__((weak));
 extern int __io_getchar(void) __attribute__((weak));
 
 int __io_putchar(int ch) {
-    LL_USART_TransmitData8(D_USART, ch);
-    while(!LL_USART_IsActiveFlag_TXE(D_USART));
-    return 1;
+  LL_USART_TransmitData8(D_USART, ch);
+  while(!LL_USART_IsActiveFlag_TXE(D_USART));
+  return 1;
 }
-
 
 char *__env[1] = { 0 };
 char **environ = __env;
@@ -66,11 +65,11 @@ int _kill(int pid, int sig)
   return -1;
 }
 
-// void _exit (int status)
-// {
-//   _kill(status, -1);
-//   while (1) {}    /* Make sure we hang here */
-// }
+void _exit (int status)
+{
+  _kill(status, -1);
+  while (1) {}    /* Make sure we hang here */
+}
 
 __attribute__((weak)) int _read(int file, char *ptr, int len)
 {
