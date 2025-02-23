@@ -3,6 +3,7 @@ add_executable( ${PROJECT_NAME}
         drive_speed_control.c
         process_serial_commands.c
         radio.c
+        nrf24l01.c
         scheduler.c
         sensors.c
 )
@@ -13,7 +14,6 @@ target_link_libraries( ${PROJECT_NAME} PUBLIC
         mpu6050
         promo_lib
         vl53l0x
-        NRF24
         # stm32hal
 )
 
