@@ -41,7 +41,7 @@ extern int main(void) {
     SystemClock_Config();
 
     //! Note: Need to set the SysTick interrupt priority after SystemClock_Config() or it doesn't work
-    NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));           /* SysTick_IRQn interrupt configuration */
+    NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 4, 0));           /* SysTick_IRQn interrupt configuration */
     NVIC_EnableIRQ(SysTick_IRQn);
 
     time_init();

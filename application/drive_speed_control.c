@@ -11,9 +11,6 @@
 #include "motor.h"
 
 
-#define MAX_ACCEL_PER_LOOP (MAX_ACCEL * (MOTOR_CONTROL_INTERVAL_US / US_TO_S))
-
-
 static void set_speed(unsigned id, float output);
 
 
@@ -29,7 +26,6 @@ static void set_speed(unsigned id, float output);
 #define DEFAULT_CONTROL_LOOP_PARAMS \
     .target = 0.0f, \
     .next_target = 0.0f, \
-    .max_input_derivative = MAX_ACCEL_PER_LOOP, \
     .min_output = MIN_SPEED, \
     .max_output = MAX_SPEED, \
     .pid = { DEFAULT_SPEED_PID }, \

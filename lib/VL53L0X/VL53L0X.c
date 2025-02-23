@@ -6,6 +6,10 @@
 #include "VL53L0X.h"
 #include "i2c.h"
 
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof(*x))
+#endif
+
 //---------------------------------------------------------
 // Local variables within this file (private)
 //---------------------------------------------------------

@@ -6,34 +6,8 @@
 #include "pid_controller.h"
 
 
-static float control_loop_filter_input(control_loop_t* control) {
-    // TODO: LERP
-    if(control->max_input_derivative == NAN) {
-        return control->filtered_target;
-    }
-
-    if(control->filtered_target - control->target > 0.0f) {
-        if(control->filtered_target - control->target > control->max_input_derivative) {
-            return control->target + control->max_input_derivative;
-        }
-        else {
-            return control->filtered_target;
-        }
-    }
-    else {
-        if(control->filtered_target - control->target < -control->max_input_derivative) {
-            return control->target - control->max_input_derivative;
-        }
-        else {
-            return control->filtered_target;
-        }
-    }
-}
-
-
 extern void control_loop_run(control_loop_t* control) {
     control->target = control->next_target;
-    control->target = control_loop_filter_input(control);
 
     float feedback = control->get_feedback(&control->odo);
 

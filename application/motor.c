@@ -47,10 +47,10 @@ extern void motors_init(void) {
 
   	//! Init Timer2 for base generation of PWM
 	LL_TIM_InitTypeDef LL_TIM_InitStruct;
-	LL_TIM_InitStruct.Prescaler = __LL_TIM_CALC_PSC(SystemCoreClock, 1000000);
+	LL_TIM_InitStruct.Prescaler = __LL_TIM_CALC_PSC(SystemCoreClock / 2, 1000000);
 	LL_TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
-	//! NOTE: 2kHz PWM
-	LL_TIM_InitStruct.Autoreload = __LL_TIM_CALC_ARR(SystemCoreClock, LL_TIM_InitStruct.Prescaler, 2000);
+	//! NOTE: 25kHz PWM
+	LL_TIM_InitStruct.Autoreload = __LL_TIM_CALC_ARR(SystemCoreClock / 2, LL_TIM_InitStruct.Prescaler, 25000);
 	LL_TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
 	LL_TIM_InitStruct.RepetitionCounter = (uint8_t)0x00;
 

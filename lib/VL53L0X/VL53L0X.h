@@ -7,16 +7,6 @@
 #include "time.h"
 
 //------------------------------------------------------------
-// For quick and dirty C++ compatibility
-//------------------------------------------------------------
-#ifndef true
-#define true  1
-#endif
-#ifndef true
-#define false 0
-#endif
-
-//------------------------------------------------------------
 // Defines
 //------------------------------------------------------------
 // I use a 8-bit number for the address, LSB must be 0 so that I can

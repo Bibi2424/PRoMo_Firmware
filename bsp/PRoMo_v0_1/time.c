@@ -18,7 +18,6 @@ extern void time_init(void) {
     NVIC_SetPriority(TIM5_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 2, 0));
     NVIC_EnableIRQ(TIM5_IRQn);
 
-    // LL_TIM_InitStruct.Prescaler = 119;
     LL_TIM_InitStruct.Prescaler = __LL_TIM_CALC_PSC(SystemCoreClock / 2, 1000000);
     LL_TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
     LL_TIM_InitStruct.Autoreload = 1000000;
