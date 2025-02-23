@@ -7,55 +7,29 @@
 #include <string.h>
 
 #include "debug.h"
-
-#if HW_TYPE == HW_PROMO_V0_1
-#include "promo_v0_1_bsp.h"
-#endif
+#include "bsp.h"
 
 #define xstr(s) str(s)
 #define str(s) #s
 
-//! Debug
-#ifndef DEBUG_ENABLE
-#define DEBUG_ENABLE 		0
-#endif
-#ifndef DEBUG_UART
-#define DEBUG_UART			6
-#endif
-#ifndef DEBUG_BAUDRATE
-#define DEBUG_BAUDRATE		921600UL
-// #define DEBUG_BAUDRATE		230400UL
-#endif
-
-
-//! For motor and encoder
-typedef enum {
-	NO_SIDE = -1,
-	LEFT_SIDE = 0,
-	RIGHT_SIDE,
-	BOTH_SIDE
-} actuator_t;
-
-
-
-#define MOTOR_CONTROL_INTERVAL_MS      	5
-// #define MPU_INTERVAL_MS      			500
-#define MPU_INTERVAL_MS      			0
-// #define ALEDS_INTERVAL_MS      			500
-#define ALEDS_INTERVAL_MS      			0
+#define MOTOR_CONTROL_INTERVAL_US      	(5000)
+// #define MPU_INTERVAL_MS      			(500)
+#define MPU_INTERVAL_MS      			(0)
+// #define ALEDS_INTERVAL_MS      			(500)
+#define ALEDS_INTERVAL_MS      			(0)
 
 #define PI 								(3.141592653f)
 
 //! TODO: Clean up and find a better place for those defines
-#define MAX_ACCEL						(2.0f)		// m/s2
 #define MIN_SPEED						(0.02f)		// m/s
-#define MAX_SPEED						(0.33f)		// m/s
+#define MAX_SPEED						(0.5f)		// m/s
 
+
+#define INVERSE_LEFT_ENCODER			(false)
+#define INVERSE_RIGHT_ENCODER			(true)
 #define WHEEL_RADIUS					(0.032f)	// m
 #define SENSOR_TICK_PER_REV				(3578)
-#define SENSOR_TICK_TO_RAD				(2.0f*PI/(float)SENSOR_TICK_PER_REV)
-
-
+#define SENSOR_TICK_TO_RAD				(2.0f * PI / (float)SENSOR_TICK_PER_REV)
 
 
 #ifndef NVIC_PRIORITYGROUP_0
@@ -69,11 +43,9 @@ typedef enum {
 //! NOTE Comment/Uncomment the line below to expanse the "assert_param" macro in the HAL drivers code
 #define USE_FULL_ASSERT    1U 
 
-extern uint32_t millis(void);
 extern void blink_led1(void);
 extern void blink_led2(void);
 
-extern void UserButton_Callback(void);
 extern void _Error_Handler(char *, int);
 
 #define Error_Handler() _Error_Handler(__FILE__, __LINE__)

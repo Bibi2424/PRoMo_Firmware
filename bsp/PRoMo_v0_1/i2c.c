@@ -1,8 +1,3 @@
-#define DEBUG_THIS_FILE   DEBUG_I2C_FILE
-
-#include "utils.h"
-#include "debug.h"
-
 #include "i2c.h"
 #include "gpio.h"
 
@@ -14,7 +9,7 @@
 static uint32_t TM_I2C_Timeout;
 
 
-extern void i2c_init(I2C_TypeDef *I2Cx) {
+extern void i2c_init(I2C_TypeDef *I2Cx, uint32_t clock_speed) {
     uint32_t clock_periph;
     // IRQn_Type i2c_event_irq, i2c_error_irq;
 
@@ -44,7 +39,7 @@ extern void i2c_init(I2C_TypeDef *I2Cx) {
     LL_I2C_DisableGeneralCall(I2Cx);
     LL_I2C_EnableClockStretching(I2Cx);
     I2C_InitStruct.PeripheralMode = LL_I2C_MODE_I2C;
-    I2C_InitStruct.ClockSpeed = SCL_CLOCK;
+    I2C_InitStruct.ClockSpeed = clock_speed;
     I2C_InitStruct.DutyCycle = LL_I2C_DUTYCYCLE_2;
     I2C_InitStruct.OwnAddress1 = 0;
     I2C_InitStruct.TypeAcknowledge = LL_I2C_ACK;
@@ -248,19 +243,3 @@ extern uint8_t i2c_full_read(I2C_TypeDef *I2Cx, uint8_t address, uint8_t mem, ui
 
     return I2C_NO_ERROR;
 }
-
-//! ---- OLD -----
-
-
-// Print out all the active I2C addresses on the bus
-// extern void searchI2C(I2C_TypeDef *I2Cx) {
-//     uint8_t devAdr;
-//     debugf("Discovered I2C addresses: ");
-//     for( devAdr=0; devAdr<=127; devAdr++ ) {
-//         if( !i2c_start(I2Cx, (devAdr<<1) | I2C_WRITE ) ) {
-//             debugf("%02X ", devAdr);
-//         }
-//         i2c_stop(I2Cx);                             // set stop conditon = release bus
-//     }
-//     debugf("done\n");
-// }

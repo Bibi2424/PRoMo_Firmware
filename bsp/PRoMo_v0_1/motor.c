@@ -1,12 +1,8 @@
-#define DEBUG_THIS_FILE	DEBUG_MOTOR_FILE
-
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "utils.h"
-#include "debug.h"
-
 #include "motor.h"
+#include "utils.h"
 #include "gpio.h"
 
 
@@ -43,15 +39,14 @@ extern void motors_init(void) {
 	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(MOTOR_ENABLE_Pin_Port, &GPIO_InitStruct);
-  	SET_PIN(MOTOR_ENABLE_Pin_Port, MOTOR_ENABLE_Pin, 1);
+  	SET_PIN(MOTOR_ENABLE_Pin_Port, MOTOR_ENABLE_Pin, GPIO_HIGH);
 
   	//! Init Timer2 for base generation of PWM
 	LL_TIM_InitTypeDef LL_TIM_InitStruct;
-	// LL_TIM_InitStruct.Prescaler = __LL_TIM_CALC_PSC(SystemCoreClock, 1000000);
-	LL_TIM_InitStruct.Prescaler = 1;
+	LL_TIM_InitStruct.Prescaler = __LL_TIM_CALC_PSC(SystemCoreClock / 2, 1000000);
 	LL_TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
-	//! NOTE: 2kHz PWM
-	LL_TIM_InitStruct.Autoreload = __LL_TIM_CALC_ARR(SystemCoreClock, LL_TIM_InitStruct.Prescaler, 2000);
+	//! NOTE: 25kHz PWM
+	LL_TIM_InitStruct.Autoreload = __LL_TIM_CALC_ARR(SystemCoreClock / 2, LL_TIM_InitStruct.Prescaler, 25000);
 	LL_TIM_InitStruct.ClockDivision = LL_TIM_CLOCKDIVISION_DIV1;
 	LL_TIM_InitStruct.RepetitionCounter = (uint8_t)0x00;
 
@@ -60,7 +55,7 @@ extern void motors_init(void) {
 	LL_TIM_Init(TIM2, &LL_TIM_InitStruct);
 	LL_TIM_EnableARRPreload(TIM2);
 
-  	//! Init Timer OutPut Compare for generation of PWM
+  	//! Init Timer Output Compare for generation of PWM
 	LL_TIM_OC_InitTypeDef LL_TIM_OC_InitStruct;
 	LL_TIM_OC_InitStruct.OCMode       = LL_TIM_OCMODE_PWM2;
 	LL_TIM_OC_InitStruct.OCState      = LL_TIM_OCSTATE_ENABLE;
@@ -88,7 +83,6 @@ extern void motors_init(void) {
   	motor_set_dir(LEFT_SIDE, MOTOR_DIR_DISABLE);
   	motor_set_speed(LEFT_SIDE, 0);
   	LL_TIM_EnableCounter(TIM2);			//! Enable counter
-
 }
 
 

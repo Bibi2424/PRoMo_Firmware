@@ -1,15 +1,14 @@
 #ifndef PID_H
 #define PID_H
 
-#include "main.h"
-
 
 typedef struct {
-	float compute_interval;
 	float proportional_gain;
 	float integral_gain;
 	float derivative_gain;
 	//! Internal stuff
+	bool is_clamped;
+	float last_run;
 	float last_error;
 	float integral_error;
 } pid_controller_t;

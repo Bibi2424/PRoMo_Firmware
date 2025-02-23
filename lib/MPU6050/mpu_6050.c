@@ -1,11 +1,5 @@
 #include "mpu_6050.h"
 
-#include "stm32f4xx_ll_bus.h"
-#include "stm32f4xx_ll_tim.h"
-#include "stm32f4xx_ll_gpio.h"
-#include "stm32f4xx_ll_i2c.h"
-#include "stm32f4xx_ll_exti.h"
-
 #include "i2c.h"
 
 
@@ -112,7 +106,7 @@ static void mpu_6050_gpio_init(void) {
 	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-	// SET_PIN(GPIOC, LL_GPIO_PIN_13, 0);
+	// SET_PIN(GPIOC, LL_GPIO_PIN_13, GPIO_LOW);
 
 	//! PC14  ------> INT
 	LL_GPIO_StructInit(&GPIO_InitStruct);
@@ -152,14 +146,13 @@ static void mpu_6050_gpio_init(void) {
 void EXTI15_10_IRQHandler(void) {
 	if (LL_EXTI_IsActiveFlag_0_31(LL_EXTI_LINE_14) != RESET) {
 		LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_14);
-		// printf("MPU INT\n");
 	}
 }
 
 
 extern bool mpu_6050_init(uint8_t address) {
 	mpu_6050_gpio_init();
-	i2c3_init();
+	i2c3_init(400000UL);
 
 	//! 7bits addressing
 	mpu_address = address << 1;

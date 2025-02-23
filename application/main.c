@@ -2,36 +2,36 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <string.h>
 
 #include "utils.h"
 #include "debug.h"
 
 #include "main.h"
+#include "time.h"
 #include "usart.h"
+#include "process_serial_commands.h"
 #include "gpio.h"
 #include "encoder.h"
 #include "motor.h"
 #include "radio.h"
-#include "nrf24l01.h"
 #include "scheduler.h"
 #include "VL53L0X.h"
 #include "sensors.h"
 #include "drive_speed_control.h"
-#include "pid_controller.h"
 #include "ws2812b.h"
 #include "mpu_6050.h"
 
-#include "lerp.h"
 
 static void sensors_get_event(void);
 static void get_data_from_radio(uint8_t *data, uint8_t size);
 static void lost_connection(void);
+static void user_button_cb(gpio_interrupt_type_t type);
 static void SystemClock_Config(void);
 
 
-
 volatile static bool gpio_pressed = false;
-
 
 
 extern int main(void) {
@@ -42,14 +42,16 @@ extern int main(void) {
     SystemClock_Config();
 
     //! Note: Need to set the SysTick interrupt priority after SystemClock_Config() or it doesn't work
-    NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 0, 0));           /* SysTick_IRQn interrupt configuration */
+    NVIC_SetPriority(SysTick_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 4, 0));           /* SysTick_IRQn interrupt configuration */
     NVIC_EnableIRQ(SysTick_IRQn);
 
+    time_init();
     MX_GPIO_Init();
+    gpio__register_callback(user_button_cb);
     #if(DEBUG_UART == 1)
-        MX_USART1_UART_Init(DEBUG_BAUDRATE);
+        MX_USART1_UART_Init(DEBUG_BAUDRATE, serial_debug_get_byte);
     #elif(DEBUG_UART == 6)
-        MX_USART6_UART_Init(DEBUG_BAUDRATE);
+        MX_USART6_UART_Init(DEBUG_BAUDRATE, serial_debug_get_byte);
     #endif
     setbuf(stdout, NULL);       //! For unbuffered ouput
     debugf("\n**************************************\n");
@@ -60,7 +62,7 @@ extern int main(void) {
     debugf("Booting...\n");
 
     scheduler_init();
-    scheduler_add_event(SCHEDULER_TASK_LED1, 1*SECOND, SCHEDULER_ALWAYS, blink_led1);
+    scheduler_add_event(SCHEDULER_TASK_LED1, 1*SCHEDULER_SECOND, SCHEDULER_ALWAYS, blink_led1);
 
     ws2812b_init();
     rgb_t strip[5] = {{25, 0, 0}, {0, 25, 0}, {0, 0, 25}, {0, 0, 0}};
@@ -73,7 +75,7 @@ extern int main(void) {
 
     if(sensors_vl53l0x_init()) { debugf("\t- VL53 Init OK\n"); }
     else { debugf("\t- VL53 Init error\n"); }
-    scheduler_add_event(SCHEDULER_TASK_VL53_GET, 250*MS, SCHEDULER_ALWAYS, sensors_get_event);
+    scheduler_add_event(SCHEDULER_TASK_VL53_GET, 250*SCHEDULER_MS, SCHEDULER_ALWAYS, sensors_get_event);
 
     static radio_settings_t radio_settings = {
         .radio_rx_id = 2,
@@ -88,13 +90,10 @@ extern int main(void) {
 
     debugf("Init Done\n");
 
-    uint32_t motor_control_last_execution = 0;
     uint32_t aleds_last_execution = 0;
     uint32_t mpu_last_execution = 0;
-
-    float t = 0.0f;
-    debugf("&Lerp,,command,current\n");
-
+    
+    drive_speed_control_enable(true);
     while (1) {
         uint32_t current_time = millis();
 
@@ -108,16 +107,6 @@ extern int main(void) {
         }
 
         radio_loop();
-
-        if(MOTOR_CONTROL_INTERVAL_MS > 0 && current_time - motor_control_last_execution > MOTOR_CONTROL_INTERVAL_MS) {
-            motor_control_last_execution = current_time;
-
-            // TODO move to a dedicated timer (use the motor timer ?)
-            drive_speed_control_loop();
-
-            // debugf("@Lerp,,1,%u\n", (unsigned)lerp(0, 100, t));
-            // t += 0.01f;
-        }
 
         if(MPU_INTERVAL_MS > 0 && current_time - mpu_last_execution > MPU_INTERVAL_MS) {
             mpu_last_execution = current_time;
@@ -137,7 +126,6 @@ extern int main(void) {
             strip[0] = strip[4];
             ws2812b_send(strip, 4);
         }
-
     }
     return 0;
 }
@@ -224,26 +212,16 @@ static void SystemClock_Config(void) {
 }
 
 
-extern void UserButton_Callback(void) {
-    gpio_pressed = true;
+static void user_button_cb(gpio_interrupt_type_t type) {
+    if(type == GPIO_INTERRUPT_FALLING) {
+        gpio_pressed = true;
+    }
 }
 
 
 extern void _Error_Handler(char *file, int line) {
     printf("Error\n");
     while(1) {}
-}
-
-
-volatile static uint32_t counter = 0;
-extern uint32_t millis(void) {
-    return counter;
-}
-
-
-void SysTick_Handler(void) {
-    // TOGGLE_PIN(DEBUG_Pin_Port, DEBUG_Pin_1);
-    counter++;
 }
 
 

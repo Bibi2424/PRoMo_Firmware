@@ -28,7 +28,7 @@ extern void scheduler_init(void) {
 
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM9);
 
-    //! Init Timer9 for base generation of PWM
+    //! Init Timer9
     LL_TIM_InitTypeDef LL_TIM_InitStruct;
     LL_TIM_InitStruct.Prescaler = __LL_TIM_CALC_PSC(SystemCoreClock, 10000);
     LL_TIM_InitStruct.CounterMode = LL_TIM_COUNTERMODE_UP;
@@ -64,7 +64,7 @@ extern void scheduler_print(void) {
 
 
 extern void scheduler_add_event(uint8_t id, uint32_t period, int16_t number_of_trigger, void (*callback)(void)) {
-    debugf("Add event [%u] in %lums for %d times\r\n", id, period / MS, number_of_trigger);
+    debugf("Add event [%u] in %lums for %d times\r\n", id, period / SCHEDULER_MS, number_of_trigger);
     if(id >= SCHEDULER_MAX_EVENT) {return;}
     if(period == 0) {
         scheduler[id].status = UNUSED;
@@ -138,7 +138,7 @@ static void scheduler_handler(uint32_t elapse_time) {
     next_id = find_next_event();
     //! Configure Timer for next event if any
     if(next_id >= 0) {
-        debugf("Next event [%d] in %lums\r\n", next_id, scheduler[next_id].time_left / MS);
+        debugf("Next event [%d] in %lums\r\n", next_id, scheduler[next_id].time_left / SCHEDULER_MS);
         LL_TIM_SetAutoReload(SCHEDULER_TIM, scheduler[next_id].time_left);
         LL_TIM_EnableCounter(SCHEDULER_TIM);
         LL_TIM_EnableIT_UPDATE(SCHEDULER_TIM);

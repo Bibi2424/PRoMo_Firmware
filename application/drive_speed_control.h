@@ -1,11 +1,13 @@
 #ifndef DRIVE_SPEED_CONTROL_H
 #define DRIVE_SPEED_CONTROL_H
 
-
+#include <stdint.h>
+#include <stdbool.h>
 #include "control_loop.h"
 
 
 extern void drive_speed_control_init(void);
+extern void drive_speed_control_enable(bool enable);
 extern void drive_speed_control_loop(void);
 extern void set_target_speed_percent(int32_t target_left, int32_t target_right);
 

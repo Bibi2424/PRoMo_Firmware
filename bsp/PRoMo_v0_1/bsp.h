@@ -17,6 +17,14 @@
 #include "stm32f4xx_ll_tim.h"
 #include "stm32f4xx_ll_spi.h"
 
+//! For motor and encoder
+typedef enum {
+   NO_SIDE = -1,
+   LEFT_SIDE = 0,
+   RIGHT_SIDE,
+   BOTH_SIDE
+} actuator_t;
+
 //! User button
 #define B1_Pin LL_GPIO_PIN_0
 #define B1_GPIO_Port GPIOA
@@ -113,5 +121,15 @@
 #define USART6_RX_GPIO_Port GPIOC
 #define USART6_GPIO_Port GPIOC
 
+//! DEBUG
+#ifndef DEBUG_UART
+	#define DEBUG_UART			6
+#endif
+
+#if DEBUG_UART == 1
+   #define D_USART USART1
+#elif DEBUG_UART == 6
+   #define D_USART USART6
+#endif
 
 #endif
