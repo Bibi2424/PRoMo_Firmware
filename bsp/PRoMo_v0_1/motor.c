@@ -39,7 +39,7 @@ extern void motors_init(void) {
 	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(MOTOR_ENABLE_Pin_Port, &GPIO_InitStruct);
-  	SET_PIN(MOTOR_ENABLE_Pin_Port, MOTOR_ENABLE_Pin, 1);
+  	SET_PIN(MOTOR_ENABLE_Pin_Port, MOTOR_ENABLE_Pin, GPIO_HIGH);
 
   	//! Init Timer2 for base generation of PWM
 	LL_TIM_InitTypeDef LL_TIM_InitStruct;

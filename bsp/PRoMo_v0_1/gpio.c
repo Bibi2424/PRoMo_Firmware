@@ -62,8 +62,8 @@ void MX_GPIO_Init(void) {
 	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
 	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
 	LL_GPIO_Init(DEBUG_Pin_Port, &GPIO_InitStruct);
-	SET_PIN(DEBUG_Pin_Port, DEBUG_Pin_1, 0);
-	SET_PIN(DEBUG_Pin_Port, DEBUG_Pin_2, 0);
+	SET_PIN(DEBUG_Pin_Port, DEBUG_Pin_1, GPIO_LOW);
+	SET_PIN(DEBUG_Pin_Port, DEBUG_Pin_2, GPIO_LOW);
 }
 
 //! TODO: Expand
