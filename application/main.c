@@ -11,6 +11,7 @@
 #include "main.h"
 #include "time.h"
 #include "usart.h"
+#include "process_serial_commands.h"
 #include "gpio.h"
 #include "encoder.h"
 #include "motor.h"
@@ -48,9 +49,9 @@ extern int main(void) {
     MX_GPIO_Init();
     gpio__register_callback(user_button_cb);
     #if(DEBUG_UART == 1)
-        MX_USART1_UART_Init(DEBUG_BAUDRATE);
+        MX_USART1_UART_Init(DEBUG_BAUDRATE, serial_debug_get_byte);
     #elif(DEBUG_UART == 6)
-        MX_USART6_UART_Init(DEBUG_BAUDRATE);
+        MX_USART6_UART_Init(DEBUG_BAUDRATE, serial_debug_get_byte);
     #endif
     setbuf(stdout, NULL);       //! For unbuffered ouput
     debugf("\n**************************************\n");

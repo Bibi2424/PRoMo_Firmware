@@ -1,11 +1,6 @@
-#define DEBUG_THIS_FILE	DEBUG_NRF24L01_FILE
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
-
-#include "utils.h"
-#include "debug.h"
 
 #include "nrf24l01.h"
 #include "time.h"
@@ -361,7 +356,7 @@ extern uint8_t nrf_has_data(void) {
 	if(nrf_lock_acquire_blocking(NRF_DEFAULT_TIMEOUT) == false) { return 0; }
 
 	if(nrf_config_register != CONFIG_FOR_RX_MODE) {
-		debugf("SET RX");
+		// debugf("SET RX");
 		_nrf_start_rx();
 	}
 
@@ -414,7 +409,7 @@ extern bool nrf_write_data(uint8_t *data, uint8_t data_size, bool ack) {
 	if(nrf_lock_acquire_blocking(NRF_DEFAULT_TIMEOUT) == false) { return false; }
 	//! Put radio in tx
 	if((nrf_config_register & BIT_VALUE(NRF24L01_CONFIG_PRIM_BIT)) != 0) {
-		printf("NOT IN TX\n");
+		// printf("NOT IN TX\n");
 		prepare_radio_for_tx(ack);
 	}
 
@@ -438,7 +433,7 @@ extern bool nrf_write_data(uint8_t *data, uint8_t data_size, bool ack) {
 static void prepare_radio_for_tx(bool ack) {
 	//! Verify radio in TX mode
 	if((nrf_config_register & BIT_VALUE(NRF24L01_CONFIG_PRIM_BIT)) != 0) {
-		debugf("Switch to TX\n");
+		// debugf("Switch to TX\n");
 		CE_LOW;
 		BIT_CLEAR(nrf_config_register, NRF24L01_CONFIG_PRIM_BIT);
 		nrf_write_register(NRF24L01_REGISTER_CONFIG, nrf_config_register);
@@ -460,7 +455,7 @@ static bool wait_for_tx_end(uint32_t timeout_ms) {
 
 	while(last_nrf_status.tx_ok == 0 && last_nrf_status.tx_fail == 0) {
 		if(millis() - start_time > timeout_ms) {
-			debugf("[timeout]");
+			// debugf("[timeout]");
 			break;
 		}
 	}
@@ -470,13 +465,13 @@ static bool wait_for_tx_end(uint32_t timeout_ms) {
 
 	if(last_nrf_status.tx_ok) {
 		last_nrf_status.tx_ok = 0;
-		debugf("[tx ok]");
+		// debugf("[tx ok]");
 		return true;
 	}
 	else if(last_nrf_status.tx_fail) {
 		last_nrf_status.tx_fail = 0;
 		_nrf_flush_tx_buffer();
-		debugf("[max rt]");
+		// debugf("[max rt]");
 		return false;
 	}
 

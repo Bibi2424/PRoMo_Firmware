@@ -12,16 +12,6 @@
 #define xstr(s) str(s)
 #define str(s) #s
 
-//! For motor and encoder
-typedef enum {
-	NO_SIDE = -1,
-	LEFT_SIDE = 0,
-	RIGHT_SIDE,
-	BOTH_SIDE
-} actuator_t;
-
-
-
 #define MOTOR_CONTROL_INTERVAL_US      	(5000)
 // #define MPU_INTERVAL_MS      			(500)
 #define MPU_INTERVAL_MS      			(0)

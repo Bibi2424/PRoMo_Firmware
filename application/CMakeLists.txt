@@ -1,14 +1,10 @@
 add_executable( ${PROJECT_NAME} 
         main.c
         drive_speed_control.c
-        encoder.c
-        motor.c
-        nrf24l01.c
         process_serial_commands.c
         radio.c
         scheduler.c
         sensors.c
-        usart.c
 )
 
 # pull in common dependencies
@@ -17,6 +13,7 @@ target_link_libraries( ${PROJECT_NAME} PUBLIC
         mpu6050
         promo_lib
         vl53l0x
+        NRF24
         # stm32hal
 )
 
@@ -28,7 +25,7 @@ target_include_directories( ${PROJECT_NAME} PUBLIC
 
 set(FW_VERSION_MAJOR "0")
 set(FW_VERSION_MINOR "2")
-set(FW_VERSION_REV   "3")
+set(FW_VERSION_REV   "5")
 
 set(HW_TYPE "HW_PROMO_V0_1")
 

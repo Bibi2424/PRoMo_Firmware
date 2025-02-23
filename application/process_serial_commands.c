@@ -22,11 +22,49 @@
 #include "i2c.h"
 #include "sensors.h"
 
+
+static char rx_buffer[RX_BUFFER_SIZE];
+static uint16_t rx_index = 0;
 static char commands[RX_BUFFER_SIZE];
+
+static uint8_t echo = true;
+
 
 static char* get_next_word(char *buffer, uint8_t is_new) {
 	if(is_new) 	{ return strtok(buffer, " "); }
 	else 		{ return strtok(NULL, " "); }
+}
+
+
+extern void serial_debug_get_byte(uint8_t rx_char) {
+	if(rx_index >= RX_BUFFER_SIZE - 1) { 
+		debugf("Error, command too Big\r\n");
+		rx_index = 0;
+		return; 
+	}
+
+	if(rx_char == 0x08 || rx_char == 0x7F) {
+		if(echo) { printf("\b \b"); }
+		if(rx_index > 0) { rx_buffer[--rx_index] = '\0'; }
+	}
+	else if(rx_char == '\r' || rx_char == '\n') {
+		if(echo) { printf("\r\n"); }
+		if(rx_index != 0) {
+			rx_buffer[rx_index++] = '\0';
+			process_serial_buffer(rx_buffer, rx_index);
+			rx_buffer[0] = '\0';
+			rx_index = 0;
+		}
+	}
+	else {
+		if(echo) { printf("%c", rx_char); }
+		rx_buffer[rx_index++] = rx_char;
+	}
+}
+
+
+extern void set_echo(uint8_t is_echo) {
+	echo = is_echo;
 }
 
 

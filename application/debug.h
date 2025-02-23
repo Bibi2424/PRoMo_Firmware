@@ -18,23 +18,15 @@
 /*------------------------- DEFINE -------------------------*/
 #define DEBUG_MAIN_FILE 						1
 #define DEBUG_PROCESS_SERIAL_COMMANDS_FILE		1
-#define DEBUG_USART_FILE						0
-#define DEBUG_GPIO_FILE							0
 
 #define DEBUG_SCHEDULER_FILE 					0
 
 #define DEBUG_DRIVE_SPEED_CONTROL_FILE			1
 #define DEBUG_PID_FILE							1
-#define DEBUG_MOTOR_FILE						1
-#define DEBUG_ENCODER_FILE						0
-#define DEBUG_LERP_FILE							1
 
 #define DEBUG_SENSORS_FILE						0
-#define DEBUG_I2C_FILE							0
 
 #define DEBUG_RADIO_FILE						0
-#define DEBUG_NRF24L01_FILE						0
-#define DEBUG_SPI_FILE							0
 
 /*------------------------- MACRO -------------------------*/
 //! define DEBUG_THIS_FILE in each files you want to print

@@ -1,7 +1,7 @@
 #ifndef MOTOR_H
 #define MOTOR_H
 
-#include "main.h"
+#include "bsp.h"
 
 #define MOTOR_DIR_FORWARD	1
 #define MOTOR_DIR_REVERSE	0

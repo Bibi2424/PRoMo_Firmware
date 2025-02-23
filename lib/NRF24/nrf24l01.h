@@ -1,8 +1,6 @@
 #ifndef NRF24L01_H
 #define NRF24L01_H
 
-#include "main.h"
-
 #ifndef NRF_POWERUP_DELAY
 #define NRF_POWERUP_DELAY	5
 #endif

@@ -51,5 +51,6 @@ add_subdirectory(bsp/PRoMo_v0_1)
 add_subdirectory(lib/MPU6050)
 add_subdirectory(lib/PRoMo_lib)
 add_subdirectory(lib/VL53L0X)
+add_subdirectory(lib/NRF24)
 
 add_subdirectory(application)

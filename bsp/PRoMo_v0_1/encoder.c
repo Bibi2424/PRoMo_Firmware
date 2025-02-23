@@ -1,14 +1,9 @@
-#define DEBUG_THIS_FILE DEBUG_ENCODER_FILE
-
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "utils.h"
-#include "debug.h"
-
 #include "encoder.h"
+#include "bsp.h"
 #include "gpio.h"
-#include "time.h"
 
 
 extern void encoders_init(void) {

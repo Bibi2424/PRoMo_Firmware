@@ -17,6 +17,14 @@
 #include "stm32f4xx_ll_tim.h"
 #include "stm32f4xx_ll_spi.h"
 
+//! For motor and encoder
+typedef enum {
+   NO_SIDE = -1,
+   LEFT_SIDE = 0,
+   RIGHT_SIDE,
+   BOTH_SIDE
+} actuator_t;
+
 //! User button
 #define B1_Pin LL_GPIO_PIN_0
 #define B1_GPIO_Port GPIOA
