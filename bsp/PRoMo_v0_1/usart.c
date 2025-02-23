@@ -62,6 +62,8 @@ extern void MX_USART6_UART_Init(uint32_t baudrate, get_char_cb_t get_char_cb) {
     LL_GPIO_InitTypeDef GPIO_InitStruct;
     /* Peripheral clock enable */
     LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_USART6);
+    LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA2);
+
     
     //! PC6   ------> USART6_TX
     //! PC7   ------> USART6_RX
@@ -94,8 +96,10 @@ extern void MX_USART6_UART_Init(uint32_t baudrate, get_char_cb_t get_char_cb) {
     LL_DMA_DisableFifoMode(DMA2, LL_DMA_STREAM_6);
 
     NVIC_SetPriority(USART6_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 6, 0)); 
+    NVIC_SetPriority(DMA2_Stream6_IRQn, NVIC_EncodePriority(NVIC_GetPriorityGrouping(), 2, 0));
 
     NVIC_EnableIRQ(USART6_IRQn);
+    NVIC_EnableIRQ(DMA2_Stream6_IRQn);
     LL_USART_ClearFlag_ORE(USART6);
     LL_USART_EnableIT_RXNE(USART6);
 
