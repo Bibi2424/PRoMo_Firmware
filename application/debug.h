@@ -1,10 +1,11 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
+
+#include "logger.h"
 
 //! Debug
 #ifndef DEBUG_ENABLE
@@ -31,19 +32,7 @@
 /*------------------------- MACRO -------------------------*/
 //! define DEBUG_THIS_FILE in each files you want to print
 // #define debugf(...) 	__asm("nop")
-#define debugf(...) 	do { if (DEBUG_THIS_FILE && DEBUG_ENABLE) printf(__VA_ARGS__); } while (0)
-#define debug_array(...) 	do { if (DEBUG_THIS_FILE && DEBUG_ENABLE) printf(__VA_ARGS__); } while (0)
-
-
-static inline void print_array(char *prefix, uint8_t *array, uint8_t size, bool lf) {
-	if(prefix != 0) { printf("%s:[", prefix); }
-	else { printf("["); }
-	for(uint8_t i = 0; i < size; i++) {
-		printf("%02X:", array[i]);
-	}
-	if(lf) { printf("]\n"); }
-	else { printf("]"); }
-}
-
+#define debugf(...) 	do { if (DEBUG_THIS_FILE && DEBUG_ENABLE) logger_log(__VA_ARGS__); } while (0)
+#define debug_array(...) 	do { if (DEBUG_THIS_FILE && DEBUG_ENABLE) logger_log(__VA_ARGS__); } while (0)
 
 #endif

@@ -14,7 +14,7 @@ target_link_libraries( ${PROJECT_NAME} PUBLIC
         mpu6050
         promo_lib
         vl53l0x
-        # stm32hal
+        logger
 )
 
 target_include_directories( ${PROJECT_NAME} PUBLIC

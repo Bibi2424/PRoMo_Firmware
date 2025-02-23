@@ -9,8 +9,10 @@
 #include "debug.h"
 
 #include "main.h"
+#include "logger.h"
 #include "time.h"
 #include "usart.h"
+#include "dma.h"
 #include "process_serial_commands.h"
 #include "gpio.h"
 #include "encoder.h"
@@ -48,16 +50,20 @@ extern int main(void) {
     time_init();
     MX_GPIO_Init();
     gpio__register_callback(user_button_cb);
+    MX_DMA_Init();
     #if(DEBUG_UART == 1)
         MX_USART1_UART_Init(DEBUG_BAUDRATE, serial_debug_get_byte);
     #elif(DEBUG_UART == 6)
         MX_USART6_UART_Init(DEBUG_BAUDRATE, serial_debug_get_byte);
     #endif
+
+    logger_init(usart6_send_dma);
+
     setbuf(stdout, NULL);       //! For unbuffered ouput
     debugf("\n**************************************\n");
     debugf(  "* " xstr(TARGET) " - fw v" xstr(FW_VERSION_MAJOR) "." xstr(FW_VERSION_MINOR) "." xstr(FW_VERSION_REV) "\n");
     debugf(  "* " xstr(HW_TYPE) "\n" );
-    debugf(  "* System_Frequency: %lu MHz\n", SystemCoreClock);
+    debugf(  "* System_Frequency: %lu MHz\n", SystemCoreClock/1000000UL);
     debugf(  "**************************************\n");
     debugf("Booting...\n");
 

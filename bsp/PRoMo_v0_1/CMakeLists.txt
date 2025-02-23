@@ -1,5 +1,6 @@
 add_library(bsp
 	gpio.c
+	dma.c
 	i2c.c
 	spi.c
 	usart.c
